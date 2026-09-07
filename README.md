@@ -16,7 +16,7 @@ A clinical decision–evidence benchmark for chat assistants, and for the rubric
 
 [Project page](https://xinxuxin.github.io/keystone-bench/) (English · 中文 · Español · 日本語) · [Data card](docs/DATA_CARD.md) · [Schema](docs/SCHEMA.md) · [Protocol](docs/PROTOCOL.md) · [Results](docs/RESULTS.md) · [Grader check](docs/JUDGE_CHECK.md) · [Contributing](CONTRIBUTING.md)
 
-![tests](https://github.com/xinxuxin/keystone-bench/actions/workflows/ci.yml/badge.svg) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![twins](https://img.shields.io/badge/twins-7%2C318-8a2be2) ![sources](https://img.shields.io/badge/HealthBench%20sources-1%2C236-8a2be2) ![clinicians](https://img.shields.io/badge/clinician%20collaborators-100%2B-0a84ff)
+![tests](https://github.com/xinxuxin/keystone-bench/actions/workflows/ci.yml/badge.svg) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![twins](https://img.shields.io/badge/twins-7%2C318-8a2be2) ![sources](https://img.shields.io/badge/HealthBench%20sources-1%2C236-8a2be2) ![clinicians](https://img.shields.io/badge/clinician%20collaborators-100%2B-0a84ff) [![pypi](https://img.shields.io/pypi/v/keystone-bench?color=8a2be2)](https://pypi.org/project/keystone-bench/)
 
 </div>
 
@@ -52,8 +52,11 @@ measured   did the reply stay definitive on the twin without naming the gap, and
 
 ## Quickstart
 
+The library is on PyPI; the twins are rebuilt from this repository, because the release ships span references rather than benchmark prose.
+
 ```bash
-pip install -e ".[dev]"
+git clone https://github.com/xinxuxin/keystone-bench && cd keystone-bench
+pip install keystone-bench        # or: pip install -e ".[dev]" to work on it
 python tools/build_release.py     # fetches HealthBench from OpenAI (MIT) and rebuilds dist/ locally, byte for byte
 keystone pairs                   # what is in the release, per family and layer
 keystone reference               # the five-model reference results
