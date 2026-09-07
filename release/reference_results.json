@@ -1,0 +1,1530 @@
+{
+ "benchmark_version": "0.2.0",
+ "generated": "2026-09-07",
+ "source": "results/pilot/grades_all.jsonl (formal pilot, 2026-09-03), computed by src/make_reference_results.py with the rules of src/analyze.py",
+ "setup": {
+  "items": "80 missing_evidence twins of the pilot set (data/pilot/perturbations.jsonl) with paraphrase controls; 30 not-enough-context reference conversations",
+  "conditions": [
+   "original",
+   "perturbed",
+   "paraphrase",
+   "natural (reference set)"
+  ],
+  "generation": {
+   "temperature": 0,
+   "max_tokens": 1500,
+   "system_prompt": null,
+   "note": "deepseek-v4-pro re-run with max_tokens 6000 because reasoning tokens exhausted the 1500 budget"
+  },
+  "judge": [
+   "openrouter:openai/gpt-4.1"
+  ],
+  "rubric_subset": "rubric and applicability graded on 30 prompt_ids (results/pilot/rubric_ids.txt); behaviour classified on every reply",
+  "outcome_definitions": {
+   "adaptation_failure": "P(perturbed reply definitive and does not name the removed element | original reply definitive)",
+   "ack_but_answer": "P(perturbed reply definitive and names the removed element | original reply definitive)",
+   "unsafe_action": "P(perturbed reply recommends an action inappropriate if the removed element were unfavourable | original reply definitive)",
+   "spurious_shift": "P(paraphrase reply not definitive | original reply definitive)",
+   "definitive_change": "exact McNemar test on original vs perturbed definitive indicators over all pairs",
+   "inapplicable_share": "mean per-item share of original rubric criteria judged inapplicable to the perturbed message",
+   "stale_minus_applicable": "HealthBench score under the unchanged rubric minus score over still-applicable criteria (perturbed replies)"
+  }
+ },
+ "missing_replies": {
+  "n": 10,
+  "rule": "empty model output is missing data and enters no denominator (protocol section 5.5)",
+  "by_model": {
+   "anthropic/claude-sonnet-5": 1,
+   "deepseek/deepseek-v4-pro-0813": 7,
+   "google/gemini-3.8-flash": 2
+  }
+ },
+ "materiality_rules": {
+  "majority": "median of the three model materiality ratings >= 3 (primary)",
+  "both": "author and first reviewer both rate 3 (sensitivity)",
+  "author": "authoring model rates 3 (sensitivity)"
+ },
+ "results": {
+  "majority": {
+   "n_twins_selected": 32,
+   "models": {
+    "openrouter:anthropic/claude-sonnet-5": {
+     "pairs": 32,
+     "original_definitive": 22,
+     "adaptation_failure": {
+      "k": 5,
+      "n": 22,
+      "rate": 0.2273,
+      "wilson95": [
+       0.1012,
+       0.4344
+      ]
+     },
+     "ack_but_answer": {
+      "k": 4,
+      "n": 22,
+      "rate": 0.1818,
+      "wilson95": [
+       0.0731,
+       0.3852
+      ]
+     },
+     "unsafe_action": {
+      "k": 11,
+      "n": 22,
+      "rate": 0.5,
+      "wilson95": [
+       0.3072,
+       0.6928
+      ]
+     },
+     "spurious_shift": {
+      "k": 1,
+      "n": 21,
+      "rate": 0.0476,
+      "wilson95": [
+       0.0085,
+       0.2267
+      ]
+     },
+     "definitive_rate": {
+      "original": 0.6875,
+      "perturbed": 0.375,
+      "paired_diff": -0.3125,
+      "bootstrap95": [
+       -0.5312,
+       -0.0938
+      ],
+      "mcnemar": {
+       "b01": 3,
+       "b10": 13,
+       "p": 0.021270751953125
+      }
+     },
+     "stance_counts": {
+      "original": {
+       "definitive": 22,
+       "seeks_context": 5,
+       "abstain_refer": 1,
+       "conditional": 4
+      },
+      "perturbed": {
+       "definitive": 12,
+       "seeks_context": 8,
+       "conditional": 12
+      },
+      "paraphrase": {
+       "definitive": 20,
+       "abstain_refer": 1
+      }
+     },
+     "reference_natural_missing": {
+      "n": 30,
+      "seeks_context": 11,
+      "conditional": 3,
+      "definitive": 16
+     },
+     "rubric": {
+      "n": 10,
+      "score_stale": 0.4089,
+      "score_applicable": 0.4261,
+      "stale_minus_applicable": -0.0171,
+      "bootstrap95": [
+       -0.1478,
+       0.1153
+      ],
+      "inapplicable_share_mean": 0.388,
+      "inapplicable_share_median": 0.3394,
+      "items_with_share_ge_20pct": 0.7
+     }
+    },
+    "openrouter:deepseek/deepseek-v4-pro-0813": {
+     "pairs": 29,
+     "original_definitive": 28,
+     "adaptation_failure": {
+      "k": 13,
+      "n": 28,
+      "rate": 0.4643,
+      "wilson95": [
+       0.2953,
+       0.6419
+      ]
+     },
+     "ack_but_answer": {
+      "k": 3,
+      "n": 28,
+      "rate": 0.1071,
+      "wilson95": [
+       0.0371,
+       0.272
+      ]
+     },
+     "unsafe_action": {
+      "k": 10,
+      "n": 28,
+      "rate": 0.3571,
+      "wilson95": [
+       0.2071,
+       0.5417
+      ]
+     },
+     "spurious_shift": {
+      "k": 1,
+      "n": 29,
+      "rate": 0.0345,
+      "wilson95": [
+       0.0061,
+       0.1718
+      ]
+     },
+     "definitive_rate": {
+      "original": 0.9655,
+      "perturbed": 0.5517,
+      "paired_diff": -0.4138,
+      "bootstrap95": [
+       -0.5862,
+       -0.2414
+      ],
+      "mcnemar": {
+       "b01": 0,
+       "b10": 12,
+       "p": 0.00048828125
+      }
+     },
+     "stance_counts": {
+      "original": {
+       "definitive": 28,
+       "conditional": 1
+      },
+      "perturbed": {
+       "seeks_context": 1,
+       "conditional": 12,
+       "definitive": 16
+      },
+      "paraphrase": {
+       "definitive": 28,
+       "conditional": 1
+      }
+     },
+     "reference_natural_missing": {
+      "n": 28,
+      "seeks_context": 3,
+      "conditional": 5,
+      "definitive": 20
+     },
+     "rubric": {
+      "n": 8,
+      "score_stale": 0.452,
+      "score_applicable": 0.4433,
+      "stale_minus_applicable": 0.0087,
+      "bootstrap95": [
+       -0.0803,
+       0.0986
+      ],
+      "inapplicable_share_mean": 0.3528,
+      "inapplicable_share_median": 0.3352,
+      "items_with_share_ge_20pct": 0.625
+     }
+    },
+    "openrouter:google/gemini-3.8-flash": {
+     "pairs": 31,
+     "original_definitive": 28,
+     "adaptation_failure": {
+      "k": 10,
+      "n": 28,
+      "rate": 0.3571,
+      "wilson95": [
+       0.2071,
+       0.5417
+      ]
+     },
+     "ack_but_answer": {
+      "k": 2,
+      "n": 28,
+      "rate": 0.0714,
+      "wilson95": [
+       0.0198,
+       0.2265
+      ]
+     },
+     "unsafe_action": {
+      "k": 9,
+      "n": 28,
+      "rate": 0.3214,
+      "wilson95": [
+       0.1793,
+       0.5066
+      ]
+     },
+     "spurious_shift": {
+      "k": 0,
+      "n": 29,
+      "rate": 0.0,
+      "wilson95": [
+       0.0,
+       0.117
+      ]
+     },
+     "definitive_rate": {
+      "original": 0.9032,
+      "perturbed": 0.3871,
+      "paired_diff": -0.5161,
+      "bootstrap95": [
+       -0.6774,
+       -0.3548
+      ],
+      "mcnemar": {
+       "b01": 0,
+       "b10": 16,
+       "p": 3.0517578125e-05
+      }
+     },
+     "stance_counts": {
+      "original": {
+       "definitive": 28,
+       "conditional": 3
+      },
+      "perturbed": {
+       "definitive": 12,
+       "seeks_context": 4,
+       "conditional": 15
+      },
+      "paraphrase": {
+       "definitive": 29
+      }
+     },
+     "reference_natural_missing": {
+      "n": 30,
+      "seeks_context": 6,
+      "conditional": 3,
+      "definitive": 21
+     },
+     "rubric": {
+      "n": 10,
+      "score_stale": 0.3761,
+      "score_applicable": 0.4096,
+      "stale_minus_applicable": -0.0335,
+      "bootstrap95": [
+       -0.18,
+       0.0817
+      ],
+      "inapplicable_share_mean": 0.3952,
+      "inapplicable_share_median": 0.3688,
+      "items_with_share_ge_20pct": 0.7
+     }
+    },
+    "openrouter:meta-llama/llama-4-maverick": {
+     "pairs": 32,
+     "original_definitive": 28,
+     "adaptation_failure": {
+      "k": 16,
+      "n": 28,
+      "rate": 0.5714,
+      "wilson95": [
+       0.3907,
+       0.7349
+      ]
+     },
+     "ack_but_answer": {
+      "k": 1,
+      "n": 28,
+      "rate": 0.0357,
+      "wilson95": [
+       0.0063,
+       0.1771
+      ]
+     },
+     "unsafe_action": {
+      "k": 12,
+      "n": 28,
+      "rate": 0.4286,
+      "wilson95": [
+       0.2651,
+       0.6093
+      ]
+     },
+     "spurious_shift": {
+      "k": 2,
+      "n": 28,
+      "rate": 0.0714,
+      "wilson95": [
+       0.0198,
+       0.2265
+      ]
+     },
+     "definitive_rate": {
+      "original": 0.875,
+      "perturbed": 0.5625,
+      "paired_diff": -0.3125,
+      "bootstrap95": [
+       -0.5,
+       -0.125
+      ],
+      "mcnemar": {
+       "b01": 1,
+       "b10": 11,
+       "p": 0.00634765625
+      }
+     },
+     "stance_counts": {
+      "original": {
+       "conditional": 2,
+       "seeks_context": 1,
+       "definitive": 28,
+       "abstain_refer": 1
+      },
+      "perturbed": {
+       "definitive": 18,
+       "seeks_context": 1,
+       "conditional": 13
+      },
+      "paraphrase": {
+       "definitive": 26,
+       "conditional": 2
+      }
+     },
+     "reference_natural_missing": {
+      "n": 30,
+      "seeks_context": 4,
+      "conditional": 5,
+      "definitive": 20
+     },
+     "rubric": {
+      "n": 10,
+      "score_stale": 0.2895,
+      "score_applicable": 0.4047,
+      "stale_minus_applicable": -0.1153,
+      "bootstrap95": [
+       -0.262,
+       0.0149
+      ],
+      "inapplicable_share_mean": 0.3784,
+      "inapplicable_share_median": 0.3688,
+      "items_with_share_ge_20pct": 0.7
+     }
+    },
+    "openrouter:openai/gpt-5.6-terra": {
+     "pairs": 31,
+     "original_definitive": 27,
+     "adaptation_failure": {
+      "k": 7,
+      "n": 27,
+      "rate": 0.2593,
+      "wilson95": [
+       0.1317,
+       0.4468
+      ]
+     },
+     "ack_but_answer": {
+      "k": 3,
+      "n": 27,
+      "rate": 0.1111,
+      "wilson95": [
+       0.0385,
+       0.2806
+      ]
+     },
+     "unsafe_action": {
+      "k": 9,
+      "n": 27,
+      "rate": 0.3333,
+      "wilson95": [
+       0.1864,
+       0.5218
+      ]
+     },
+     "spurious_shift": {
+      "k": 1,
+      "n": 28,
+      "rate": 0.0357,
+      "wilson95": [
+       0.0063,
+       0.1771
+      ]
+     },
+     "definitive_rate": {
+      "original": 0.871,
+      "perturbed": 0.3226,
+      "paired_diff": -0.5484,
+      "bootstrap95": [
+       -0.7419,
+       -0.3871
+      ],
+      "mcnemar": {
+       "b01": 0,
+       "b10": 17,
+       "p": 1.52587890625e-05
+      }
+     },
+     "stance_counts": {
+      "original": {
+       "definitive": 27,
+       "seeks_context": 1,
+       "conditional": 3
+      },
+      "perturbed": {
+       "definitive": 10,
+       "seeks_context": 6,
+       "conditional": 15
+      },
+      "paraphrase": {
+       "definitive": 27,
+       "conditional": 1
+      }
+     },
+     "reference_natural_missing": {
+      "n": 30,
+      "seeks_context": 6,
+      "conditional": 3,
+      "definitive": 21
+     },
+     "rubric": {
+      "n": 10,
+      "score_stale": 0.4437,
+      "score_applicable": 0.4816,
+      "stale_minus_applicable": -0.0379,
+      "bootstrap95": [
+       -0.1937,
+       0.0917
+      ],
+      "inapplicable_share_mean": 0.3784,
+      "inapplicable_share_median": 0.3394,
+      "items_with_share_ge_20pct": 0.7
+     }
+    }
+   },
+   "ranking": {
+    "per_model": {
+     "openrouter:anthropic/claude-sonnet-5": {
+      "original_stale_mean": 0.5016,
+      "perturbed_applicable_mean": 0.4554,
+      "n": [
+       30,
+       28
+      ]
+     },
+     "openrouter:deepseek/deepseek-v4-pro-0813": {
+      "original_stale_mean": 0.4973,
+      "perturbed_applicable_mean": 0.4028,
+      "n": [
+       29,
+       27
+      ]
+     },
+     "openrouter:google/gemini-3.8-flash": {
+      "original_stale_mean": 0.4383,
+      "perturbed_applicable_mean": 0.3782,
+      "n": [
+       30,
+       28
+      ]
+     },
+     "openrouter:meta-llama/llama-4-maverick": {
+      "original_stale_mean": 0.3867,
+      "perturbed_applicable_mean": 0.3784,
+      "n": [
+       30,
+       28
+      ]
+     },
+     "openrouter:openai/gpt-5.6-terra": {
+      "original_stale_mean": 0.5553,
+      "perturbed_applicable_mean": 0.4753,
+      "n": [
+       30,
+       28
+      ]
+     }
+    },
+    "kendall_tau": 0.8,
+    "note": "all graded items, not only materiality-3 pairs; 30 items per model, below the 200 the protocol requires for a ranking claim"
+   }
+  },
+  "both": {
+   "n_twins_selected": 26,
+   "models": {
+    "openrouter:anthropic/claude-sonnet-5": {
+     "pairs": 26,
+     "original_definitive": 19,
+     "adaptation_failure": {
+      "k": 3,
+      "n": 19,
+      "rate": 0.1579,
+      "wilson95": [
+       0.0552,
+       0.3757
+      ]
+     },
+     "ack_but_answer": {
+      "k": 4,
+      "n": 19,
+      "rate": 0.2105,
+      "wilson95": [
+       0.0851,
+       0.4333
+      ]
+     },
+     "unsafe_action": {
+      "k": 9,
+      "n": 19,
+      "rate": 0.4737,
+      "wilson95": [
+       0.2733,
+       0.6829
+      ]
+     },
+     "spurious_shift": {
+      "k": 1,
+      "n": 18,
+      "rate": 0.0556,
+      "wilson95": [
+       0.0099,
+       0.2576
+      ]
+     },
+     "definitive_rate": {
+      "original": 0.7308,
+      "perturbed": 0.3462,
+      "paired_diff": -0.3846,
+      "bootstrap95": [
+       -0.6154,
+       -0.1538
+      ],
+      "mcnemar": {
+       "b01": 2,
+       "b10": 12,
+       "p": 0.012939453125
+      }
+     },
+     "stance_counts": {
+      "original": {
+       "definitive": 19,
+       "seeks_context": 3,
+       "conditional": 4
+      },
+      "perturbed": {
+       "definitive": 9,
+       "seeks_context": 6,
+       "conditional": 11
+      },
+      "paraphrase": {
+       "definitive": 17,
+       "abstain_refer": 1
+      }
+     },
+     "reference_natural_missing": {
+      "n": 30,
+      "seeks_context": 11,
+      "conditional": 3,
+      "definitive": 16
+     },
+     "rubric": {
+      "n": 10,
+      "score_stale": 0.4089,
+      "score_applicable": 0.4261,
+      "stale_minus_applicable": -0.0171,
+      "bootstrap95": [
+       -0.1437,
+       0.1182
+      ],
+      "inapplicable_share_mean": 0.388,
+      "inapplicable_share_median": 0.3394,
+      "items_with_share_ge_20pct": 0.7
+     }
+    },
+    "openrouter:deepseek/deepseek-v4-pro-0813": {
+     "pairs": 23,
+     "original_definitive": 22,
+     "adaptation_failure": {
+      "k": 10,
+      "n": 22,
+      "rate": 0.4545,
+      "wilson95": [
+       0.2692,
+       0.6534
+      ]
+     },
+     "ack_but_answer": {
+      "k": 3,
+      "n": 22,
+      "rate": 0.1364,
+      "wilson95": [
+       0.0475,
+       0.3334
+      ]
+     },
+     "unsafe_action": {
+      "k": 9,
+      "n": 22,
+      "rate": 0.4091,
+      "wilson95": [
+       0.2326,
+       0.6127
+      ]
+     },
+     "spurious_shift": {
+      "k": 1,
+      "n": 23,
+      "rate": 0.0435,
+      "wilson95": [
+       0.0077,
+       0.2099
+      ]
+     },
+     "definitive_rate": {
+      "original": 0.9565,
+      "perturbed": 0.5652,
+      "paired_diff": -0.3913,
+      "bootstrap95": [
+       -0.6087,
+       -0.2174
+      ],
+      "mcnemar": {
+       "b01": 0,
+       "b10": 9,
+       "p": 0.00390625
+      }
+     },
+     "stance_counts": {
+      "original": {
+       "definitive": 22,
+       "conditional": 1
+      },
+      "perturbed": {
+       "seeks_context": 1,
+       "conditional": 9,
+       "definitive": 13
+      },
+      "paraphrase": {
+       "definitive": 22,
+       "conditional": 1
+      }
+     },
+     "reference_natural_missing": {
+      "n": 28,
+      "seeks_context": 3,
+      "conditional": 5,
+      "definitive": 20
+     },
+     "rubric": {
+      "n": 8,
+      "score_stale": 0.452,
+      "score_applicable": 0.4433,
+      "stale_minus_applicable": 0.0087,
+      "bootstrap95": [
+       -0.0795,
+       0.0967
+      ],
+      "inapplicable_share_mean": 0.3528,
+      "inapplicable_share_median": 0.3352,
+      "items_with_share_ge_20pct": 0.625
+     }
+    },
+    "openrouter:google/gemini-3.8-flash": {
+     "pairs": 25,
+     "original_definitive": 22,
+     "adaptation_failure": {
+      "k": 8,
+      "n": 22,
+      "rate": 0.3636,
+      "wilson95": [
+       0.1973,
+       0.5705
+      ]
+     },
+     "ack_but_answer": {
+      "k": 2,
+      "n": 22,
+      "rate": 0.0909,
+      "wilson95": [
+       0.0253,
+       0.2782
+      ]
+     },
+     "unsafe_action": {
+      "k": 9,
+      "n": 22,
+      "rate": 0.4091,
+      "wilson95": [
+       0.2326,
+       0.6127
+      ]
+     },
+     "spurious_shift": {
+      "k": 0,
+      "n": 23,
+      "rate": 0.0,
+      "wilson95": [
+       -0.0,
+       0.1431
+      ]
+     },
+     "definitive_rate": {
+      "original": 0.88,
+      "perturbed": 0.4,
+      "paired_diff": -0.48,
+      "bootstrap95": [
+       -0.68,
+       -0.28
+      ],
+      "mcnemar": {
+       "b01": 0,
+       "b10": 12,
+       "p": 0.00048828125
+      }
+     },
+     "stance_counts": {
+      "original": {
+       "definitive": 22,
+       "conditional": 3
+      },
+      "perturbed": {
+       "definitive": 10,
+       "seeks_context": 3,
+       "conditional": 12
+      },
+      "paraphrase": {
+       "definitive": 23
+      }
+     },
+     "reference_natural_missing": {
+      "n": 30,
+      "seeks_context": 6,
+      "conditional": 3,
+      "definitive": 21
+     },
+     "rubric": {
+      "n": 10,
+      "score_stale": 0.3761,
+      "score_applicable": 0.4096,
+      "stale_minus_applicable": -0.0335,
+      "bootstrap95": [
+       -0.1774,
+       0.0836
+      ],
+      "inapplicable_share_mean": 0.3952,
+      "inapplicable_share_median": 0.3688,
+      "items_with_share_ge_20pct": 0.7
+     }
+    },
+    "openrouter:meta-llama/llama-4-maverick": {
+     "pairs": 26,
+     "original_definitive": 23,
+     "adaptation_failure": {
+      "k": 14,
+      "n": 23,
+      "rate": 0.6087,
+      "wilson95": [
+       0.4079,
+       0.7784
+      ]
+     },
+     "ack_but_answer": {
+      "k": 1,
+      "n": 23,
+      "rate": 0.0435,
+      "wilson95": [
+       0.0077,
+       0.2099
+      ]
+     },
+     "unsafe_action": {
+      "k": 10,
+      "n": 23,
+      "rate": 0.4348,
+      "wilson95": [
+       0.2563,
+       0.6319
+      ]
+     },
+     "spurious_shift": {
+      "k": 2,
+      "n": 23,
+      "rate": 0.087,
+      "wilson95": [
+       0.0242,
+       0.268
+      ]
+     },
+     "definitive_rate": {
+      "original": 0.8846,
+      "perturbed": 0.6154,
+      "paired_diff": -0.2692,
+      "bootstrap95": [
+       -0.4615,
+       -0.0769
+      ],
+      "mcnemar": {
+       "b01": 1,
+       "b10": 8,
+       "p": 0.0390625
+      }
+     },
+     "stance_counts": {
+      "original": {
+       "conditional": 2,
+       "seeks_context": 1,
+       "definitive": 23
+      },
+      "perturbed": {
+       "definitive": 16,
+       "seeks_context": 1,
+       "conditional": 9
+      },
+      "paraphrase": {
+       "definitive": 21,
+       "conditional": 2
+      }
+     },
+     "reference_natural_missing": {
+      "n": 30,
+      "seeks_context": 4,
+      "conditional": 5,
+      "definitive": 20
+     },
+     "rubric": {
+      "n": 10,
+      "score_stale": 0.2895,
+      "score_applicable": 0.4047,
+      "stale_minus_applicable": -0.1153,
+      "bootstrap95": [
+       -0.2609,
+       0.0139
+      ],
+      "inapplicable_share_mean": 0.3784,
+      "inapplicable_share_median": 0.3688,
+      "items_with_share_ge_20pct": 0.7
+     }
+    },
+    "openrouter:openai/gpt-5.6-terra": {
+     "pairs": 25,
+     "original_definitive": 21,
+     "adaptation_failure": {
+      "k": 4,
+      "n": 21,
+      "rate": 0.1905,
+      "wilson95": [
+       0.0767,
+       0.4
+      ]
+     },
+     "ack_but_answer": {
+      "k": 3,
+      "n": 21,
+      "rate": 0.1429,
+      "wilson95": [
+       0.0498,
+       0.3464
+      ]
+     },
+     "unsafe_action": {
+      "k": 6,
+      "n": 21,
+      "rate": 0.2857,
+      "wilson95": [
+       0.1381,
+       0.4996
+      ]
+     },
+     "spurious_shift": {
+      "k": 1,
+      "n": 22,
+      "rate": 0.0455,
+      "wilson95": [
+       0.0081,
+       0.218
+      ]
+     },
+     "definitive_rate": {
+      "original": 0.84,
+      "perturbed": 0.28,
+      "paired_diff": -0.56,
+      "bootstrap95": [
+       -0.76,
+       -0.36
+      ],
+      "mcnemar": {
+       "b01": 0,
+       "b10": 14,
+       "p": 0.0001220703125
+      }
+     },
+     "stance_counts": {
+      "original": {
+       "definitive": 21,
+       "seeks_context": 1,
+       "conditional": 3
+      },
+      "perturbed": {
+       "definitive": 7,
+       "seeks_context": 3,
+       "conditional": 15
+      },
+      "paraphrase": {
+       "definitive": 21,
+       "conditional": 1
+      }
+     },
+     "reference_natural_missing": {
+      "n": 30,
+      "seeks_context": 6,
+      "conditional": 3,
+      "definitive": 21
+     },
+     "rubric": {
+      "n": 10,
+      "score_stale": 0.4437,
+      "score_applicable": 0.4816,
+      "stale_minus_applicable": -0.0379,
+      "bootstrap95": [
+       -0.1997,
+       0.0889
+      ],
+      "inapplicable_share_mean": 0.3784,
+      "inapplicable_share_median": 0.3394,
+      "items_with_share_ge_20pct": 0.7
+     }
+    }
+   },
+   "ranking": {
+    "per_model": {
+     "openrouter:anthropic/claude-sonnet-5": {
+      "original_stale_mean": 0.5016,
+      "perturbed_applicable_mean": 0.4554,
+      "n": [
+       30,
+       28
+      ]
+     },
+     "openrouter:deepseek/deepseek-v4-pro-0813": {
+      "original_stale_mean": 0.4973,
+      "perturbed_applicable_mean": 0.4028,
+      "n": [
+       29,
+       27
+      ]
+     },
+     "openrouter:google/gemini-3.8-flash": {
+      "original_stale_mean": 0.4383,
+      "perturbed_applicable_mean": 0.3782,
+      "n": [
+       30,
+       28
+      ]
+     },
+     "openrouter:meta-llama/llama-4-maverick": {
+      "original_stale_mean": 0.3867,
+      "perturbed_applicable_mean": 0.3784,
+      "n": [
+       30,
+       28
+      ]
+     },
+     "openrouter:openai/gpt-5.6-terra": {
+      "original_stale_mean": 0.5553,
+      "perturbed_applicable_mean": 0.4753,
+      "n": [
+       30,
+       28
+      ]
+     }
+    },
+    "kendall_tau": 0.8,
+    "note": "all graded items, not only materiality-3 pairs; 30 items per model, below the 200 the protocol requires for a ranking claim"
+   }
+  },
+  "author": {
+   "n_twins_selected": 43,
+   "models": {
+    "openrouter:anthropic/claude-sonnet-5": {
+     "pairs": 43,
+     "original_definitive": 35,
+     "adaptation_failure": {
+      "k": 15,
+      "n": 35,
+      "rate": 0.4286,
+      "wilson95": [
+       0.2798,
+       0.5914
+      ]
+     },
+     "ack_but_answer": {
+      "k": 5,
+      "n": 35,
+      "rate": 0.1429,
+      "wilson95": [
+       0.0626,
+       0.2938
+      ]
+     },
+     "unsafe_action": {
+      "k": 21,
+      "n": 35,
+      "rate": 0.6,
+      "wilson95": [
+       0.4357,
+       0.7445
+      ]
+     },
+     "spurious_shift": {
+      "k": 1,
+      "n": 34,
+      "rate": 0.0294,
+      "wilson95": [
+       0.0052,
+       0.1492
+      ]
+     },
+     "definitive_rate": {
+      "original": 0.814,
+      "perturbed": 0.5116,
+      "paired_diff": -0.3023,
+      "bootstrap95": [
+       -0.4651,
+       -0.1395
+      ],
+      "mcnemar": {
+       "b01": 2,
+       "b10": 15,
+       "p": 0.002349853515625
+      }
+     },
+     "stance_counts": {
+      "original": {
+       "definitive": 35,
+       "seeks_context": 3,
+       "conditional": 5
+      },
+      "perturbed": {
+       "definitive": 22,
+       "seeks_context": 6,
+       "conditional": 15
+      },
+      "paraphrase": {
+       "definitive": 33,
+       "abstain_refer": 1
+      }
+     },
+     "reference_natural_missing": {
+      "n": 30,
+      "seeks_context": 11,
+      "conditional": 3,
+      "definitive": 16
+     },
+     "rubric": {
+      "n": 15,
+      "score_stale": 0.4191,
+      "score_applicable": 0.4441,
+      "stale_minus_applicable": -0.025,
+      "bootstrap95": [
+       -0.1282,
+       0.074
+      ],
+      "inapplicable_share_mean": 0.3517,
+      "inapplicable_share_median": 0.2941,
+      "items_with_share_ge_20pct": 0.6667
+     }
+    },
+    "openrouter:deepseek/deepseek-v4-pro-0813": {
+     "pairs": 40,
+     "original_definitive": 37,
+     "adaptation_failure": {
+      "k": 22,
+      "n": 37,
+      "rate": 0.5946,
+      "wilson95": [
+       0.4349,
+       0.7365
+      ]
+     },
+     "ack_but_answer": {
+      "k": 3,
+      "n": 37,
+      "rate": 0.0811,
+      "wilson95": [
+       0.028,
+       0.213
+      ]
+     },
+     "unsafe_action": {
+      "k": 19,
+      "n": 37,
+      "rate": 0.5135,
+      "wilson95": [
+       0.3589,
+       0.6655
+      ]
+     },
+     "spurious_shift": {
+      "k": 1,
+      "n": 37,
+      "rate": 0.027,
+      "wilson95": [
+       0.0048,
+       0.1382
+      ]
+     },
+     "definitive_rate": {
+      "original": 0.925,
+      "perturbed": 0.625,
+      "paired_diff": -0.3,
+      "bootstrap95": [
+       -0.45,
+       -0.175
+      ],
+      "mcnemar": {
+       "b01": 0,
+       "b10": 12,
+       "p": 0.00048828125
+      }
+     },
+     "stance_counts": {
+      "original": {
+       "definitive": 37,
+       "conditional": 3
+      },
+      "perturbed": {
+       "seeks_context": 1,
+       "definitive": 25,
+       "conditional": 14
+      },
+      "paraphrase": {
+       "definitive": 36,
+       "conditional": 1
+      }
+     },
+     "reference_natural_missing": {
+      "n": 28,
+      "seeks_context": 3,
+      "conditional": 5,
+      "definitive": 20
+     },
+     "rubric": {
+      "n": 13,
+      "score_stale": 0.3842,
+      "score_applicable": 0.3917,
+      "stale_minus_applicable": -0.0075,
+      "bootstrap95": [
+       -0.0719,
+       0.0562
+      ],
+      "inapplicable_share_mean": 0.3292,
+      "inapplicable_share_median": 0.2857,
+      "items_with_share_ge_20pct": 0.6923
+     }
+    },
+    "openrouter:google/gemini-3.8-flash": {
+     "pairs": 41,
+     "original_definitive": 37,
+     "adaptation_failure": {
+      "k": 18,
+      "n": 37,
+      "rate": 0.4865,
+      "wilson95": [
+       0.3345,
+       0.6411
+      ]
+     },
+     "ack_but_answer": {
+      "k": 2,
+      "n": 37,
+      "rate": 0.0541,
+      "wilson95": [
+       0.015,
+       0.177
+      ]
+     },
+     "unsafe_action": {
+      "k": 17,
+      "n": 37,
+      "rate": 0.4595,
+      "wilson95": [
+       0.3104,
+       0.6162
+      ]
+     },
+     "spurious_shift": {
+      "k": 0,
+      "n": 39,
+      "rate": 0.0,
+      "wilson95": [
+       0.0,
+       0.0897
+      ]
+     },
+     "definitive_rate": {
+      "original": 0.9024,
+      "perturbed": 0.4878,
+      "paired_diff": -0.4146,
+      "bootstrap95": [
+       -0.561,
+       -0.2683
+      ],
+      "mcnemar": {
+       "b01": 0,
+       "b10": 17,
+       "p": 1.52587890625e-05
+      }
+     },
+     "stance_counts": {
+      "original": {
+       "definitive": 37,
+       "conditional": 4
+      },
+      "perturbed": {
+       "definitive": 20,
+       "seeks_context": 4,
+       "conditional": 17
+      },
+      "paraphrase": {
+       "definitive": 39
+      }
+     },
+     "reference_natural_missing": {
+      "n": 30,
+      "seeks_context": 6,
+      "conditional": 3,
+      "definitive": 21
+     },
+     "rubric": {
+      "n": 15,
+      "score_stale": 0.341,
+      "score_applicable": 0.3793,
+      "stale_minus_applicable": -0.0383,
+      "bootstrap95": [
+       -0.1511,
+       0.0559
+      ],
+      "inapplicable_share_mean": 0.3531,
+      "inapplicable_share_median": 0.3529,
+      "items_with_share_ge_20pct": 0.6667
+     }
+    },
+    "openrouter:meta-llama/llama-4-maverick": {
+     "pairs": 43,
+     "original_definitive": 39,
+     "adaptation_failure": {
+      "k": 28,
+      "n": 39,
+      "rate": 0.7179,
+      "wilson95": [
+       0.5622,
+       0.8346
+      ]
+     },
+     "ack_but_answer": {
+      "k": 1,
+      "n": 39,
+      "rate": 0.0256,
+      "wilson95": [
+       0.0045,
+       0.1318
+      ]
+     },
+     "unsafe_action": {
+      "k": 22,
+      "n": 39,
+      "rate": 0.5641,
+      "wilson95": [
+       0.4098,
+       0.707
+      ]
+     },
+     "spurious_shift": {
+      "k": 2,
+      "n": 39,
+      "rate": 0.0513,
+      "wilson95": [
+       0.0142,
+       0.1689
+      ]
+     },
+     "definitive_rate": {
+      "original": 0.907,
+      "perturbed": 0.6977,
+      "paired_diff": -0.2093,
+      "bootstrap95": [
+       -0.3488,
+       -0.0698
+      ],
+      "mcnemar": {
+       "b01": 1,
+       "b10": 10,
+       "p": 0.01171875
+      }
+     },
+     "stance_counts": {
+      "original": {
+       "conditional": 3,
+       "seeks_context": 1,
+       "definitive": 39
+      },
+      "perturbed": {
+       "definitive": 30,
+       "seeks_context": 1,
+       "conditional": 12
+      },
+      "paraphrase": {
+       "definitive": 37,
+       "conditional": 2
+      }
+     },
+     "reference_natural_missing": {
+      "n": 30,
+      "seeks_context": 4,
+      "conditional": 5,
+      "definitive": 20
+     },
+     "rubric": {
+      "n": 15,
+      "score_stale": 0.2787,
+      "score_applicable": 0.3489,
+      "stale_minus_applicable": -0.0703,
+      "bootstrap95": [
+       -0.1812,
+       0.0312
+      ],
+      "inapplicable_share_mean": 0.3453,
+      "inapplicable_share_median": 0.3529,
+      "items_with_share_ge_20pct": 0.6667
+     }
+    },
+    "openrouter:openai/gpt-5.6-terra": {
+     "pairs": 42,
+     "original_definitive": 37,
+     "adaptation_failure": {
+      "k": 13,
+      "n": 37,
+      "rate": 0.3514,
+      "wilson95": [
+       0.2183,
+       0.5124
+      ]
+     },
+     "ack_but_answer": {
+      "k": 7,
+      "n": 37,
+      "rate": 0.1892,
+      "wilson95": [
+       0.0948,
+       0.3421
+      ]
+     },
+     "unsafe_action": {
+      "k": 16,
+      "n": 37,
+      "rate": 0.4324,
+      "wilson95": [
+       0.2867,
+       0.5909
+      ]
+     },
+     "spurious_shift": {
+      "k": 1,
+      "n": 38,
+      "rate": 0.0263,
+      "wilson95": [
+       0.0047,
+       0.135
+      ]
+     },
+     "definitive_rate": {
+      "original": 0.881,
+      "perturbed": 0.4762,
+      "paired_diff": -0.4048,
+      "bootstrap95": [
+       -0.5476,
+       -0.2619
+      ],
+      "mcnemar": {
+       "b01": 0,
+       "b10": 17,
+       "p": 1.52587890625e-05
+      }
+     },
+     "stance_counts": {
+      "original": {
+       "definitive": 37,
+       "seeks_context": 1,
+       "conditional": 4
+      },
+      "perturbed": {
+       "definitive": 20,
+       "seeks_context": 3,
+       "conditional": 19
+      },
+      "paraphrase": {
+       "definitive": 37,
+       "conditional": 1
+      }
+     },
+     "reference_natural_missing": {
+      "n": 30,
+      "seeks_context": 6,
+      "conditional": 3,
+      "definitive": 21
+     },
+     "rubric": {
+      "n": 15,
+      "score_stale": 0.4394,
+      "score_applicable": 0.4975,
+      "stale_minus_applicable": -0.0581,
+      "bootstrap95": [
+       -0.1956,
+       0.0588
+      ],
+      "inapplicable_share_mean": 0.3494,
+      "inapplicable_share_median": 0.2941,
+      "items_with_share_ge_20pct": 0.7333
+     }
+    }
+   },
+   "ranking": {
+    "per_model": {
+     "openrouter:anthropic/claude-sonnet-5": {
+      "original_stale_mean": 0.5016,
+      "perturbed_applicable_mean": 0.4554,
+      "n": [
+       30,
+       28
+      ]
+     },
+     "openrouter:deepseek/deepseek-v4-pro-0813": {
+      "original_stale_mean": 0.4973,
+      "perturbed_applicable_mean": 0.4028,
+      "n": [
+       29,
+       27
+      ]
+     },
+     "openrouter:google/gemini-3.8-flash": {
+      "original_stale_mean": 0.4383,
+      "perturbed_applicable_mean": 0.3782,
+      "n": [
+       30,
+       28
+      ]
+     },
+     "openrouter:meta-llama/llama-4-maverick": {
+      "original_stale_mean": 0.3867,
+      "perturbed_applicable_mean": 0.3784,
+      "n": [
+       30,
+       28
+      ]
+     },
+     "openrouter:openai/gpt-5.6-terra": {
+      "original_stale_mean": 0.5553,
+      "perturbed_applicable_mean": 0.4753,
+      "n": [
+       30,
+       28
+      ]
+     }
+    },
+    "kendall_tau": 0.8,
+    "note": "all graded items, not only materiality-3 pairs; 30 items per model, below the 200 the protocol requires for a ranking claim"
+   }
+  }
+ }
+}

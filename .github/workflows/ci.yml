@@ -1,0 +1,50 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Cache HealthBench
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: healthbench-2025-05-07
+      - run: pip install -e ".[dev]"
+      - name: Rebuild the release from HealthBench and the shipped edits
+        run: python tools/build_release.py
+      - name: Verify the rebuilt release matches its manifest
+        run: python tools/build_release.py --check
+      - run: python tools/quality_checks.py > /dev/null
+      - run: python tools/trivial_baselines.py > /dev/null
+      - run: python -m pytest -q
+      - run: keystone validate && keystone pairs
+
+  pages:
+    if: github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

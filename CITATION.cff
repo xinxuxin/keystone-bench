@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: If you use Keystone, please cite it.
+title: "Keystone: a clinical decision-evidence benchmark for chat assistants and their rubrics"
+abstract: >-
+  Keystone pairs every source clinical conversation with twins that change exactly one fact and with a
+  paraphrase-only control, annotates each source with the decision it asks for and each twin with the
+  evidence state that follows, and scores both the assistant's action and the applicability of the
+  physician rubric that grades it. Built on HealthBench (OpenAI, MIT).
+type: dataset
+version: "0.4.0"
+license: MIT
+repository-code: "https://github.com/xinxuxin/keystone-bench"
+url: "https://xinxuxin.github.io/keystone-bench/"
+authors:
+  - given-names: Xin
+    family-names: Xu
+keywords:
+  - benchmark
+  - clinical decision support
+  - large language models
+  - evaluation
+  - medical AI
+references:
+  - type: data
+    title: HealthBench
+    authors:
+      - name: OpenAI
+    url: "https://github.com/openai/simple-evals"
+    license: MIT

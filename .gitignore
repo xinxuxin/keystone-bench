@@ -1,0 +1,14 @@
+# Built locally by tools/build_release.py; never committed (contains HealthBench text)
+dist/
+.cache/
+# Model runs
+runs/
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+*.egg-info/
+build/
+.DS_Store
+.claude/
