@@ -31,7 +31,8 @@ jobs:
       - run: keystone validate && keystone pairs
 
   pages:
-    if: github.ref == 'refs/heads/main'
+    # Pages is public-only on this plan, so the site deploys once the repository itself is public
+    if: github.ref == 'refs/heads/main' && github.event.repository.visibility == 'public'
     needs: test
     runs-on: ubuntu-latest
     permissions:
@@ -44,6 +45,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
