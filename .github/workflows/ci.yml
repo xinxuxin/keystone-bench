@@ -35,6 +35,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     permissions:
+      contents: read      # actions/checkout needs it; naming any permission drops the defaults
       pages: write
       id-token: write
     environment:
