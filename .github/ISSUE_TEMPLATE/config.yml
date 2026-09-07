@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Protocol
+    url: https://github.com/xinxuxin/keystone-bench/blob/main/docs/PROTOCOL.md
+    about: What the benchmark measures, how items are built, and what the analysis plan is.
+  - name: Data card
+    url: https://github.com/xinxuxin/keystone-bench/blob/main/docs/DATA_CARD.md
+    about: Field-by-field description of every released file, with coverage and known limits.

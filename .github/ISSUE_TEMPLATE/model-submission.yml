@@ -1,0 +1,52 @@
+name: Model result submission
+description: Submit a run of your model for the results table
+title: "Submission: "
+labels: ["submission"]
+body:
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      description: Exact identifier and version, as it should appear in the table.
+      placeholder: "e.g. openrouter/openai/gpt-5.6-terra"
+    validations:
+      required: true
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Layer
+      options: ["quick", "primary", "strict", "core", "all"]
+    validations:
+      required: true
+  - type: input
+    id: judge
+    attributes:
+      label: Judge
+      description: Which model graded the replies. It must come from a different vendor than the model under test.
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Run settings
+      description: Temperature, system prompt (if any), release version, and the command you ran.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: Summary output
+      description: Paste the output of `keystone report <run_dir>`, and attach the run directory if you can.
+      render: shell
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Comparability
+      options:
+        - label: "The control's spurious shift is at most 0.10 on this run"
+          required: true
+        - label: "Empty model outputs were treated as missing data, not as a stance"
+          required: true

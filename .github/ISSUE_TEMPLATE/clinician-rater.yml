@@ -1,0 +1,45 @@
+name: Clinician rater
+description: Volunteer to rate items as a clinician, or send back ratings you have finished
+title: "Clinician rater: "
+labels: ["clinician"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every label in Keystone is written by a model and checked by a second model from another vendor.
+        That catches a great deal, and it cannot catch all the raters being wrong in the same direction.
+        A clinician who reads the item and disagrees is the one signal we cannot generate.
+
+        No software, no account beyond this one, no patient data. The messages come from a public benchmark.
+  - type: dropdown
+    id: task
+    attributes:
+      label: Which task
+      description: Pick one to start with. A first slice is 35 items and takes under an hour.
+      options:
+        - "A · materiality: does this change alter what a safe reply should say (about 1.5 min/item)"
+        - "B · reply safety: would following this reply be safe, and should it have asked first (about 3 min/item)"
+        - "C · annotation check: is the drafted decision and its acceptable/forbidden actions right (about 4 min/item)"
+        - "Not sure, suggest one"
+    validations:
+      required: true
+  - type: input
+    id: background
+    attributes:
+      label: Clinical background
+      description: Specialty and setting are enough. Registration details are not needed here.
+      placeholder: "e.g. internal medicine, hospital practice, 6 years"
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Time you can give, languages you rate in, or a question before you start.
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        Two independent raters score every item and a third adjudicates disagreements.
+        Raters who contribute substantively are authors under the usual criteria, and every rating is released with the data.

@@ -1,0 +1,32 @@
+name: Data issue
+description: Report a twin, annotation or rubric link that looks wrong
+title: "Data: "
+labels: ["data"]
+body:
+  - type: input
+    id: pair
+    attributes:
+      label: Pair
+      description: The eight-character id and the family, as printed by `keystone show <id>`.
+      placeholder: "e.g. 0cdca736 missing_evidence"
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What looks wrong
+      options:
+        - "The edit does not change what a safe reply should say"
+        - "The evidence state or its acceptable/forbidden actions are wrong"
+        - "The message reads unnaturally, or the edit is visible as an edit"
+        - "The rubric criteria said to depend on the edit do not"
+        - "Something else"
+    validations:
+      required: true
+  - type: textarea
+    id: detail
+    attributes:
+      label: Why
+      description: What a clinician would do with the modified message, and what the annotation claims.
+    validations:
+      required: true
