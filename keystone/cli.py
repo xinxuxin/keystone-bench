@@ -1,4 +1,4 @@
-"""Command line: keystone run | show | report | panel | regress | compare-judges | validate | reference | pairs | estimate."""
+"""Command line: keystone build | run | show | report | panel | regress | compare-judges | validate | reference | pairs | estimate."""
 from __future__ import annotations
 
 import argparse
@@ -13,6 +13,17 @@ from . import __version__
 from .data import FAMILIES, LAYERS, SPLITS, find_dist, load_manifest, load_pairs, load_rows
 from .metrics import cohen_kappa, pair_action_outcomes, pair_outcomes, panel_records, primary_hypothesis_supported, summarize
 from .runner import OpenAICompatible, evaluate, report_markdown, write_run
+
+
+def cmd_build(a):
+    from .build import main as build_main
+    argv = []
+    for flag, value in (("--dist", a.out or a.dist), ("--cache", a.cache), ("--release", a.release)):
+        if value:
+            argv += [flag, str(value)]
+    if a.check:
+        argv.append("--check")
+    raise SystemExit(build_main(argv))
 
 
 def cmd_pairs(a):
@@ -306,6 +317,11 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog="keystone", description=f"Keystone {__version__}: paired evidence-perturbation stress tests")
     ap.add_argument("--dist", default=None, help="release directory (default: $KEYSTONE_DIST or the repository's dist/)")
     sub = ap.add_subparsers(dest="cmd", required=True)
+    s = sub.add_parser("build", help="rebuild the release from HealthBench and the shipped edits (needed once after pip install)")
+    s.add_argument("--out", help="where to write it (default: ./dist in a checkout, ~/.cache/keystone/dist otherwise)")
+    s.add_argument("--cache", help="path of the HealthBench copy to use or download")
+    s.add_argument("--release", help="directory holding metadata.jsonl and edits.jsonl")
+    s.add_argument("--check", action="store_true", help="verify an existing release against its MANIFEST"); s.set_defaults(f=cmd_build)
     s = sub.add_parser("pairs", help="count pairs per family and layer"); s.add_argument("--family", choices=FAMILIES); s.set_defaults(f=cmd_pairs)
     s = sub.add_parser("validate", help="check the release against its MANIFEST and structural invariants"); s.set_defaults(f=cmd_validate)
     s = sub.add_parser("reference", help="print the reference results shipped with the release"); s.add_argument("--rule", default="majority", choices=["majority", "both", "author"]); s.set_defaults(f=cmd_reference)

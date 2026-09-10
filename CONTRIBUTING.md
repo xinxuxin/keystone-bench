@@ -42,6 +42,16 @@ python -m pytest -q
 
 Layer membership (`in_core`, `in_strict`, `paraphrase_released`) is computed by `tools/build_release.py` from the ratings, never stored. Bump `VERSION` in `tools/build_release.py`, `keystone/__init__.py` and `pyproject.toml` together, and add a line to `CHANGELOG.md`.
 
+## Validity checks
+
+Three checks test the labels against measured behaviour and against physician-written artefacts rather than
+against another model, and none needs a key: `make anchors` regenerates `docs/BEHAVIOUR_ANCHOR.md`,
+`docs/RUBRIC_ANCHOR.md` and `docs/IDEAL_ANSWER_CHECK.md` at full resampling. The test suite runs the same three
+scripts end to end with the resampling turned down (`KEYSTONE_BOOT`, `KEYSTONE_PERM`, `KEYSTONE_NULL_DRAWS`),
+so CI catches a script that stops working on the current release without recomputing the published intervals. `make
+judge-rescore` rescores the shipped judge run after a scoring change, also without calling anything; only a
+judge or prompt change needs `make judge-check`, which does call a judge.
+
 ## Tests
 
 `python -m pytest -q` runs three groups, none of which needs a key: structural checks of the rebuilt release against the data card and schema (`tests/test_dataset.py`), the package API on fake models (`tests/test_package.py`), and the Inspect task on mock models (`tests/test_inspect_task.py`).

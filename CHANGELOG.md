@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.1 (2026-09-09)
+
+- `keystone build`: an installation from PyPI rebuilds the release without a checkout, fetching the label and edit files once from the matching tag. The build code moved into the package (`keystone/build.py`); `tools/build_release.py` is the same entry point for a checkout.
+- Three validity checks that need no key and no clinician. [`BEHAVIOUR_ANCHOR.md`](docs/BEHAVIOUR_ANCHOR.md): criterion validity from the shipped reference replies, where materiality separates a 0.57 drop in commitment from a 0.13 one while the paraphrase control stays flat, with a per-assistant breakdown and the applicability share as a second consequence. [`RUBRIC_ANCHOR.md`](docs/RUBRIC_ANCHOR.md): materiality against the physicians' own rubric, with three extent-controlled measures showing their point allocation carries signal of its own. [`IDEAL_ANSWER_CHECK.md`](docs/IDEAL_ANSWER_CHECK.md): the edited fact against HealthBench's physician-written ideal answers, with rare-term weighting, a same-theme null and a prominence measure.
+- Grader validity: the two low rows of `docs/JUDGE_CHECK.md` traced to a fixed expectation applied to items whose annotations differ (`tools/judge_diagnose.py`), scoring now reported against both a fixed and an item-conditional expectation, and the shipped judgements rescorable offline (`--from-records`).
+- The action prompt decides the three cases the judgements split on: content-free deferral is not an acceptable action, forbidden means a listed action taken rather than a shortcoming, and a question is decisive only if its answer changes which acceptable action applies. Not yet re-measured against a judge.
+- [`RELATED_WORK.md`](docs/RELATED_WORK.md): where Keystone sits against HealthBench, MedHELM, MediQ, CRAFT-MD, AgentClinic, EviMed, MamaBench and the Causal Sensitivity Score, including what is not ours.
+- `.zenodo.json` for archival metadata; 77 tests, which now run the three anchor scripts end to end.
+
 ## 0.4.0 (2026-09-06)
 
 - Decision–evidence layer: a decision frame per source and an evidence state with acceptable actions, forbidden actions, decisive questions and the fact a reply must not assume per twin; drafted by Claude Sonnet, reviewed by Codex, every disagreement released; the negative control's state is derived from the frame.

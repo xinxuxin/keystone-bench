@@ -35,10 +35,13 @@ def find_dist(path: str | os.PathLike | None = None) -> Path:
         candidates.append(Path(os.environ["KEYSTONE_DIST"]))
     candidates.append(Path(__file__).resolve().parent.parent / "dist")
     candidates.append(Path.cwd() / "dist")
+    # where `keystone build` writes when Keystone was installed rather than cloned
+    candidates.append(Path(os.environ.get("KEYSTONE_CACHE", Path.home() / ".cache" / "keystone")) / "dist")
     for c in candidates:
         if (c / "MANIFEST.json").exists():
             return c
-    raise FileNotFoundError("Keystone release directory not found; pass dist=... or set KEYSTONE_DIST to a directory containing MANIFEST.json")
+    raise FileNotFoundError("Keystone release directory not found. Run `keystone build` to rebuild it from HealthBench, "
+                            "or pass dist=... or set KEYSTONE_DIST to a directory containing MANIFEST.json")
 
 
 def load_rows(path: Path) -> list[dict]:

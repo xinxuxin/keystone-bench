@@ -17,7 +17,7 @@ from .prompts import BEHAVIOR_TEMPLATE, APPLICABILITY_TEMPLATE, GRADER_TEMPLATE,
 from .metrics import wilson, mcnemar_exact, healthbench_score, pair_outcomes, summarize, cohen_kappa
 from .runner import OpenAICompatible, evaluate, write_run
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 __all__ = ["FAMILIES", "CONDITIONS", "Pair", "find_dist", "load_pairs", "load_reference", "load_manifest",
            "BEHAVIOR_TEMPLATE", "APPLICABILITY_TEMPLATE", "GRADER_TEMPLATE", "parse_json",
            "wilson", "mcnemar_exact", "healthbench_score", "pair_outcomes", "summarize", "cohen_kappa",

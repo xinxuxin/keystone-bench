@@ -7,7 +7,7 @@ abstract: >-
   evidence state that follows, and scores both the assistant's action and the applicability of the
   physician rubric that grades it. Built on HealthBench (OpenAI, MIT).
 type: dataset
-version: "0.4.0"
+version: "0.4.1"
 license: MIT
 repository-code: "https://github.com/xinxuxin/keystone-bench"
 url: "https://xinxuxin.github.io/keystone-bench/"
