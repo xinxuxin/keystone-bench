@@ -47,11 +47,19 @@ def test_decode_reconstructs_a_span_reference():
     assert build.decode_obj({"note": "plain"}, source) == {"note": "plain"}
 
 
-def test_manifest_lists_every_built_file():
+def test_manifest_lists_every_file_the_build_produced():
+    """Every file the manifest names is on disk.
+
+    Not set equality: tools that run after the build legitimately add artefacts to the release directory
+    (`quality_checks.py` writes `quality_flags.jsonl` there), and the manifest is written during the build,
+    so it cannot list them. The hashes themselves are checked in `tests/test_dataset.py`."""
     dist = build.default_dist()
     man = json.loads((dist / "MANIFEST.json").read_text())
     on_disk = {str(p.relative_to(dist)) for p in list(dist.rglob("*.jsonl")) + [q for q in dist.glob("*.json") if q.name != "MANIFEST.json"]}
-    assert on_disk == set(man["files"])
+    missing = set(man["files"]) - on_disk
+    assert not missing, f"the manifest names files that are not in the release: {sorted(missing)}"
+    for required in ("keystone_twins.jsonl", "keystone_core.jsonl", "reference_results.json"):
+        assert required in man["files"], f"{required} must be in MANIFEST.json"
 
 
 def test_validity_anchors_are_present_and_say_what_they_measure():
