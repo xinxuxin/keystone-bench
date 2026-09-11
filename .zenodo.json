@@ -3,7 +3,7 @@
   "upload_type": "dataset",
   "license": "MIT",
   "access_right": "open",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "<p>Keystone takes each of 1,236 HealthBench conversations and pairs it with twins that change <strong>exactly one fact</strong>, in eight families including two negative controls, plus a paraphrase-only control that changes nothing. Every source carries a decision frame (what is being decided, the action the stated evidence supports, the facts it rests on) and every twin carries the evidence state that follows the edit, with the actions a clinician would accept or forbid on it. A judge from another vendor maps each reply to that annotation, so the outcomes are about actions and every judged item is in the denominator, and the physician rubric's applicability is scored alongside the model.</p><p>The repository stores the labels and edits we wrote plus span references into HealthBench, and rebuilds the release locally, so no HealthBench conversation is redistributed as prose. Every label is model-written and reviewed by a model from another vendor (<code>tier: silver</code>); rows confirmed by clinicians ship as <code>gold</code>, and results on this release must not be described as clinical validation.</p><p>Built on HealthBench (OpenAI, MIT).</p>",
   "creators": [
     {

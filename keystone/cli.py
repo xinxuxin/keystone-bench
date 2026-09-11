@@ -59,8 +59,13 @@ def cmd_validate(a):
                 print("OTHER TURNS differ", p.id); bad += 1
             if p.perturbed[k]["content"] == p.original[k]["content"]:
                 print("UNCHANGED twin", p.id); bad += 1
-            if p.in_core and p.family not in ("salient_distractor", "demographic_control") and p.materiality_majority != 3:
-                print("CORE without materiality 3", p.id); bad += 1
+            # demographic_shift is screened on its own label from 0.5.0: a changed demographic makes a
+            # different action right, which the 1 to 3 scale calls 2, so materiality 3 is the wrong gate there
+            floor = 2 if p.family == "demographic_shift" else 3
+            if p.in_core and p.family not in ("salient_distractor", "demographic_control") and (p.materiality_majority or 0) < floor:
+                print(f"CORE below the materiality floor of {floor}", p.id); bad += 1
+            if p.in_core and p.family == "demographic_shift" and p.meta.get("advice_should_change") != "yes":
+                print("CORE demographic twin whose advice should not change", p.id); bad += 1
             if p.in_strict and not p.in_core:
                 print("STRICT outside core", p.id); bad += 1
     # the reference records must reproduce the headline numbers of the reference results

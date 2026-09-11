@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0 (2026-09-11)
+
+- **`demographic_shift` is screened on its own label.** Materiality 3 reads "the original definitive answer is no longer justified", which is what a removal does; a demographic change makes a *different* action right, which a rater following the scale calls 2. The family was losing 608 twins that `advice_should_change`, written in a separate labelling pass, says change the advice. The core layer now takes the family on that label with materiality 2 as the floor: 220 twins to 906, strict 216 to 735, core overall 4,803 to 5,489. Numbers computed on `demographic_shift` under 0.4.x are not comparable with 0.5.0.
+- The 181 `demographic_shift` twins whose label says the advice should **not** change are treated as what they are: out of every layer, shipped in `all` flagged `acts_as_control`, counted in the manifest. Previously the flag required an annotated evidence state and fired on none of them.
+
 ## 0.4.1 (2026-09-09)
 
 - `keystone build`: an installation from PyPI rebuilds the release without a checkout, fetching the label and edit files once from the matching tag. The build code moved into the package (`keystone/build.py`); `tools/build_release.py` is the same entry point for a checkout.

@@ -31,7 +31,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-VERSION = "0.4.1"
+VERSION = "0.5.0"
 CACHE = Path(os.environ.get("KEYSTONE_CACHE", Path.home() / ".cache" / "keystone"))
 RAW = "https://raw.githubusercontent.com/xinxuxin/keystone-bench/v{version}/release/{name}"
 RELEASE_FILES = ("metadata.jsonl", "edits.jsonl", "reference_ids.json", "reference_results.json",
@@ -128,12 +128,28 @@ def paraphrase_ok(t: dict, flags: list[str]) -> bool:
 
 
 def is_core(t: dict, flags: list[str]) -> bool:
-    """No mechanical defect, and the three raters' median materiality is what the family requires:
-    3 (decision-changing) for a perturbation, 1 (irrelevant) for the negative control."""
+    """No mechanical defect, and the edit is material in the terms its own family is written in.
+
+
+    For most families that is the raters' median materiality: 3 for a perturbation, 1 for a negative
+    control. `demographic_shift` is scored differently, and the reason is in the scale. Materiality 3 reads
+    "the original definitive answer is no longer justified", which is what removing a fact does; changing a
+    demographic does something else, it makes a *different* action the right one, and a rater following the
+    scale calls that 2. The family therefore lost 608 twins that its own purpose-built label
+    (`advice_should_change`, written in a separate pass) says change the advice. Here it is screened on that
+    label instead, with materiality 2 as the floor so that a twin every rater called inert stays out, and
+    the twins whose label says the advice should *not* change are treated as what they are, controls."""
     if twin_defect(flags):
         return False
     if t["family"] in CONTROLS:
         return t.get("materiality_majority") == 1
+    if t["family"] == "demographic_shift":
+        # A twin whose label says the advice should not change expects the opposite behaviour from the rest
+        # of its family, so it stays out of the layer rather than diluting it. It ships in `all`, flagged
+        # `acts_as_control`, and the manifest counts it.
+        if t.get("advice_should_change") != "yes":
+            return False
+        return (t.get("materiality_majority") or 0) >= 2
     return t.get("materiality_majority") == 3
 
 
@@ -271,7 +287,10 @@ def build(dist: Path, cache: Path, release: Path | None = None) -> int:
         t["tier"] = "silver"            # model-drafted and model-reviewed; gold once clinicians confirm
         t["clinician_confirmed"] = None
         t["state_consistent"] = state_consistent(t)
-        t["acts_as_control"] = bool(t["family"] == "demographic_shift" and t.get("advice_should_change") == "no" and t.get("evidence_state") == "sufficient_for_original_action")
+        # A demographic twin whose own label says the advice should not change is a control, whether or not a
+        # state was annotated for it: the evidence still supports the original action by construction.
+        t["acts_as_control"] = bool(t["family"] == "demographic_shift" and t.get("advice_should_change") == "no"
+                                    and t.get("evidence_state") in (None, "sufficient_for_original_action"))
         t["state_review_behaviour_agree"] = review_behaviour_agree(t)
         # primary layer: strict, the state agrees with the family's design, and the second reviewer did not disagree with the
         # behaviour the state calls for (ask / change / escalate / hold)

@@ -1,6 +1,6 @@
 {
- "version": "0.4.1",
- "built": "2026-09-11T17:14:12+00:00",
+ "version": "0.5.0",
+ "built": "2026-09-11T17:23:40+00:00",
  "healthbench": {
   "url": "https://openaipublic.blob.core.windows.net/simple-evals/healthbench/2025-05-07-06-14-12_oss_eval.jsonl",
   "sha256": "e99dd3c6372c10d6fcc5e385c5fae69d0dd40392dae56836ef9493ae324ecd2f"
@@ -21,9 +21,9 @@
   "healthbench_style/demographic_control__original.jsonl": "8a65fd4b71f81cf38748fe73574ae35416269b1d2fc029f7107bdf344038b9c3",
   "healthbench_style/demographic_control__paraphrase.jsonl": "03131a79504d54d53711986991626152c1560d5f3d8689fb1ffea3ac7079eabf",
   "healthbench_style/demographic_control__perturbed.jsonl": "1315134823a838ea754faa856bfb46a017fde3d2827e6e2c424cf2ef7a042da1",
-  "healthbench_style/demographic_shift__original.jsonl": "8bb86ea1eab1d194befb43cab3b37b6210f0cb8fddac623d41a85e7b169a05f2",
-  "healthbench_style/demographic_shift__paraphrase.jsonl": "f2b2aa5df80931a0c3cf7b8038a07dd95e998714e22fe25ad4c26e3fa70e0cbc",
-  "healthbench_style/demographic_shift__perturbed.jsonl": "a1d534e5fc9753b273fe8ffe826ad5127099313feae4cd51736ab05d9b83312b",
+  "healthbench_style/demographic_shift__original.jsonl": "f8419eca8012488ca52fc0ed1a20f42442d80af072eb8fca33339ffbecf44d4a",
+  "healthbench_style/demographic_shift__paraphrase.jsonl": "2fc3c0db1c5fae20c35c4e67732189639f1119a559a8feffb4b7ed1aeb0ab514",
+  "healthbench_style/demographic_shift__perturbed.jsonl": "c7b41e3dbcdd0bdc61cb82c3b0e80f4878efd534d1e2871fe5e186327857217e",
   "healthbench_style/missing_evidence__original.jsonl": "ec7ee74422fac905211388215950bf44c598f9234c16c2f795be0e9bb29b0c52",
   "healthbench_style/missing_evidence__paraphrase.jsonl": "3486ae8d672241ea47be242788630388d5dc60a6a0e8a70e74dcd8399d8244e2",
   "healthbench_style/missing_evidence__perturbed.jsonl": "b06dc7c00d5825adf61842fef5013e5c2ac160ced122fc5ba0bf93bb3713f5ea",
@@ -34,8 +34,8 @@
   "healthbench_style/salient_distractor__original.jsonl": "6f845f7c027fc0a58e54240e15baf2ac314c4f66e42f72d045cd5682a7c8fc0b",
   "healthbench_style/salient_distractor__paraphrase.jsonl": "7c7fc87f60b4ac7fbd0526461464fc03e25eb99f72dbd5f103350e13be82f3ff",
   "healthbench_style/salient_distractor__perturbed.jsonl": "b9e86875a17d1b306ab43e7e1a609ce40f44cdc606aee36f0e61cb7589da0bc1",
-  "keystone_core.jsonl": "089d9d9fd60ecabe07aca8156e0fed4724cc9fd1400b4d127cdd35b7a7a5aaac",
-  "keystone_twins.jsonl": "d1861d7fc3b1dff04ffc51abb8b0debad05acf003a4d302badbb5cbe0de3abd3",
+  "keystone_core.jsonl": "f0d6e7d7fd2f6800de0de74a33238d31994291cc6cd1e26a6cdbe939a50857d3",
+  "keystone_twins.jsonl": "de36bbe0d870320f5c5b0c1f59af39835f10913592532505ccaaa503353d59b2",
   "reference_records.jsonl": "730438adf19f082afc943f9879e39abd0b0a5f913cecaf765de750ff68c7dc56",
   "reference_results.json": "60b1762a19adfec51c3737d4ee3baec975dd806c041ab23b8db4c4bc081ddaef"
  }

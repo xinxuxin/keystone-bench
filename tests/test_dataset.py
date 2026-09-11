@@ -141,15 +141,23 @@ def test_quality_flags_present_and_core_excludes_defects(twins, core):
 
 
 def test_core_definition(twins, core):
+    """Core is materiality 3, except where the family's own label says what material means for it.
+
+    `demographic_shift` makes a different action right rather than leaving none justified, which a rater
+    following the 1 to 3 scale calls 2, so from 0.5.0 it is screened on `advice_should_change` with
+    materiality 2 as the floor, and the twins whose advice should not change stay out of the layer."""
     def is_core(t):
         if [f for f in t["quality_flags"] if not f.startswith("C5")]:
             return False
+        if t["family"] == "demographic_shift":
+            return t.get("advice_should_change") == "yes" and (t.get("materiality_majority") or 0) >= 2
         want = 1 if t["family"] in CONTROL_FAMILIES else 3
         return t.get("materiality_majority") == want
     expect = {(t["prompt_id"], t["family"]) for t in twins if is_core(t)}
     got = {(t["prompt_id"], t["family"]) for t in core}
     assert expect == got
     assert all(t["in_core"] for t in core)
+    assert not any(t["in_core"] for t in twins if t.get("acts_as_control")), "a control must not sit in a perturbation layer"
 
 
 def test_paraphrase_release_rule(twins):
@@ -399,9 +407,13 @@ def test_evidence_states_and_primary(twins, manifest):
             assert t["family"] == "demographic_shift" and t.get("advice_should_change") == "no"
     assert manifest["counts"]["primary"] == sum(1 for t in twins if t["in_primary"])
     assert manifest["counts"]["twins_with_evidence_state"] == sum(1 for t in twins if t.get("evidence_state"))
-    # every annotated perturbation twin of the three base perturbation families in the strict layer carries a state
-    strict_pert = [t for t in twins if t["in_strict"] and t["family"] in ("missing_evidence", "conflicting_evidence", "demographic_shift")]
-    assert sum(1 for t in strict_pert if t.get("evidence_state")) / len(strict_pert) > 0.95
+    # The guarantee that matters: the action outcomes need a state, so the primary layer must always have one.
+    assert all(t.get("evidence_state") for t in twins if t["in_primary"]), "primary without an evidence state"
+    # The two families annotated at scale keep their coverage. `demographic_shift` does not: widening its core
+    # in 0.5.0 admitted twins whose state was never annotated, so they are scorable on stance and not on action.
+    for fam in ("missing_evidence", "conflicting_evidence"):
+        sp = [t for t in twins if t["in_strict"] and t["family"] == fam]
+        assert sum(1 for t in sp if t.get("evidence_state")) / len(sp) > 0.95, fam
 
 
 def test_decision_frames_and_alternative_family(twins, manifest):

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "keystone-bench"
-version = "0.4.1"
+version = "0.5.0"
 description = "Paired evidence-perturbation stress tests for clinical chat assistants and their rubric graders (built on HealthBench)"
 readme = "README.md"
 license = { text = "MIT" }

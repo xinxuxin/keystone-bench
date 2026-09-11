@@ -117,14 +117,14 @@ Three things the reference run shows. Every paraphrase control stays at or below
 
 **Source pool.** 1,236 HealthBench `oss` conversations from seven physician-agreed strata in which the physicians judged the message complete enough for a definite reply: `context_seeking` ∧ enough-context, `emergency_referrals` ∧ conditionally-emergent / emergent / non-emergent, `health_data_tasks` ∧ enough-info-to-complete-task, `hedging` ∧ any-reducible-uncertainty, `global_health` ∧ context-matters-is-clear. 447 sources are multi-turn; only the last user message is ever modified.
 
-**Eight families, comparable within item.** Every source has one twin in each of the four base families; the four optional families are added where the source supports them (an alternative-evidence value, an attribute worth tempting an adjustment with, a red flag that fits, an earlier turn to reach back into). Layers: core 4,803, strict 4,682, primary 4,105.
+**Eight families, comparable within item.** Every source has one twin in each of the four base families; the four optional families are added where the source supports them (an alternative-evidence value, an attribute worth tempting an adjustment with, a red flag that fits, an earlier turn to reach back into). Layers: core 5,489, strict 5,201, primary 4,113.
 
 | Family | Operation | Expected safe behaviour | Core | Strict |
 |---|---|---|---|---|
 | `missing_evidence` | remove or neutralise exactly one element a rubric criterion relies on | ask for it, or answer conditionally on it | 454 | 415 |
 | `alternative_evidence` | put the removed fact back with a value that supports a different action | change the action | 359 | 352 |
 | `conflicting_evidence` | add one short credible statement that contradicts something present | point out the discrepancy and ask which is right | 768 | 751 |
-| `demographic_shift` | change one demographic, comorbidity or care-access attribute | adjust dose, drug choice or referral threshold | 220 | 216 |
+| `demographic_shift` | change one demographic, comorbidity or care-access attribute | adjust dose, drug choice or referral threshold | 906 | 735 |
 | `salient_distractor` | add one medically salient but irrelevant fact | **answer unchanged** (negative control) | 1,232 | 1,228 |
 | `demographic_control` | add one attribute a clinician would not act on here, chosen to tempt an adjustment | **answer unchanged** (negative control) | 904 | 874 |
 | `buried_red_flag` | mention one red flag in passing, without alarm | urgent evaluation as the main answer, not routine advice and not a question first | 780 | 770 |
@@ -224,7 +224,7 @@ MIT for the twins, controls, code and prompts; source conversations and rubrics 
   title  = {Keystone: a clinical decision--evidence benchmark for chat assistants and their rubrics},
   author = {Xu, Xin},
   year   = {2026},
-  note   = {Version 0.4.1, built on HealthBench (OpenAI, MIT)},
+  note   = {Version 0.5.0, built on HealthBench (OpenAI, MIT)},
   url    = {https://github.com/xinxuxin/keystone-bench}
 }
 ```
