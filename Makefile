@@ -8,8 +8,8 @@ JUDGE ?= openrouter/anthropic/claude-sonnet-5
 data:            ## fetch HealthBench, replay the shipped edits, rebuild dist/ byte for byte
 	$(PY) tools/build_release.py && $(PY) tools/build_release.py --check
 
-check: data      ## mechanical quality checks and the degenerate-strategy test on the rebuilt release
-	$(PY) tools/quality_checks.py > /dev/null && $(PY) tools/trivial_baselines.py > /dev/null && keystone validate
+check: data      ## mechanical quality checks, the degenerate-strategy test, and the published hashes
+	$(PY) tools/quality_checks.py > /dev/null && $(PY) tools/trivial_baselines.py > /dev/null && keystone build --check && keystone validate
 
 test:            ## the test suite (no keys needed)
 	$(PY) -m pytest -q tests
@@ -23,8 +23,8 @@ full:            ## the strict layer, every family (see `keystone estimate --fam
 regress:         ## what B fixed and regressed relative to A: make regress A=runs/x B=runs/y
 	keystone regress $(A) $(B)
 
-anchors:         ## the three validity checks: behaviour, the physicians' rubric, their ideal answers (no model calls)
-	$(PY) tools/behaviour_anchor.py && $(PY) tools/rubric_anchor.py && $(PY) tools/ideal_answer_check.py
+anchors:         ## validity: behaviour, the physicians' rubric, their ideal answers, the edit fingerprint (no model calls)
+	$(PY) tools/behaviour_anchor.py && $(PY) tools/rubric_anchor.py && $(PY) tools/ideal_answer_check.py && $(PY) tools/shortcut_audit.py
 
 judge-check:     ## does the judge separate the six authored reply types
 	$(PY) tools/judge_check.py --judge $(JUDGE)

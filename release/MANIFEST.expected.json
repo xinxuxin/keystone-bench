@@ -1,0 +1,42 @@
+{
+ "version": "0.4.1",
+ "built": "2026-09-11T17:14:12+00:00",
+ "healthbench": {
+  "url": "https://openaipublic.blob.core.windows.net/simple-evals/healthbench/2025-05-07-06-14-12_oss_eval.jsonl",
+  "sha256": "e99dd3c6372c10d6fcc5e385c5fae69d0dd40392dae56836ef9493ae324ecd2f"
+ },
+ "note": "sha256 of every file a rebuild must reproduce; `keystone build --check` compares against this.",
+ "files": {
+  "contrastive_replies.jsonl": "26146462b247475725cf90cad2b9a830a2e81c65c91d603379f503beb2f2d7c0",
+  "decision_frames.jsonl": "f94f8ca244ed9b366f2fd3c832fd87732f32c23679223bbe70744444e785e004",
+  "healthbench_style/alternative_evidence__original.jsonl": "ad99b53fcce5d485029c2d12d0c986553d7f8251cdef76fff71f400ade2821b5",
+  "healthbench_style/alternative_evidence__paraphrase.jsonl": "a1db748f745ddaf359bfb2b296dab8eb7f2e0843a145a1df9b49e5200cf2389a",
+  "healthbench_style/alternative_evidence__perturbed.jsonl": "78644ce588238210cb67bad19556361e77790c09016a76fcb9b80780703d2a03",
+  "healthbench_style/buried_red_flag__original.jsonl": "f6fb7efed2044a8d542177c96466d7508a779e6e81f4f1d8bd5e421d4fba6e6d",
+  "healthbench_style/buried_red_flag__paraphrase.jsonl": "f44ad5f49f2dd4b4d05996b5fbe211b63cbf31265a3fc2a0db80e1baf891c8c7",
+  "healthbench_style/buried_red_flag__perturbed.jsonl": "73c0c46a2fe73c70059fe17dd627055d2f103d1281db6d109d51f84392e4bc8e",
+  "healthbench_style/conflicting_evidence__original.jsonl": "f9d9eb5e04989d23fd637df3c578c7a6defb8b03ab37ae14991ed2a8c54ebd35",
+  "healthbench_style/conflicting_evidence__paraphrase.jsonl": "cc04e91b8e2389e5e139185b4dcfad426f101f19c339b860f171731d53c12977",
+  "healthbench_style/conflicting_evidence__perturbed.jsonl": "d1001c28d661da4e61f00284e23bcc98ecc6fa3a0b60bea0c143339f087f84a3",
+  "healthbench_style/demographic_control__original.jsonl": "8a65fd4b71f81cf38748fe73574ae35416269b1d2fc029f7107bdf344038b9c3",
+  "healthbench_style/demographic_control__paraphrase.jsonl": "03131a79504d54d53711986991626152c1560d5f3d8689fb1ffea3ac7079eabf",
+  "healthbench_style/demographic_control__perturbed.jsonl": "1315134823a838ea754faa856bfb46a017fde3d2827e6e2c424cf2ef7a042da1",
+  "healthbench_style/demographic_shift__original.jsonl": "8bb86ea1eab1d194befb43cab3b37b6210f0cb8fddac623d41a85e7b169a05f2",
+  "healthbench_style/demographic_shift__paraphrase.jsonl": "f2b2aa5df80931a0c3cf7b8038a07dd95e998714e22fe25ad4c26e3fa70e0cbc",
+  "healthbench_style/demographic_shift__perturbed.jsonl": "a1d534e5fc9753b273fe8ffe826ad5127099313feae4cd51736ab05d9b83312b",
+  "healthbench_style/missing_evidence__original.jsonl": "ec7ee74422fac905211388215950bf44c598f9234c16c2f795be0e9bb29b0c52",
+  "healthbench_style/missing_evidence__paraphrase.jsonl": "3486ae8d672241ea47be242788630388d5dc60a6a0e8a70e74dcd8399d8244e2",
+  "healthbench_style/missing_evidence__perturbed.jsonl": "b06dc7c00d5825adf61842fef5013e5c2ac160ced122fc5ba0bf93bb3713f5ea",
+  "healthbench_style/missing_evidence_early__original.jsonl": "cba3029f3e53ea2046b57f8cb0107b5a82d2fa13c2aae27c92bf6a34d97a8f58",
+  "healthbench_style/missing_evidence_early__paraphrase.jsonl": "6690153c0764ec4b4f2bcee2bf2730c0bc6f1dcd133b1ea5da67a522f88e0d7f",
+  "healthbench_style/missing_evidence_early__perturbed.jsonl": "7364fdaa020a8e34b7c4b027cb5bcac812ab3c46641d6c5b4b2b41f76b3da40f",
+  "healthbench_style/reference__natural_missing.jsonl": "6e3b98f3be81ec98ad656454112ea814491614fc2ac66d29a3a8929621122fd5",
+  "healthbench_style/salient_distractor__original.jsonl": "6f845f7c027fc0a58e54240e15baf2ac314c4f66e42f72d045cd5682a7c8fc0b",
+  "healthbench_style/salient_distractor__paraphrase.jsonl": "7c7fc87f60b4ac7fbd0526461464fc03e25eb99f72dbd5f103350e13be82f3ff",
+  "healthbench_style/salient_distractor__perturbed.jsonl": "b9e86875a17d1b306ab43e7e1a609ce40f44cdc606aee36f0e61cb7589da0bc1",
+  "keystone_core.jsonl": "089d9d9fd60ecabe07aca8156e0fed4724cc9fd1400b4d127cdd35b7a7a5aaac",
+  "keystone_twins.jsonl": "d1861d7fc3b1dff04ffc51abb8b0debad05acf003a4d302badbb5cbe0de3abd3",
+  "reference_records.jsonl": "730438adf19f082afc943f9879e39abd0b0a5f913cecaf765de750ff68c7dc56",
+  "reference_results.json": "60b1762a19adfec51c3737d4ee3baec975dd806c041ab23b8db4c4bc081ddaef"
+ }
+}

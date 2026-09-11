@@ -14,7 +14,7 @@ A clinical decision–evidence benchmark for chat assistants, and for the rubric
   <img alt="One decision seen in three evidence states: the evidence settles it, the fact is removed so two actions are possible, the fact is replaced so another action is correct" src="assets/three-states.svg" width="820">
 </picture>
 
-[Project page](https://xinxuxin.github.io/keystone-bench/) (English · 中文 · Español · 日本語) · [Data card](docs/DATA_CARD.md) · [Schema](docs/SCHEMA.md) · [Protocol](docs/PROTOCOL.md) · [Results](docs/RESULTS.md) · [Grader check](docs/JUDGE_CHECK.md) · [Related work](docs/RELATED_WORK.md) · [Contributing](CONTRIBUTING.md)
+[Project page](https://xinxuxin.github.io/keystone-bench/) (English · 中文 · Español · 日本語) · [Data card](docs/DATA_CARD.md) · [Schema](docs/SCHEMA.md) · [Protocol](docs/PROTOCOL.md) · [Results](docs/RESULTS.md) · [Grader check](docs/JUDGE_CHECK.md) · [Shortcut audit](docs/SHORTCUT_AUDIT.md) · [Related work](docs/RELATED_WORK.md) · [Contributing](CONTRIBUTING.md)
 
 ![tests](https://github.com/xinxuxin/keystone-bench/actions/workflows/ci.yml/badge.svg) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![twins](https://img.shields.io/badge/twins-7%2C318-8a2be2) ![sources](https://img.shields.io/badge/HealthBench%20sources-1%2C236-8a2be2) ![clinicians](https://img.shields.io/badge/clinician%20collaborators-100%2B-0a84ff) [![pypi](https://img.shields.io/pypi/v/keystone-bench?color=8a2be2)](https://pypi.org/project/keystone-bench/)
 
@@ -48,7 +48,7 @@ measured   did the reply stay definitive on the twin without naming the gap, and
 | **Reference set** | 153 conversations that naturally lack decisive information, unperturbed |
 | **Reference results** | five assistants, every reply and its classification shipped (`release/reference_records.jsonl`) |
 | **Grader validity** | six authored replies with intended labels per item (166 items); the action judge separates unsupported commitment from correct replies at 0.90 to 0.99 with GPT-4.1 as judge ([`docs/JUDGE_CHECK.md`](docs/JUDGE_CHECK.md)) |
-| **Auditable** | `MANIFEST.json` with SHA-256 of every file, 77 tests that need no key, a degenerate-strategy check that no fixed policy can win, three validity checks against behaviour and physician-written artefacts we did not produce, and every rater disagreement released |
+| **Auditable** | published SHA-256 per file that your own rebuild is checked against, 79 tests that need no key, a degenerate-strategy check that no fixed policy can win, three validity checks against behaviour and physician-written artefacts we did not produce, an audit of whether the edit leaves a fingerprint a model could answer instead of the evidence, and every rater disagreement released |
 
 ## Quickstart
 
@@ -57,6 +57,7 @@ The library is on PyPI. The twins are not: the release ships span references rat
 ```bash
 pip install keystone-bench
 keystone build                   # fetches HealthBench (OpenAI, MIT) and the label files, rebuilds the release locally
+keystone build --check           # your rebuild against the hashes this repository publishes, file by file
 keystone pairs                   # what is in the release, per family and layer
 keystone reference               # the five-model reference results
 keystone show 0cdca736           # one source: original, twins, control, decision frame, evidence state, what each reference model did
@@ -186,7 +187,7 @@ None of the three is adjudication: clinician review of a stratified subset follo
 
 ## How the data is distributed
 
-HealthBench is MIT, and its authors ask that items not be posted as plain text on the open web. This repository therefore contains what we wrote and nothing of theirs: `release/metadata.jsonl` holds every label and rationale, and `release/edits.jsonl` holds, per twin, the words we added plus `[start, end]` references into the HealthBench message they edit. `tools/build_release.py` downloads HealthBench from OpenAI's public URL, replays the edits, applies the layer rules, and writes `dist/` with the same SHA-256 per file as the release the reference results were computed on. The canary string is preserved in every row.
+HealthBench is MIT, and its authors ask that items not be posted as plain text on the open web. This repository therefore contains what we wrote and nothing of theirs: `release/metadata.jsonl` holds every label and rationale, and `release/edits.jsonl` holds, per twin, the words we added plus `[start, end]` references into the HealthBench message they edit. `tools/build_release.py` downloads HealthBench from OpenAI's public URL, replays the edits, applies the layer rules, and writes `dist/` with the same SHA-256 per file as the release the reference results were computed on. Those hashes are committed as [`release/MANIFEST.expected.json`](release/MANIFEST.expected.json), so `keystone build --check` compares your rebuild against this repository rather than against itself, and the manifest covers exactly the files the build wrote. The canary string is preserved in every row.
 
 ## Repository layout
 
@@ -195,9 +196,9 @@ HealthBench is MIT, and its authors ask that items not be posted as plain text o
 | `release/` | **What we wrote**: `metadata.jsonl` (labels and ratings per twin), `edits.jsonl` (our text plus span references), `reference_ids.json`, `reference_results.json`, `reference_records.jsonl` |
 | `dist/` | **Built locally**, never committed: `healthbench_style/` (13 JSONL files in HealthBench's schema), `keystone_twins.jsonl`, `keystone_core.jsonl`, `MANIFEST.json`, data card |
 | `keystone/` | The package: `data.py` (pairs), `prompts.py` (the three graders), `metrics.py` (outcomes, Wilson, McNemar, kappa), `runner.py` (any-provider evaluation), `cli.py`, `inspect_task.py` |
-| `tools/` | `build_release.py` (rebuild and verify, same code as `keystone build`), `quality_checks.py` (C1 to C8, no model), `trivial_baselines.py` (the metrics cannot be gamed), `rubric_anchor.py`, `ideal_answer_check.py` and `behaviour_anchor.py` (the three validity anchors), `judge_check.py` and `judge_diagnose.py` (grader validity) |
-| `tests/` | 77 tests, no keys: release structure against the data card and schema, package API on fake models, Inspect task on mock models, the rebuild path a PyPI install takes |
-| `docs/` | Data card, field schema (including the decision–evidence fields), protocol (section 11: the 0.4.0 construct), results table, per-item report, applicability-judge agreement, grader validity, the three anchors, related work |
+| `tools/` | `build_release.py` (rebuild and verify, same code as `keystone build`), `quality_checks.py` (C1 to C8, no model), `trivial_baselines.py` (the metrics cannot be gamed), `rubric_anchor.py`, `ideal_answer_check.py` and `behaviour_anchor.py` (the three validity anchors), `judge_check.py` and `judge_diagnose.py` (grader validity), `shortcut_audit.py` (is the edit answerable from its fingerprint) |
+| `tests/` | 79 tests, no keys: release structure against the data card and schema, package API on fake models, Inspect task on mock models, the rebuild path a PyPI install takes |
+| `docs/` | Data card, field schema (including the decision–evidence fields), protocol (section 11: the 0.4.0 construct), results table, per-item report, applicability-judge agreement, grader validity, the three anchors, the shortcut audit, related work |
 | `site/` | The project page |
 
 ## Clinician panel

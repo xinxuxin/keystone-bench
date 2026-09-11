@@ -68,12 +68,14 @@ def test_validity_anchors_are_present_and_say_what_they_measure():
         "BEHAVIOUR_ANCHOR.md": ("Dropped commitment on the twin", "Dropped on the paraphrase (control)", "Per assistant"),
         "RUBRIC_ANCHOR.md": ("Primary comparison", "Reaching the criterion the physicians weighted highest", "Anchoring"),
         "IDEAL_ANSWER_CHECK.md": ("Removal families", "Same-theme null", "negative control"),
+        "SHORTCUT_AUDIT.md": ("How visible is each edit", "length only", "What the edits repeat"),
     }
     for name, needles in docs.items():
         txt = (ROOT / "docs" / name).read_text()
         for n in needles:
             assert n in txt, f"{name} no longer reports {n!r}; regenerate it with make anchors"
-        assert "tier: silver" in txt or "`silver`" in txt, f"{name} must keep the tier statement"
+        if name != "SHORTCUT_AUDIT.md":
+            assert "tier: silver" in txt or "`silver`" in txt, f"{name} must keep the tier statement"
 
 
 def test_the_three_anchors_run_end_to_end(tmp_path):
@@ -85,12 +87,42 @@ def test_the_three_anchors_run_end_to_end(tmp_path):
     import subprocess
     import sys
 
-    env = {**os.environ, "KEYSTONE_BOOT": "40", "KEYSTONE_PERM": "200", "KEYSTONE_NULL_DRAWS": "3"}
+    env = {**os.environ, "KEYSTONE_BOOT": "40", "KEYSTONE_PERM": "200", "KEYSTONE_NULL_DRAWS": "3", "KEYSTONE_EPOCHS": "3"}
     for script, needle in (("rubric_anchor.py", "Reaching the criterion the physicians weighted highest"),
                            ("ideal_answer_check.py", "Same-theme null"),
-                           ("behaviour_anchor.py", "Dropped on the paraphrase (control)")):
+                           ("behaviour_anchor.py", "Dropped on the paraphrase (control)"),
+                           ("shortcut_audit.py", "Does the fingerprint explain the behaviour")):
         out = tmp_path / f"{script}.md"
         r = subprocess.run([sys.executable, str(ROOT / "tools" / script), "--out", str(out)],
                            capture_output=True, text=True, env=env, cwd=ROOT)
         assert r.returncode == 0, f"{script} failed: {r.stderr[-800:]}"
         assert needle in out.read_text(), f"{script} no longer reports {needle!r}"
+
+
+def test_published_hashes_are_committed_and_match_the_rebuild():
+    """The claim is that a rebuild is byte for byte the release the numbers were computed on.
+
+    That is only checkable if the hashes live in the repository rather than in the manifest the rebuild
+    just wrote, so the release ships them and this test compares the built dist against them."""
+    import hashlib
+
+    exp = json.loads((ROOT / "release" / build.EXPECTED).read_text())
+    assert exp["version"] == build.VERSION, "the published hashes are for another version; rerun --record-expected"
+    assert exp["healthbench"]["sha256"], "record the hash of the HealthBench copy the release was built from"
+    dist = build.default_dist()
+    bad = [rel for rel, h in exp["files"].items()
+           if not (dist / rel).exists() or hashlib.sha256((dist / rel).read_bytes()).hexdigest() != h]
+    assert not bad, f"the rebuild differs from the published release on {bad[:3]}"
+
+
+def test_the_published_hash_check_fails_on_a_changed_file(tmp_path):
+    """A check that cannot fail is not a check."""
+    import shutil
+
+    dist = build.default_dist()
+    copy = tmp_path / "dist"
+    copy.mkdir()
+    for name in ("MANIFEST.json", "keystone_twins.jsonl"):
+        shutil.copy(dist / name, copy / name)
+    (copy / "keystone_twins.jsonl").write_text((copy / "keystone_twins.jsonl").read_text() + "\n")
+    assert build.check(copy, ROOT / "release") == 1

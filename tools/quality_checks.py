@@ -11,6 +11,7 @@ model ratings, so the defect screen underneath them must not.
     C6  leakage                no meta-language ("the removed", "as an AI", "rubric", ...)
     C7  cross-family duplicate two families of one source wrote nearly the same text
     C8  paraphrase == perturbed
+    C9R templated insertion    the added text reuses vocabulary that carries a large share of its family
 
 Writes `dist/quality_report.md` and `dist/quality_flags.jsonl`. Run `tools/build_release.py` first.
 Usage: python tools/quality_checks.py
@@ -26,6 +27,18 @@ META = re.compile(r"\b(as an AI|note that|the removed|perturbed|rubric|benchmark
 NUM = re.compile(r"\d+(?:\.\d+)?")
 # Negation counting must see contractions, or "no dryness" -> "don't have dryness" reads as drift
 NEG = re.compile(r"(\b(?:no|not|never|none|without|denies|negative|nor|lack(?:s|ing)?|absent|free of)\b|n't\b)", re.I)
+WORD = re.compile(r"[a-z']{4,}")
+# A template term is one the authors reach for again and again in a family: frequent in that family's
+# insertions and rare in the source messages themselves, which is what separates clinical furniture
+# ("osteoarthritis" in a third of the distractors) from ordinary discourse ("though", "last"). Review, not
+# defect: it does not decide core or strict membership.
+TEMPLATE_SHARE = 0.08
+TEMPLATE_LIFT = 4.0
+TEMPLATE_STOP = set("""about after again also always another because been before being could doesn't don't during either
+every from have having here it's i'm i've just like little maybe might more most much myself never night only other over
+really right same since some something still such sure than that their them then there these they this those thing
+through very weeks what when where which while will with without would years your yesterday lately sometimes probably
+actually""".split())
 
 
 def norm(s: str) -> str:
@@ -54,6 +67,26 @@ def main():
                 a, b = norm(ts[i]["perturbed_prompt"]).strip(), norm(ts[j]["perturbed_prompt"]).strip()
                 if a and b and ratio(a, b) < 0.02:
                     near_dup.add((pid, ts[i]["family"])); near_dup.add((pid, ts[j]["family"]))
+    # C9R needs a first pass: how much of each family's inserted vocabulary is shared across its sources
+    inserted = {}
+    fam_df, fam_n = defaultdict(Counter), Counter()
+    for t in twins:
+        o = set(WORD.findall((t["original_prompt"] or "").lower()))
+        e = set(WORD.findall((t["perturbed_prompt"] or "").lower()))
+        new_terms = {w for w in e - o if w not in TEMPLATE_STOP}
+        inserted[(t["prompt_id"], t["family"])] = new_terms
+        if new_terms:
+            fam_n[t["family"]] += 1
+            fam_df[t["family"]].update(new_terms)
+    base = Counter()
+    for pid, ts in by_src.items():
+        base.update(set(WORD.findall((ts[0]["original_prompt"] or "").lower())))
+    n_src = max(len(by_src), 1)
+    templated = {fam: {w for w, c in df.items()
+                       if c >= max(TEMPLATE_SHARE * fam_n[fam], 5)
+                       and (c / fam_n[fam]) >= TEMPLATE_LIFT * (base[w] / n_src + 1e-6)}
+                 for fam, df in fam_df.items()}
+
     for t in twins:
         f = []
         s = src.get(t["prompt_id"])
@@ -94,8 +127,14 @@ def main():
                 f.append("C5_paraphrase_numbers_changed")
             if len(NEG.findall(para)) != len(NEG.findall(op)):
                 f.append("C5R_paraphrase_negation_count_differs")  # R = review, not a defect: English negates many ways
+        hit = sorted(inserted.get((t["prompt_id"], t["family"]), set()) & templated.get(t["family"], set()))
+        if hit:
+            f.append("C9R_templated_insertion")
         if f:
-            flags.append({"prompt_id": t["prompt_id"], "family": t["family"], "flags": f})
+            rec = {"prompt_id": t["prompt_id"], "family": t["family"], "flags": f}
+            if hit:
+                rec["templated_terms"] = hit[:5]
+            flags.append(rec)
     (ROOT / "dist/quality_flags.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in flags))
     cnt = Counter(x for r in flags for x in r["flags"])
     defects = [r for r in flags if any(not x.startswith("C5R") for x in r["flags"])]
@@ -112,6 +151,7 @@ def main():
             "C4_distractor_not_materiality1": "negative control not rated materiality 1",
             "C5_paraphrase_numbers_changed": "paraphrase changed a number (defect)",
             "C5R_paraphrase_negation_count_differs": "paraphrase has a different negation count (**screen, not a defect**: English negates many ways; sent to a model for review)",
+            "C9R_templated_insertion": f"the added text reuses vocabulary carrying at least {TEMPLATE_SHARE:.0%} of this family's insertions (**screen, not a defect**: the terms are in `templated_terms`, and a family whose insertions repeat is learnable without reasoning)",
             "C6_meta_language": "perturbed text contains meta-language, leaking the construction",
             "C7_near_duplicate_across_families": "two families of one source wrote nearly the same twin (relative distance < 0.02)",
             "C8_paraphrase_equals_perturbed": "paraphrase control equals the perturbed version"}

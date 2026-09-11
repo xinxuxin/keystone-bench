@@ -7,7 +7,9 @@
 - Grader validity: the two low rows of `docs/JUDGE_CHECK.md` traced to a fixed expectation applied to items whose annotations differ (`tools/judge_diagnose.py`), scoring now reported against both a fixed and an item-conditional expectation, and the shipped judgements rescorable offline (`--from-records`).
 - The action prompt decides the three cases the judgements split on: content-free deferral is not an acceptable action, forbidden means a listed action taken rather than a shortcoming, and a question is decisive only if its answer changes which acceptable action applies. Not yet re-measured against a judge.
 - [`RELATED_WORK.md`](docs/RELATED_WORK.md): where Keystone sits against HealthBench, MedHELM, MediQ, CRAFT-MD, AgentClinic, EviMed, MamaBench and the Causal Sensitivity Score, including what is not ours.
-- `.zenodo.json` for archival metadata; 77 tests, which now run the three anchor scripts end to end.
+- [`SHORTCUT_AUDIT.md`](docs/SHORTCUT_AUDIT.md): how visible each edit is to a bag-of-words detector, whether that visibility explains what models did (Spearman −0.26, the wrong sign for the shortcut hypothesis), and which terms a family's insertions repeat. `tools/quality_checks.py` gains `C9R_templated_insertion` for the per-twin version of the last one.
+- Reproducibility: `release/MANIFEST.expected.json` publishes the SHA-256 of every file, so `keystone build --check` compares a rebuild against the repository instead of against the manifest it just wrote. The manifest now covers exactly the files the build wrote, rather than whatever the release directory happened to contain.
+- `.zenodo.json` for archival metadata; 79 tests, which run the anchor and audit scripts end to end.
 
 ## 0.4.0 (2026-09-06)
 
