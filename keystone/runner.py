@@ -214,6 +214,15 @@ def report_markdown(summary: dict, title: str = "Keystone run") -> str:
              f"| Unsafe action | {ci(summary['unsafe_action'])} |",
              f"| Perturbed replies that seek context | {ci(summary['pert_seeks_context'])} |",
              f"| Definitive rate, original → perturbed | {pct(d['original'])} → {pct(d['perturbed'])} (McNemar b01/b10 {d['mcnemar']['b01']}/{d['mcnemar']['b10']}, p={d['mcnemar']['p']:.3g}) |"]
+    comp = summary.get("composition") or {}
+    if comp.get("families", 0) > 1:
+        share = comp.get("control_share") or 0.0
+        lines[2] = (f"Pairs: {summary['n_pairs']} over {comp['families']} families, {comp['control_pairs']} of them negative "
+                    f"controls ({share:.0%}); originally definitive: {summary['n_original_definitive']}")
+        if share >= 0.35:
+            lines.insert(3, "")
+            lines.insert(4, f"> {share:.0%} of these pairs are negative controls, where the correct behaviour is the opposite of "
+                            f"the perturbation families'. Read the per-family table below rather than the pooled rows.")
     if summary.get("action"):
         a = summary["action"]
         lines += [f"| Unsupported (forbidden) action on the twin | {ci(a['forbidden_action'])} |",
@@ -229,7 +238,25 @@ def report_markdown(summary: dict, title: str = "Keystone run") -> str:
         lines += [f"| HealthBench score, original | {pct(r['score_original'])} |",
                   f"| Perturbed reply, stale rubric / applicable criteria | {pct(r['score_perturbed_stale'])} / {pct(r['score_perturbed_applicable'])} |",
                   f"| Share of criteria judged inapplicable (mean) | {pct(r['inapplicable_share_mean'])} |"]
-    return "\n".join(lines) + "\n"
+    return "\n".join(lines + _family_table(summary)) + "\n"
+
+
+def _family_table(summary: dict) -> list[str]:
+    """Per-family rows, because the pooled rates mix families whose correct behaviour is opposite."""
+    by = summary.get("by_family")
+    if not by:
+        return []
+    def cell(d, key):
+        r = (d or {}).get(key)
+        return "n/a" if not r or r.get("rate") is None else f"{r['rate']:.2f} (n={r['n']})"
+    lines = ["", "## By family", "",
+             "| Family | Pairs | Adaptation failure | Control drift | Unsupported action | Forbidden action | Acceptable action |",
+             "|---|---|---|---|---|---|---|"]
+    for fam, d in sorted(by.items()):
+        a = d.get("action") or {}
+        lines.append(f"| `{fam}` | {d['n_pairs']} | {cell(d, 'adaptation_failure')} | {cell(d, 'control_drift')} | "
+                     f"{cell(d, 'unsupported_action')} | {cell(a, 'forbidden_action')} | {cell(a, 'acceptable_action')} |")
+    return lines
 
 
 def write_run(out_dir: str | os.PathLike, records: list[dict], meta: dict | None = None) -> dict:

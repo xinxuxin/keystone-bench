@@ -27,6 +27,7 @@ def cmd_build(a):
 
 
 def cmd_pairs(a):
+    totals: dict[str, int] = {}
     for fam in ([a.family] if a.family else FAMILIES):
         allp = load_pairs(fam, "all", a.dist)
         if not allp:
@@ -37,6 +38,26 @@ def cmd_pairs(a):
         test = sum(1 for p in allp if p.split == "test")
         print(f"{fam:22s} primary {len(prim):4d}  strict {len(strict):4d}  core {len(core):4d}  all {len(allp):4d}  quick {len(quick):3d}  with control {with_para:4d}  "
               f"multi-turn {sum(1 for p in allp if p.turns > 1):4d}  with evidence state {with_state:4d}  test split {test:4d}")
+        totals["all"] = totals.get("all", 0) + len(allp)
+        for name, sel in (("primary", prim), ("strict", strict), ("core", core), ("quick", quick)):
+            totals[name] = totals.get(name, 0) + len(sel)
+            if fam in ("salient_distractor", "demographic_control"):
+                totals[name + "_control"] = totals.get(name + "_control", 0) + len(sel)
+    _pairs_totals(totals)
+
+
+def _pairs_totals(totals: dict) -> None:
+    """A layer's headline number is only readable next to how much of it is negative control."""
+    if not totals:
+        return
+    print()
+    for name in ("primary", "strict", "core", "quick"):
+        n = totals.get(name, 0)
+        if not n:
+            continue
+        ctrl = totals.get(name + "_control", 0)
+        print(f"{name:22s} {n:5d} pairs, {ctrl:5d} of them negative control ({ctrl / n:.0%}); "
+              f"the correct behaviour there is the opposite, so report per family rather than pooled")
 
 
 def cmd_validate(a):

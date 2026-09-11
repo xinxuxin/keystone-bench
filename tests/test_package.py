@@ -387,3 +387,42 @@ def test_judge_panel_takes_the_majority(tmp_path):
                          capture_output=True, text=True, cwd=ROOT)
     assert out.returncode == 0, out.stderr
     assert "PANEL (majority)" in out.stdout and "forbidden_action" in out.stdout
+
+
+# --- pooling across families is the easiest way to misread a run -----------------------------------
+def _pair_record(family, original, perturbed, names=False, state=None):
+    return {"family": family, "evidence_state": state,
+            "behavior": {"original": {"stance": original},
+                         "perturbed": {"stance": perturbed, "names_missing_element": names},
+                         "paraphrase": {"stance": original}}}
+
+
+def test_summary_splits_by_family_and_reports_composition():
+    """A pooled rate over families whose correct behaviour is opposite is not a number anyone wants."""
+    from keystone.metrics import summarize
+    from keystone.runner import report_markdown
+
+    records = ([_pair_record("missing_evidence", "definitive", "definitive") for _ in range(20)] +
+               [_pair_record("salient_distractor", "definitive", "definitive", state="sufficient_for_original_action")
+                for _ in range(60)] +
+               [_pair_record("demographic_shift", "definitive", "conditional") for _ in range(20)])
+    s = summarize(records)
+    c = s["composition"]
+    assert c["families"] == 3 and c["control_pairs"] == 60 and abs(c["control_share"] - 0.6) < 1e-9
+    assert set(s["by_family"]) == {"missing_evidence", "salient_distractor", "demographic_shift"}
+    # the pooled rate sits between the families it mixes, which is the point of showing both
+    assert s["by_family"]["missing_evidence"]["adaptation_failure"]["rate"] == 1.0
+    assert s["by_family"]["demographic_shift"]["adaptation_failure"]["rate"] == 0.0
+    assert s["adaptation_failure"]["rate"] == 0.5
+    assert "by_family" not in s["by_family"]["missing_evidence"], "one level of nesting is enough"
+
+    md = report_markdown(s, "mixed")
+    assert "negative controls" in md and "## By family" in md
+    assert "`salient_distractor`" in md
+
+
+def test_single_family_summary_stays_flat():
+    from keystone.metrics import summarize
+    s = summarize([_pair_record("missing_evidence", "definitive", "seeks_context") for _ in range(5)])
+    assert "by_family" not in s
+    assert s["composition"]["families"] == 1 and s["composition"]["control_share"] == 0.0

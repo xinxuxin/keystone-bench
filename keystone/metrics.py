@@ -172,9 +172,16 @@ def panel_records(runs: list[list[dict]]) -> list[dict]:
     return out
 
 
-def summarize(records: list[dict]) -> dict:
+def summarize(records: list[dict], _nested: bool = False) -> dict:
     """Aggregate a run. Each record carries 'behavior' (condition -> JSON) and optionally
-    'rubric' with 'score_original', 'score_perturbed_stale', 'score_perturbed_applicable', 'inapplicable_share'."""
+    'rubric' with 'score_original', 'score_perturbed_stale', 'score_perturbed_applicable', 'inapplicable_share'.
+
+    A run over several families gets `by_family` and `composition` as well as the pooled rates. Pooling across
+    families is rarely the number anyone wants: the negative controls are the largest families in every layer
+    (51 percent of `primary`), and on them the correct behaviour is the opposite of the perturbation families',
+    so a pooled action rate mostly measures how often the model held an answer it was right to hold. The
+    family-aware outcomes return NA where they are undefined, which keeps the pooled rate from being wrong, but
+    `composition` is what tells a reader whether it is worth reading."""
     outs = [pair_outcomes(r.get("behavior", {}), r.get("family")) for r in records]
     def rate(key):
         xs = [o[key] for o in outs if o.get(key) is not None]
@@ -220,6 +227,18 @@ def summarize(records: list[dict]) -> dict:
         out["action"]["by_state"] = {st: dict(_rate(sum(1 for r, a in zip(acts, aouts) if r.get("evidence_state") == st and a["acceptable_action"]),
                                                    sum(1 for r, a in zip(acts, aouts) if r.get("evidence_state") == st and a["acceptable_action"] is not None)))
                                      for st in sorted({r.get("evidence_state") for r in acts if r.get("evidence_state")})}
+    fams = sorted({r.get("family") for r in records if r.get("family")})
+    ctrl = sum(1 for r in records if r.get("family") in CONTROL_FAMILIES)
+    out["composition"] = {
+        "families": len(fams),
+        "by_family": {f: sum(1 for r in records if r.get("family") == f) for f in fams},
+        "control_pairs": ctrl,
+        "control_share": (ctrl / len(records)) if records else None,
+        "by_evidence_state": dict(Counter(r.get("evidence_state") for r in records if r.get("evidence_state"))),
+    }
+    if not _nested and len(fams) > 1:
+        out["by_family"] = {f: summarize([r for r in records if r.get("family") == f], _nested=True) for f in fams}
+
     rub = [r["rubric"] for r in records if r.get("rubric")]
     if rub:
         def mean(key):
