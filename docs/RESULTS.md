@@ -10,7 +10,9 @@ Rates are over pairs whose original reply was definitive, with Wilson 95% interv
 | openrouter:meta-llama/llama-4-maverick | missing_evidence | pilot-80 (majority 3) | 32 | 0.57 [0.39, 0.73] | 0.07 [0.02, 0.23] | 0.43 [0.27, 0.61] | 0.88 → 0.56 | 0.0063 | reference pilot 2026-09-06, judge gpt-4.1 |
 | openrouter:openai/gpt-5.6-terra | missing_evidence | pilot-80 (majority 3) | 31 | 0.26 [0.13, 0.45] | 0.04 [0.01, 0.18] | 0.33 [0.19, 0.52] | 0.87 → 0.32 | 1.5e-05 | reference pilot 2026-09-06, judge gpt-4.1 |
 
-No community submissions yet. See `CONTRIBUTING.md` for how to add one.
+**Scope of these numbers.** All 80 pilot items are single-turn, while 38 percent of the release is multi-turn, so nothing in this table describes what an assistant does when the load-bearing fact sits in an earlier turn. That is what `missing_evidence_early` is for, and no reference run covers it yet. The pilot also predates the 0.3.0 change that gives every judge the full conversation rather than the last user message; the change cannot affect these numbers, because the items are single-turn, and it is noted here so that the two dates are not read as a discrepancy.
+
+No community submissions yet. See [`../results/community/README.md`](../results/community/README.md) for how to add one.
 
 ## Unconditional outcomes on the same records
 

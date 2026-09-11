@@ -2,6 +2,8 @@
 
 ## 0.5.0 (2026-09-11)
 
+- `results/community/` exists with the submission format that `CONTRIBUTING.md` had been pointing at, `examples/quickstart.py` runs in a checkout that has not been pip-installed, and the Inspect task's layer documentation matches the layers as they are now rather than as they were in 0.2.0.
+- `docs/RESULTS.md` states the scope of the reference numbers: all 80 pilot items are single-turn while 38 percent of the release is multi-turn, so the table says nothing about a fact removed from an earlier turn.
 - Runs report per family. `summarize` adds `composition` (families, negative-control share, evidence states) and `by_family`; `REPORT.md` prints a per-family table and warns when controls pass 35 percent of the run; `keystone pairs` prints the control share of each layer. Pooling matters more than it looks: the controls are 51 percent of `primary`, and on them the correct behaviour is the opposite of the perturbation families'.
 
 - **`demographic_shift` is screened on its own label.** Materiality 3 reads "the original definitive answer is no longer justified", which is what a removal does; a demographic change makes a *different* action right, which a rater following the scale calls 2. The family was losing 608 twins that `advice_should_change`, written in a separate labelling pass, says change the advice. The core layer now takes the family on that label with materiality 2 as the floor: 220 twins to 906, strict 216 to 735, core overall 4,803 to 5,489. Numbers computed on `demographic_shift` under 0.4.x are not comparable with 0.5.0.

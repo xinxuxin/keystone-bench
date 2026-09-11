@@ -63,9 +63,15 @@ def _chat(messages: list[dict]) -> list[ChatMessage]:
 
 
 def load_family(family: str, layer: str = "core") -> list[Sample]:
-    """One sample per source conversation. layer='core' keeps majority-materiality-3 twins
-    (materiality 1 for the negative control) without mechanical defects; layer='strict' also requires both
-    reviewers to accept the twin as natural and the edit to be tied to the rubric; layer='all' keeps every twin."""
+    """One sample per source conversation.
+
+    `all` keeps every twin. `core` keeps the twins with no mechanical defect whose edit is material in the
+    terms its own family is written in: median materiality 3 for a perturbation, 1 for a negative control,
+    and for `demographic_shift` the family's own `advice_should_change` label with materiality 2 as the floor
+    (see `keystone/build.py`). `strict` adds that the edit is tied to at least one rubric criterion and that
+    the two reviewer models did not both reject the twin. `primary` adds an evidence state consistent with
+    what the family's edit is designed to do, and is the layer the action outcomes use. `quick` is the fixed
+    balanced set, 40 twins per family."""
     if family not in FAMILIES:
         raise ValueError(f"family must be one of {FAMILIES}, got {family!r}")
     if layer not in ("primary", "strict", "core", "all", "quick"):

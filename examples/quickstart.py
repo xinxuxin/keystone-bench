@@ -10,7 +10,13 @@ import json
 import os
 import sys
 
-from keystone import OpenAICompatible, evaluate, load_manifest, load_pairs, summarize, write_run
+try:
+    from keystone import OpenAICompatible, evaluate, load_manifest, load_pairs, summarize, write_run
+except ModuleNotFoundError:            # a checkout that has not been pip-installed
+    import sys
+    from pathlib import Path as _Path
+    sys.path.insert(0, str(_Path(__file__).resolve().parent.parent))
+    from keystone import OpenAICompatible, evaluate, load_manifest, load_pairs, summarize, write_run
 from keystone.metrics import primary_hypothesis_supported
 from keystone.runner import report_markdown
 

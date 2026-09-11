@@ -27,7 +27,7 @@ Rules the protocol asks you to keep so that numbers are comparable:
 
 ## Submitting results
 
-Open a pull request that adds your `summary.json` under `results/community/<model>/<family>__<layer>.json` together with the `records.jsonl` (so the classification can be audited) and a short note on the endpoint and date. Reference numbers in `release/reference_results.json` were produced from the same kind of records with the same code; the results table is regenerated from submissions.
+Open a pull request that adds your `summary.json` and `records.jsonl` under `results/community/<model>/`, named `<family>__<layer>.json` and `.jsonl`, with the endpoint, date and judge in the PR body. [`results/community/README.md`](results/community/README.md) states what makes a submission comparable. Reference numbers in `release/reference_results.json` were produced from the same kind of records with the same code; the results table is regenerated from submissions.
 
 ## Changing the data
 
