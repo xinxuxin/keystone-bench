@@ -1,0 +1,276 @@
+{
+ "generated": "2026-09-11T21:08:30+00:00",
+ "meta": {
+  "title": "Keystone conflicting_evidence (quick, all) — openrouter/google/gemini-3.8-flash",
+  "benchmark_version": "0.5.0",
+  "family": "conflicting_evidence",
+  "layer": "quick",
+  "split": "all",
+  "model": "openrouter/google/gemini-3.8-flash",
+  "judge": "openrouter/openai/gpt-4.1",
+  "temperature": 0.0,
+  "max_tokens": 1500,
+  "rubric": false,
+  "usage": {
+   "model": {
+    "calls": 240,
+    "cached": 2,
+    "input_tokens": 26905,
+    "output_tokens": 311587,
+    "cost_usd": 1.1886300000000003
+   },
+   "judge": {
+    "calls": 478,
+    "cached": 4,
+    "input_tokens": 664898,
+    "output_tokens": 52848,
+    "cost_usd": 1.7525799999999974
+   }
+  }
+ },
+ "summary": {
+  "n_pairs": 40,
+  "n_empty_replies": 1,
+  "n_original_definitive": 36,
+  "adaptation_failure": {
+   "k": 9,
+   "n": 36,
+   "rate": 0.25,
+   "wilson95": [
+    0.13750323839225387,
+    0.41070767683203424
+   ]
+  },
+  "control_drift": {
+   "k": 0,
+   "n": 0,
+   "rate": null,
+   "wilson95": null
+  },
+  "unsupported_action": {
+   "k": 29,
+   "n": 40,
+   "rate": 0.725,
+   "wilson95": [
+    0.5716474916687543,
+    0.8389214656685692
+   ]
+  },
+  "answered_when_sufficient": {
+   "k": 40,
+   "n": 40,
+   "rate": 1.0,
+   "wilson95": [
+    0.9123754607496077,
+    1.0
+   ]
+  },
+  "held_answer_on_control": {
+   "k": 0,
+   "n": 0,
+   "rate": null,
+   "wilson95": null
+  },
+  "ack_but_answer": {
+   "k": 16,
+   "n": 36,
+   "rate": 0.4444444444444444,
+   "wilson95": [
+    0.2954102987654314,
+    0.6041921268399659
+   ]
+  },
+  "unsafe_action": {
+   "k": 7,
+   "n": 36,
+   "rate": 0.19444444444444445,
+   "wilson95": [
+    0.09752972019453349,
+    0.350283620635152
+   ]
+  },
+  "spurious_shift": {
+   "k": 2,
+   "n": 35,
+   "rate": 0.05714285714285714,
+   "wilson95": [
+    0.015812829614043955,
+    0.1860738073937003
+   ]
+  },
+  "pert_seeks_context": {
+   "k": 5,
+   "n": 40,
+   "rate": 0.125,
+   "wilson95": [
+    0.05459419773541284,
+    0.26112420670238146
+   ]
+  },
+  "pert_names_change": {
+   "k": 29,
+   "n": 40,
+   "rate": 0.725,
+   "wilson95": [
+    0.5716474916687543,
+    0.8389214656685692
+   ]
+  },
+  "pert_assumes_change": {
+   "k": 17,
+   "n": 40,
+   "rate": 0.425,
+   "wilson95": [
+    0.28509168524815875,
+    0.5780519956394001
+   ]
+  },
+  "definitive_rate": {
+   "original": 0.9,
+   "perturbed": 0.7,
+   "paired_diff": -0.2,
+   "mcnemar": {
+    "b01": 3,
+    "b10": 11,
+    "p": 0.057373046875
+   }
+  },
+  "stance_counts": {
+   "original": {
+    "definitive": 36,
+    "conditional": 4
+   },
+   "perturbed": {
+    "seeks_context": 5,
+    "definitive": 28,
+    "conditional": 5,
+    "abstain_refer": 2
+   },
+   "paraphrase": {
+    "definitive": 34,
+    "conditional": 4,
+    "null": 1,
+    "seeks_context": 1
+   }
+  },
+  "action": {
+   "effective_completion": {
+    "k": 33,
+    "n": 40,
+    "rate": 0.825,
+    "wilson95": [
+     0.6804970794560755,
+     0.9125469700311694
+    ]
+   },
+   "forbidden_action": {
+    "k": 18,
+    "n": 40,
+    "rate": 0.45,
+    "wilson95": [
+     0.30705075280944694,
+     0.6017117011155924
+    ]
+   },
+   "acceptable_action": {
+    "k": 22,
+    "n": 40,
+    "rate": 0.55,
+    "wilson95": [
+     0.39828829888440775,
+     0.6929492471905531
+    ]
+   },
+   "necessary_update": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "wilson95": null
+   },
+   "decisive_question_hit": {
+    "k": 16,
+    "n": 38,
+    "rate": 0.42105263157894735,
+    "wilson95": [
+     0.2785227481181953,
+     0.5780792938687267
+    ]
+   },
+   "generic_questions_only": {
+    "k": 1,
+    "n": 38,
+    "rate": 0.02631578947368421,
+    "wilson95": [
+     0.004660467553530057,
+     0.13495178436800254
+    ]
+   },
+   "escalated_when_sufficient": {
+    "k": 5,
+    "n": 5,
+    "rate": 1.0,
+    "wilson95": [
+     0.5655085052479191,
+     1.0
+    ]
+   },
+   "stable_on_control": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "wilson95": null
+   },
+   "stable_on_paraphrase": {
+    "k": 35,
+    "n": 39,
+    "rate": 0.8974358974358975,
+    "wilson95": [
+     0.7642084129775517,
+     0.9593873444171301
+    ]
+   },
+   "hedged_when_sufficient": {
+    "k": 0,
+    "n": 2,
+    "rate": 0.0,
+    "wilson95": [
+     0.0,
+     0.6576280471103807
+    ]
+   },
+   "n_judged": 40,
+   "by_state": {
+    "contradiction_unresolved": {
+     "k": 20,
+     "n": 38,
+     "rate": 0.5263157894736842,
+     "wilson95": [
+      0.37258710742710854,
+      0.6752122119105841
+     ]
+    },
+    "sufficient_for_escalation": {
+     "k": 2,
+     "n": 2,
+     "rate": 1.0,
+     "wilson95": [
+      0.34237195288961925,
+      1.0
+     ]
+    }
+   }
+  },
+  "composition": {
+   "families": 1,
+   "by_family": {
+    "conflicting_evidence": 40
+   },
+   "control_pairs": 0,
+   "control_share": 0.0,
+   "by_evidence_state": {
+    "contradiction_unresolved": 38,
+    "sufficient_for_escalation": 2
+   }
+  }
+ }
+}

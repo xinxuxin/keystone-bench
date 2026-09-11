@@ -101,7 +101,34 @@ More in [`examples/quickstart.py`](examples/quickstart.py).
 
 ## Reference results
 
-Five assistants on the evidence-removal family, 80 twins with paraphrase controls, GPT-4.1 as judge, temperature 0, no system prompt. Primary rule: the 32 twins whose median materiality rating is 3. Rates are over pairs whose original reply was definitive, Wilson 95% intervals; `keystone reference` prints the full table with two sensitivity rules.
+Five assistants over the quick set, **eight families**, 303 twins each with its original and its paraphrase-only control, GPT-4.1 as judge, temperature 0, no system prompt, benchmark 0.5.0. Every reply and both judges' verdicts ship in [`results/reference/`](results/reference/), so a different judge can be scored on them without paying to generate anything. Full tables in [`docs/RESULTS.md`](docs/RESULTS.md).
+
+**What each family asks for, and how often the assistant did it.**
+
+| Family | The behaviour it asks for | claude-sonnet-5 | deepseek-v4-pro | gemini-3.8-flash | gpt-5.6-terra | llama-4-maverick |
+|---|---|---|---|---|---|---|
+| `missing_evidence` | ask the question that settles it | 0.69 | 0.65 | 0.49 | **0.74** | 0.37 |
+| `conflicting_evidence` | name the contradiction and ask which side is true | **0.61** | 0.42 | 0.42 | 0.47 | 0.26 |
+| `buried_red_flag` | make urgent evaluation the main answer | 0.72 | 0.74 | 0.85 | **0.93** | 0.35 |
+| `alternative_evidence` | change the action to the one the new value supports | 0.90 | **0.94** | 0.87 | 0.81 | 0.74 |
+| `demographic_shift` | adjust the advice to the changed attribute | 0.94 | 0.90 | **0.97** | 0.94 | 0.68 |
+| `salient_distractor` (control) | answer unchanged | 0.93 | 0.95 | 0.80 | **0.97** | 0.85 |
+| `demographic_control` (control) | answer unchanged | **0.95** | **0.95** | 0.87 | **0.95** | 0.78 |
+
+**The effect is the evidence, measured on eight families.** The same item is edited two ways: the twin changes one fact, the control only rewords. The share of replies taking an action the annotation forbids, twin minus control, per item:
+
+| | `missing_evidence` | `conflicting_evidence` | `buried_red_flag` | `demographic_shift` | `salient_distractor` | `demographic_control` |
+|---|---|---|---|---|---|---|
+| twin minus control | **+0.34** | **+0.33** | **+0.19** | **+0.07** | −0.02 | −0.00 |
+| 95% interval | [0.17, 0.51] | [0.22, 0.45] | [0.06, 0.32] | [0.01, 0.14] | [−0.07, 0.03] | [−0.05, 0.06] |
+
+The two negative-control families sit on zero, where the correct behaviour is to answer unchanged, and the perturbation families do not. That contrast is what separates a benchmark that measures evidence-sensitivity from one that measures sensitivity to being edited, and it is now measured rather than argued ([`docs/BEHAVIOUR_ANCHOR.md`](docs/BEHAVIOUR_ANCHOR.md)).
+
+**The hardest family is `conflicting_evidence`.** The best assistant names the contradiction 61 percent of the time and the worst 26 percent, and its forbidden-action rate runs 0.30 to 0.78. An assistant that is told two incompatible things about the same patient usually picks one and proceeds.
+
+### The earlier single-family pilot
+
+Kept because it carries the paired definitive-rate test and the rubric grades the quick set does not: 80 `missing_evidence` twins, all single-turn, rates over pairs whose original reply was definitive.
 
 | Assistant | Definitive, original → twin | Adaptation failure | Spurious shift (control) | Unsafe action | McNemar p |
 |---|---|---|---|---|---|
@@ -189,7 +216,7 @@ None of the three is adjudication: clinician review of a stratified subset follo
 
 ## How the data is distributed
 
-HealthBench is MIT, and its authors ask that items not be posted as plain text on the open web. This repository therefore contains what we wrote and nothing of theirs: `release/metadata.jsonl` holds every label and rationale, and `release/edits.jsonl` holds, per twin, the words we added plus `[start, end]` references into the HealthBench message they edit. `tools/build_release.py` downloads HealthBench from OpenAI's public URL, replays the edits, applies the layer rules, and writes `dist/` with the same SHA-256 per file as the release the reference results were computed on. Those hashes are committed as [`release/MANIFEST.expected.json`](release/MANIFEST.expected.json), so `keystone build --check` compares your rebuild against this repository rather than against itself, and the manifest covers exactly the files the build wrote. The canary string is preserved in every row.
+HealthBench is MIT, and its authors ask that items not be posted as plain text on the open web. No HealthBench conversation is reconstructible from this repository, and no item is stored as prose: `release/metadata.jsonl` holds every label and rationale, and `release/edits.jsonl` holds, per twin, the words we added plus `[start, end]` references into the HealthBench message they edit. `tools/build_release.py` downloads HealthBench from OpenAI's public URL, replays the edits, applies the layer rules, and writes `dist/` with the same SHA-256 per file as the release the reference results were computed on. Those hashes are committed as [`release/MANIFEST.expected.json`](release/MANIFEST.expected.json), so `keystone build --check` compares your rebuild against this repository rather than against itself, and the manifest covers exactly the files the build wrote. The canary string is preserved in every row. Two places hold short fragments rather than nothing at all, and both are measured rather than asserted: an annotation sometimes quotes the clause it is about, and a model reply in `results/reference/` sometimes echoes one, at a median longest run of 19 characters and a maximum of 73.
 
 ## Repository layout
 

@@ -96,14 +96,41 @@ The action prompt now decides the three cases the judgements split on:
 `tools/judge_check.py` reports both expectations side by side, so a judge change is measured against the same
 stored baseline rather than against a moving target.
 
-**Not yet measured.** Every number on this page comes from the 0.4.0 prompt. The rules above are a change to
-the instrument and have to be re-run before they can be claimed to have fixed anything:
+## Measured: the same set, the same judge, the new prompt
 
-```bash
-python tools/judge_check.py --judge openrouter/openai/gpt-4.1 --out runs/judge_check_0_4_1
-```
+Rerun on 2026-09-11 with the 0.5.0 action prompt, GPT-4.1 again, the 123 released items again, 1,476 calls,
+USD 4.58. The `fixed` columns are the ones to compare, because the baseline above is a fixed expectation.
 
-1,992 calls, about USD 5.40 at the same prices, and the comparison to beat is the fixed column above:
-`fluent_overreach` must not fall below 0.90, and `unnecessary_refusal` acceptable and `generic_questions`
-forbidden are the two rows the change is aimed at. A second judge from another vendor on the same set, scored
-with `keystone compare-judges`, roughly doubles the cost and is the honest way to report the result.
+| intended type | n | forbidden as expected (fixed / item) | acceptable as expected (fixed / item) | stance as expected |
+|---|---|---|---|---|
+| fluent_overreach | 123 | 0.93 / 0.93 | 0.93 / 0.93 | 0.96 |
+| brief_correct | 123 | 0.98 / 0.98 | 0.98 / 0.98 | 0.89 |
+| conditional_correct | 123 | 1.00 / 1.00 | 1.00 / 1.00 | 0.74 |
+| unnecessary_refusal | 123 | 0.42 / 0.44 | 0.75 / 0.60 | 1.00 |
+| acknowledge_then_act | 123 | 0.76 / 0.76 | 0.76 / 0.76 | 0.74 |
+| generic_questions | 123 | 0.52 / 0.59 | 0.66 / 0.66 | 1.00 |
+
+Against the 0.4.0 baseline on the same items:
+
+| | before | after | |
+|---|---|---|---|
+| `fluent_overreach`, the separation the benchmark rests on | 0.92 / 0.91 | **0.93 / 0.93** | held, above the 0.90 floor set before the run |
+| `conditional_correct` | 0.99 / 0.99 | **1.00 / 1.00** | held |
+| `unnecessary_refusal`, acceptable | 0.46 | **0.75** | rule 1 worked: a deferral with none of the substance the item asks for is no longer read as taking the item's referral action |
+| `generic_questions`, forbidden | 0.37 | **0.52** | rule 3 worked: a question that settles nothing is no longer read as taking a forbidden action |
+| `unnecessary_refusal`, forbidden | 0.54 | **0.42** | moved the wrong way against the fixed expectation |
+
+**The row that moved the wrong way.** The judge now calls a content-free refusal a forbidden action 58 percent
+of the time. Whether that is an error depends on the item: many `forbidden_actions` lists name exactly this
+("refuse or defer entirely to the treating provider instead of drafting the message"), and where they do, the
+judge is right and the fixed expectation is wrong. The item-conditional column barely moves because the regex
+that detects such a list is crude. The honest statement is that this row is not measuring what its name
+suggests, and the fix is a better-specified expectation rather than a better-tuned prompt.
+
+**Why the prompt is not being tuned further.** Six numbers on one small validity set, iterated against, become
+a set the prompt is fitted to rather than validated on. One change, one measurement, both reported. A judge
+change from here should be measured on a held-out slice or a second judge from another vendor, and the 43
+items outside the released split are kept for that.
+
+**Reproduce.** `python tools/judge_check.py --judge openrouter/openai/gpt-4.1 --workers 8`, or score the stored
+judgements of either run offline with `--from-records`.

@@ -65,7 +65,7 @@ def test_manifest_lists_every_file_the_build_produced():
 def test_validity_anchors_are_present_and_say_what_they_measure():
     """The three anchor pages are generated artefacts; a release should not ship without them."""
     docs = {
-        "BEHAVIOUR_ANCHOR.md": ("Dropped commitment on the twin", "Dropped on the paraphrase (control)", "Per assistant"),
+        "BEHAVIOUR_ANCHOR.md": ("Dropped commitment, by rubric-blind materiality", "On the paraphrase (control)", "Per assistant"),
         "RUBRIC_ANCHOR.md": ("Primary comparison", "Reaching the criterion the physicians weighted highest", "Anchoring"),
         "IDEAL_ANSWER_CHECK.md": ("Removal families", "Same-theme null", "negative control"),
         "SHORTCUT_AUDIT.md": ("How visible is each edit", "length only", "What the edits repeat"),
@@ -90,7 +90,7 @@ def test_the_three_anchors_run_end_to_end(tmp_path):
     env = {**os.environ, "KEYSTONE_BOOT": "40", "KEYSTONE_PERM": "200", "KEYSTONE_NULL_DRAWS": "3", "KEYSTONE_EPOCHS": "3"}
     for script, needle in (("rubric_anchor.py", "Reaching the criterion the physicians weighted highest"),
                            ("ideal_answer_check.py", "Same-theme null"),
-                           ("behaviour_anchor.py", "Dropped on the paraphrase (control)"),
+                           ("behaviour_anchor.py", "On the paraphrase (control)"),
                            ("shortcut_audit.py", "Does the fingerprint explain the behaviour")):
         out = tmp_path / f"{script}.md"
         r = subprocess.run([sys.executable, str(ROOT / "tools" / script), "--out", str(out)],

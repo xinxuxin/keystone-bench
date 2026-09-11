@@ -1,54 +1,359 @@
 # Criterion validity: materiality against measured behaviour
 
-Both other anchors ask whether our labels agree with something physicians wrote. This one asks whether the label predicts what it claims to predict. A twin labelled material is one whose original commitment the evidence no longer supports, so assistants should stop committing on it more often than on a twin labelled immaterial. The replies that test this are already in the release: five assistants on the 80 `missing_evidence` twins of the reference pilot, each reply classified, each item also answered in a paraphrase-only version that changes wording and no evidence.
+The other two anchors ask whether our labels agree with something physicians wrote. This one asks whether the label predicts what it claims to predict: on a twin whose edit is material, assistants should behave differently, and on the paraphrase-only twin of the same item they should not. The second half is what makes this a test rather than a correlation, because a label that predicts both sides is tracking how much the text was disturbed rather than whether the evidence still supports the answer.
 
-**Why the paraphrase column decides it.** A label that predicts the drop on both sides is tracking how much the message was disturbed. A label that predicts the drop on the perturbed side only is tracking the evidence. The last column is that difference, per item, and it is the number this page is for.
+Sources: reference_records.jsonl, alternative_evidence, buried_red_flag, conflicting_evidence, demographic_control, demographic_shift, missing_evidence, missing_evidence_early, salient_distractor, alternative_evidence, buried_red_flag, conflicting_evidence, demographic_control, demographic_shift, missing_evidence, missing_evidence_early, salient_distractor, alternative_evidence, buried_red_flag, conflicting_evidence, demographic_control, demographic_shift, missing_evidence, missing_evidence_early, salient_distractor, alternative_evidence, buried_red_flag, conflicting_evidence, demographic_control, demographic_shift, missing_evidence, missing_evidence_early, salient_distractor, alternative_evidence, buried_red_flag, conflicting_evidence, demographic_control, demographic_shift, missing_evidence, missing_evidence_early, salient_distractor. Assistants: claude-sonnet-5, deepseek-v4-pro-0813, gemini-3.8-flash, llama-4-maverick, gpt-5.6-terra, claude-sonnet-5, deepseek-v4-pro-0813, gemini-3.8-flash, llama-4-maverick, gpt-5.6-terra. Families with at least ten items: `alternative_evidence`, `buried_red_flag`, `conflicting_evidence`, `demographic_control`, `demographic_shift`, `missing_evidence`, `missing_evidence_early`, `salient_distractor`.
 
-Rates are computed per item across the five assistants before being averaged, so one item contributes one observation. Intervals are 95 percent bootstrap over items. Empty replies are missing data and enter no denominator.
+Rates are computed per item across assistants before being averaged, so one item is one observation. Intervals are 95 percent bootstrap over items; empty replies are missing data and enter no denominator.
 
-The fourth column is the release's adaptation-failure outcome under a plainer name, because on an immaterial twin staying definitive is the correct behaviour: that column is a quality measure only where the edit is material, and it is shown across all three levels so the contrast is visible rather than hidden.
+### `alternative_evidence`
 
-### Materiality from the two rubric-blind reviewers, where they agree
+40 items, 5 assistants, 200 records.
 
-| Materiality | Items | Committed on the original | Dropped commitment on the twin | Stayed definitive without naming the change | Dropped on the paraphrase (control) | Evidence effect, twin minus paraphrase |
-|---|---|---|---|---|---|---|
-| 3 | 17 | 0.812 [0.659, 0.941] | 0.574 [0.419, 0.731] | 0.355 [0.219, 0.499] | 0.075 [0.000, 0.212] | 0.499 [0.280, 0.703] |
-| 2 | 30 | 0.887 [0.780, 0.973] | 0.227 [0.121, 0.341] | 0.683 [0.571, 0.791] | 0.034 [0.000, 0.103] | 0.193 [0.101, 0.298] |
-| 1 | 11 | 0.709 [0.473, 0.909] | 0.130 [0.000, 0.315] | 0.767 [0.522, 0.944] | 0.139 [0.000, 0.361] | -0.009 [-0.306, 0.269] |
+#### Dropped commitment, by rubric-blind materiality
 
-Trend over items: Spearman rho 0.487 on the twin (permutation p 0.00025) against -0.051 on the paraphrase control (p 0.74).
-Evidence effect at materiality 3 minus materiality 1: 0.508 [0.161, 0.870].
+Share of assistants that stopped committing, among those that committed on the original. This is the removal families' prediction; where the correct response is a *different* action rather than none, read the next table instead.
 
-### Materiality as the three-rater median, for comparison
-
-| Materiality | Items | Committed on the original | Dropped commitment on the twin | Stayed definitive without naming the change | Dropped on the paraphrase (control) | Evidence effect, twin minus paraphrase |
-|---|---|---|---|---|---|---|
-| 3 | 26 | 0.854 [0.746, 0.938] | 0.579 [0.470, 0.690] | 0.333 [0.232, 0.443] | 0.069 [0.008, 0.165] | 0.510 [0.372, 0.638] |
-| 2 | 43 | 0.842 [0.749, 0.926] | 0.232 [0.150, 0.324] | 0.670 [0.574, 0.759] | 0.054 [0.000, 0.127] | 0.178 [0.096, 0.265] |
-| 1 | 11 | 0.709 [0.473, 0.909] | 0.130 [0.000, 0.315] | 0.767 [0.522, 0.944] | 0.139 [0.000, 0.361] | -0.009 [-0.306, 0.269] |
-
-Trend over items: Spearman rho 0.536 on the twin (permutation p <5e-05) against 0.013 on the paraphrase control (p 0.86).
-Evidence effect at materiality 3 minus materiality 1: 0.519 [0.219, 0.868].
-
-### Per assistant
-
-The same contrast computed inside each assistant's own replies, to show the result is not one model's behaviour.
-
-| Assistant | Items | Dropped on twin, materiality 3 | materiality 1 | Difference |
+| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
-| `claude-sonnet-5` | 44 | 0.545 (n=11) | 0.143 (n=7) | 0.403 |
-| `deepseek-v4-pro-0813` | 48 | 0.500 (n=14) | 0.125 (n=8) | 0.375 |
-| `gemini-3.8-flash` | 48 | 0.643 (n=14) | 0.000 (n=9) | 0.643 |
-| `llama-4-maverick` | 51 | 0.429 (n=14) | 0.222 (n=9) | 0.206 |
-| `gpt-5.6-terra` | 45 | 0.750 (n=12) | 0.000 (n=6) | 0.750 |
+| all | 30 | 0.320 [0.182, 0.463] | 0.198 [0.086, 0.324] | 0.122 [0.052, 0.205] |
+| 3 | 30 | 0.320 [0.188, 0.464] | 0.198 [0.089, 0.324] | 0.122 [0.045, 0.204] |
+| 2 | 0 | | | |
+| 1 | 0 | | | |
 
-### The rubric side
+This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
 
-On the 24 items whose replies were also rubric-graded, the share of the physicians' criteria that the applicability judge ruled no longer judgeable tracks materiality at Spearman rho 0.513 (permutation p 0.01). Same labels, a different measured consequence.
+#### Forbidden action, by rubric-blind materiality
+
+Share of assistants that took an action this twin's own annotation forbids. Defined for every family, so this is the cross-family outcome.
+
+| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
+|---|---|---|---|---|
+| all | 30 | 0.142 [0.087, 0.202] | 0.155 [0.075, 0.248] | -0.013 [-0.102, 0.070] |
+| 3 | 30 | 0.142 [0.088, 0.198] | 0.155 [0.075, 0.247] | -0.013 [-0.102, 0.068] |
+| 2 | 0 | | | |
+| 1 | 0 | | | |
+
+This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
+
+#### Per assistant
+
+The twin-side rate inside each assistant's own replies, so the result is not one model's behaviour.
+
+| Assistant | Materiality 3 | Materiality 1 | Difference |
+|---|---|---|---|
+| `claude-sonnet-5` | too few at one end | | |
+| `deepseek-v4-pro-0813` | too few at one end | | |
+| `gemini-3.8-flash` | too few at one end | | |
+| `llama-4-maverick` | too few at one end | | |
+| `gpt-5.6-terra` | too few at one end | | |
+
+### `buried_red_flag`
+
+40 items, 5 assistants, 200 records.
+
+#### Dropped commitment, by rubric-blind materiality
+
+Share of assistants that stopped committing, among those that committed on the original. This is the removal families' prediction; where the correct response is a *different* action rather than none, read the next table instead.
+
+| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
+|---|---|---|---|---|
+| all | 40 | 0.231 [0.129, 0.345] | 0.064 [0.021, 0.118] | 0.167 [0.060, 0.282] |
+| 3 | 40 | 0.231 [0.131, 0.341] | 0.064 [0.021, 0.117] | 0.167 [0.057, 0.287] |
+| 2 | 0 | | | |
+| 1 | 0 | | | |
+
+This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
+
+#### Forbidden action, by rubric-blind materiality
+
+Share of assistants that took an action this twin's own annotation forbids. Defined for every family, so this is the cross-family outcome.
+
+| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
+|---|---|---|---|---|
+| all | 40 | 0.291 [0.209, 0.384] | 0.125 [0.060, 0.205] | 0.166 [0.049, 0.279] |
+| 3 | 40 | 0.291 [0.208, 0.380] | 0.125 [0.060, 0.205] | 0.166 [0.046, 0.279] |
+| 2 | 0 | | | |
+| 1 | 0 | | | |
+
+This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
+
+#### Per assistant
+
+The twin-side rate inside each assistant's own replies, so the result is not one model's behaviour.
+
+| Assistant | Materiality 3 | Materiality 1 | Difference |
+|---|---|---|---|
+| `claude-sonnet-5` | too few at one end | | |
+| `deepseek-v4-pro-0813` | too few at one end | | |
+| `gemini-3.8-flash` | too few at one end | | |
+| `llama-4-maverick` | too few at one end | | |
+| `gpt-5.6-terra` | too few at one end | | |
+
+### `conflicting_evidence`
+
+40 items, 5 assistants, 200 records.
+
+#### Dropped commitment, by rubric-blind materiality
+
+Share of assistants that stopped committing, among those that committed on the original. This is the removal families' prediction; where the correct response is a *different* action rather than none, read the next table instead.
+
+| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
+|---|---|---|---|---|
+| all | 23 | 0.416 [0.278, 0.555] | 0.104 [0.028, 0.211] | 0.312 [0.155, 0.459] |
+| 3 | 23 | 0.416 [0.274, 0.558] | 0.104 [0.028, 0.211] | 0.312 [0.158, 0.463] |
+| 2 | 0 | | | |
+| 1 | 0 | | | |
+
+This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
+
+#### Forbidden action, by rubric-blind materiality
+
+Share of assistants that took an action this twin's own annotation forbids. Defined for every family, so this is the cross-family outcome.
+
+| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
+|---|---|---|---|---|
+| all | 23 | 0.374 [0.272, 0.478] | 0.083 [0.026, 0.152] | 0.291 [0.191, 0.404] |
+| 3 | 23 | 0.374 [0.274, 0.480] | 0.083 [0.026, 0.157] | 0.291 [0.189, 0.402] |
+| 2 | 0 | | | |
+| 1 | 0 | | | |
+
+This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
+
+#### Per assistant
+
+The twin-side rate inside each assistant's own replies, so the result is not one model's behaviour.
+
+| Assistant | Materiality 3 | Materiality 1 | Difference |
+|---|---|---|---|
+| `claude-sonnet-5` | too few at one end | | |
+| `deepseek-v4-pro-0813` | too few at one end | | |
+| `gemini-3.8-flash` | too few at one end | | |
+| `llama-4-maverick` | too few at one end | | |
+| `gpt-5.6-terra` | too few at one end | | |
+
+### `demographic_control`
+
+40 items, 5 assistants, 200 records.
+
+#### Dropped commitment, by rubric-blind materiality
+
+Share of assistants that stopped committing, among those that committed on the original. This is the removal families' prediction; where the correct response is a *different* action rather than none, read the next table instead.
+
+| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
+|---|---|---|---|---|
+| all | 40 | 0.431 [0.304, 0.561] | 0.209 [0.109, 0.318] | 0.223 [0.096, 0.346] |
+| 3 | 0 | | | |
+| 2 | 0 | | | |
+| 1 | 40 | 0.431 [0.304, 0.561] | 0.209 [0.107, 0.321] | 0.223 [0.100, 0.349] |
+
+This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
+
+#### Forbidden action, by rubric-blind materiality
+
+Share of assistants that took an action this twin's own annotation forbids. Defined for every family, so this is the cross-family outcome.
+
+| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
+|---|---|---|---|---|
+| all | 40 | 0.101 [0.045, 0.171] | 0.113 [0.058, 0.181] | -0.011 [-0.056, 0.033] |
+| 3 | 0 | | | |
+| 2 | 0 | | | |
+| 1 | 40 | 0.101 [0.045, 0.171] | 0.113 [0.056, 0.181] | -0.011 [-0.056, 0.034] |
+
+This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
+
+#### Per assistant
+
+The twin-side rate inside each assistant's own replies, so the result is not one model's behaviour.
+
+| Assistant | Materiality 3 | Materiality 1 | Difference |
+|---|---|---|---|
+| `claude-sonnet-5` | too few at one end | | |
+| `deepseek-v4-pro-0813` | too few at one end | | |
+| `gemini-3.8-flash` | too few at one end | | |
+| `llama-4-maverick` | too few at one end | | |
+| `gpt-5.6-terra` | too few at one end | | |
+
+### `demographic_shift`
+
+40 items, 5 assistants, 200 records.
+
+#### Dropped commitment, by rubric-blind materiality
+
+Share of assistants that stopped committing, among those that committed on the original. This is the removal families' prediction; where the correct response is a *different* action rather than none, read the next table instead.
+
+| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
+|---|---|---|---|---|
+| all | 32 | 0.340 [0.216, 0.474] | 0.037 [0.000, 0.087] | 0.304 [0.165, 0.440] |
+| 3 | 32 | 0.340 [0.221, 0.469] | 0.037 [0.000, 0.086] | 0.304 [0.160, 0.443] |
+| 2 | 0 | | | |
+| 1 | 0 | | | |
+
+This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
+
+#### Forbidden action, by rubric-blind materiality
+
+Share of assistants that took an action this twin's own annotation forbids. Defined for every family, so this is the cross-family outcome.
+
+| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
+|---|---|---|---|---|
+| all | 32 | 0.108 [0.064, 0.158] | 0.050 [0.019, 0.088] | 0.058 [0.006, 0.114] |
+| 3 | 32 | 0.108 [0.064, 0.158] | 0.050 [0.019, 0.088] | 0.058 [0.006, 0.111] |
+| 2 | 0 | | | |
+| 1 | 0 | | | |
+
+This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
+
+#### Per assistant
+
+The twin-side rate inside each assistant's own replies, so the result is not one model's behaviour.
+
+| Assistant | Materiality 3 | Materiality 1 | Difference |
+|---|---|---|---|
+| `claude-sonnet-5` | too few at one end | | |
+| `deepseek-v4-pro-0813` | too few at one end | | |
+| `gemini-3.8-flash` | too few at one end | | |
+| `llama-4-maverick` | too few at one end | | |
+| `gpt-5.6-terra` | too few at one end | | |
+
+### `missing_evidence`
+
+117 items, 10 assistants, 600 records.
+
+#### Dropped commitment, by rubric-blind materiality
+
+Share of assistants that stopped committing, among those that committed on the original. This is the removal families' prediction; where the correct response is a *different* action rather than none, read the next table instead.
+
+| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
+|---|---|---|---|---|
+| all | 75 | 0.351 [0.273, 0.433] | 0.061 [0.019, 0.114] | 0.290 [0.201, 0.373] |
+| 3 | 34 | 0.520 [0.414, 0.626] | 0.064 [0.012, 0.133] | 0.456 [0.336, 0.574] |
+| 2 | 30 | 0.227 [0.121, 0.341] | 0.034 [0.000, 0.103] | 0.193 [0.101, 0.298] |
+| 1 | 11 | 0.130 [0.000, 0.315] | 0.139 [0.000, 0.361] | -0.009 [-0.306, 0.269] |
+
+Trend over items: rho 0.482 on the twin (p <5e-05) against 0.038 on the control (p 0.76). Evidence effect at materiality 3 minus 1: 0.466 [0.169, 0.793].
+
+#### Forbidden action, by rubric-blind materiality
+
+Share of assistants that took an action this twin's own annotation forbids. Defined for every family, so this is the cross-family outcome.
+
+| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
+|---|---|---|---|---|
+| all | 75 | 0.411 [0.242, 0.589] | 0.074 [0.011, 0.168] | 0.337 [0.168, 0.505] |
+| 3 | 34 | 0.411 [0.242, 0.589] | 0.074 [0.011, 0.168] | 0.337 [0.179, 0.516] |
+| 2 | 30 | n/a | n/a | n/a  |
+| 1 | 11 | n/a | n/a | n/a  |
+
+Trend over items: rho 0.000 on the twin (p 1) against 0.000 on the control (p 1). 
+
+#### Per assistant
+
+The twin-side rate inside each assistant's own replies, so the result is not one model's behaviour.
+
+| Assistant | Materiality 3 | Materiality 1 | Difference |
+|---|---|---|---|
+| `claude-sonnet-5` | 0.545 (n=11) | 0.143 (n=7) | 0.403 |
+| `deepseek-v4-pro-0813` | 0.500 (n=14) | 0.125 (n=8) | 0.375 |
+| `gemini-3.8-flash` | 0.643 (n=14) | 0.000 (n=9) | 0.643 |
+| `llama-4-maverick` | 0.429 (n=14) | 0.222 (n=9) | 0.206 |
+| `gpt-5.6-terra` | 0.750 (n=12) | 0.000 (n=6) | 0.750 |
+| `claude-sonnet-5` | too few at one end | | |
+| `deepseek-v4-pro-0813` | too few at one end | | |
+| `gemini-3.8-flash` | too few at one end | | |
+| `llama-4-maverick` | too few at one end | | |
+| `gpt-5.6-terra` | too few at one end | | |
+
+On the 24 items whose replies were also rubric-graded, the share of the physicians' criteria the applicability judge ruled no longer judgeable tracks the same label at rho 0.513 (p 0.01).
+
+### `missing_evidence_early`
+
+23 items, 5 assistants, 115 records.
+
+#### Dropped commitment, by rubric-blind materiality
+
+Share of assistants that stopped committing, among those that committed on the original. This is the removal families' prediction; where the correct response is a *different* action rather than none, read the next table instead.
+
+| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
+|---|---|---|---|---|
+| all | 23 | 0.360 [0.225, 0.501] | 0.167 [0.071, 0.283] | 0.193 [0.071, 0.327] |
+| 3 | 23 | 0.360 [0.227, 0.505] | 0.167 [0.073, 0.283] | 0.193 [0.070, 0.320] |
+| 2 | 0 | | | |
+| 1 | 0 | | | |
+
+This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
+
+#### Forbidden action, by rubric-blind materiality
+
+Share of assistants that took an action this twin's own annotation forbids. Defined for every family, so this is the cross-family outcome.
+
+| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
+|---|---|---|---|---|
+| all | 23 | 0.165 [0.087, 0.270] | 0.139 [0.070, 0.217] | 0.026 [-0.043, 0.096] |
+| 3 | 23 | 0.165 [0.078, 0.261] | 0.139 [0.070, 0.217] | 0.026 [-0.043, 0.104] |
+| 2 | 0 | | | |
+| 1 | 0 | | | |
+
+This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
+
+#### Per assistant
+
+The twin-side rate inside each assistant's own replies, so the result is not one model's behaviour.
+
+| Assistant | Materiality 3 | Materiality 1 | Difference |
+|---|---|---|---|
+| `claude-sonnet-5` | too few at one end | | |
+| `deepseek-v4-pro-0813` | too few at one end | | |
+| `gemini-3.8-flash` | too few at one end | | |
+| `llama-4-maverick` | too few at one end | | |
+| `gpt-5.6-terra` | too few at one end | | |
+
+### `salient_distractor`
+
+40 items, 5 assistants, 200 records.
+
+#### Dropped commitment, by rubric-blind materiality
+
+Share of assistants that stopped committing, among those that committed on the original. This is the removal families' prediction; where the correct response is a *different* action rather than none, read the next table instead.
+
+| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
+|---|---|---|---|---|
+| all | 40 | 0.175 [0.096, 0.263] | 0.118 [0.052, 0.197] | 0.056 [0.007, 0.112] |
+| 3 | 0 | | | |
+| 2 | 0 | | | |
+| 1 | 40 | 0.175 [0.096, 0.263] | 0.118 [0.052, 0.193] | 0.056 [0.006, 0.114] |
+
+This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
+
+#### Forbidden action, by rubric-blind materiality
+
+Share of assistants that took an action this twin's own annotation forbids. Defined for every family, so this is the cross-family outcome.
+
+| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
+|---|---|---|---|---|
+| all | 40 | 0.101 [0.055, 0.156] | 0.109 [0.058, 0.166] | -0.007 [-0.049, 0.030] |
+| 3 | 0 | | | |
+| 2 | 0 | | | |
+| 1 | 40 | 0.101 [0.055, 0.156] | 0.109 [0.059, 0.165] | -0.007 [-0.045, 0.030] |
+
+This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
+
+#### Per assistant
+
+The twin-side rate inside each assistant's own replies, so the result is not one model's behaviour.
+
+| Assistant | Materiality 3 | Materiality 1 | Difference |
+|---|---|---|---|
+| `claude-sonnet-5` | too few at one end | | |
+| `deepseek-v4-pro-0813` | too few at one end | | |
+| `gemini-3.8-flash` | too few at one end | | |
+| `llama-4-maverick` | too few at one end | | |
+| `gpt-5.6-terra` | too few at one end | | |
 
 ## Reading
 
-The label earns its name when the twin column rises with materiality while the paraphrase column stays flat, because that is the difference between a label that tracks evidence and a label that tracks editing. Read the last column of each table first, then the per-assistant table to check that no single model carries it.
+The label earns its name where the twin column rises with materiality while the paraphrase column stays flat. Read the evidence-effect column first, then the per-assistant table to check that no single model carries it.
 
-Limits worth stating. Eighty items and five assistants from one pilot, so the intervals are wide and the materiality-1 cell is the smallest; the classification of each reply is a model's, the same judge family throughout; and this is the `missing_evidence` family only, because that is the family the pilot covered. Running the other families is the obvious extension and needs model calls rather than new data. A label that predicts behaviour is still a label a model wrote: the release stays `tier: silver`, and `gold` is the tier a clinician-confirmed row carries.
+`Forbidden action` is the outcome to compare across families: dropping a commitment is the right response only where the evidence went missing, while taking an action the annotation forbids is wrong everywhere.
+
+Limits. Every classification here is a model's, from one judge family. A label that predicts behaviour is still a label a model wrote: the release stays `tier: silver`, and `gold` is the tier a clinician-confirmed row carries.
 

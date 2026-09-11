@@ -1,24 +1,27 @@
 #!/usr/bin/env python3
 """Criterion validity: does the materiality label predict what models actually do?
 
-The other two anchors compare our labels with physician-written artefacts. This one asks the harder
-question, the one a rater-agreement study cannot answer: a twin labelled material is supposed to be a twin
-where the original commitment is no longer supported, so **assistants should stop committing on it more often
-than on a twin labelled immaterial**. That prediction is about behaviour, and the behaviour is already
-measured and shipped: `release/reference_records.jsonl` holds every reply of five assistants on the 80
-`missing_evidence` twins of the reference pilot, with its classification.
+The other two anchors compare our labels with physician-written artefacts. This one asks the harder question,
+the one a rater-agreement study cannot answer: a twin labelled material is supposed to be a twin whose original
+commitment the evidence no longer supports, so **assistants should behave differently on it than on a twin
+labelled immaterial**. That prediction is about behaviour, and behaviour is measured.
 
-The design has a built-in discriminant control. Each item also carries a paraphrase-only twin, which changes
-the wording and no evidence. Materiality must predict the drop in commitment on the **perturbed** side and
-must *not* predict it on the **paraphrase** side: a label that predicts both is measuring how much the text
-was disturbed, not whether the evidence still supports the answer. The gap between the two is therefore the
-estimate to read, and it is computed per item, so no model contributes more than one observation to it.
+The design has a built-in discriminant control. Every item also carries a paraphrase-only twin, which changes
+the wording and no evidence. Materiality must predict the change on the **perturbed** side and must *not*
+predict it on the **paraphrase** side: a label that predicts both is measuring how much the text was disturbed
+rather than whether the evidence still supports the answer. Each table's last column is that difference,
+computed per item, so no model contributes more than one observation to it.
 
-Materiality is taken from the two rubric-blind reviewers where they agree (the release's own two-rater rule),
-with the three-rater median reported next to it. Rates are aggregated per item first, so five replies to the
-same twin cannot act as five independent observations.
+Two outcomes, because the families ask for different behaviour. **Dropped commitment** is the removal
+families' prediction and means little where the correct response is to change the action rather than withhold
+it. **Forbidden action** is the 0.5.0 outcome and is defined for every family against that twin's own
+annotation, so it is the one to read outside `missing_evidence`.
 
-    python tools/behaviour_anchor.py            # writes docs/BEHAVIOUR_ANCHOR.md
+Materiality comes from the two rubric-blind reviewers where they agree, the release's own two-rater rule, with
+the three-rater median beside it. Rates are aggregated per item before being averaged.
+
+    python tools/behaviour_anchor.py                                  # the shipped reference pilot
+    python tools/behaviour_anchor.py --family all --records release/reference_records.jsonl runs/quick__*
 """
 from __future__ import annotations
 
@@ -39,6 +42,26 @@ def rows(p: Path) -> list:
     return [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
 
 
+def load_records(paths: list[str]) -> list:
+    """Records from several runs. A run's records carry no model name, so take it from its summary.json."""
+    out = []
+    for raw in paths:
+        p = Path(raw)
+        if p.is_dir():
+            p = p / "records.jsonl"
+        if not p.exists():
+            continue
+        model = None
+        summary = p.parent / "summary.json"
+        if summary.exists():
+            meta = json.loads(summary.read_text()).get("meta") or {}
+            model = meta.get("model")
+        for r in rows(p):
+            r["model"] = r.get("model") or model or p.parent.name
+            out.append(r)
+    return out
+
+
 def blind(t: dict):
     a, b = t.get("reviewer_materiality"), t.get("codex_materiality")
     if a in (1, 2, 3) and b in (1, 2, 3):
@@ -47,7 +70,15 @@ def blind(t: dict):
 
 
 def stance(rec: dict, cond: str):
-    return (rec["behavior"].get(cond) or {}).get("stance")
+    return (rec.get("behavior", {}).get(cond) or {}).get("stance")
+
+
+def forbidden(rec: dict, cond: str):
+    """True when the judge named a forbidden action for this condition, None when it did not judge it."""
+    a = (rec.get("action") or {}).get(cond)
+    if not a:
+        return None
+    return bool(a.get("forbidden"))
 
 
 def mean(v: list):
@@ -60,6 +91,15 @@ def boot_ci(vals: list, seed: int = 0):
     rng = random.Random(seed)
     draws = sorted(mean([vals[rng.randrange(len(vals))] for _ in range(len(vals))]) for _ in range(BOOT))
     return mean(vals), (draws[int(0.025 * BOOT)], draws[int(0.975 * BOOT)])
+
+
+def boot_diff(hi: list, lo: list, seed: int = 1):
+    if not hi or not lo:
+        return None, (None, None)
+    rng = random.Random(seed)
+    draws = sorted(mean([hi[rng.randrange(len(hi))] for _ in hi]) - mean([lo[rng.randrange(len(lo))] for _ in lo])
+                   for _ in range(BOOT))
+    return mean(hi) - mean(lo), (draws[int(0.025 * BOOT)], draws[int(0.975 * BOOT)])
 
 
 def spearman_perm(pairs: list, seed: int = 0):
@@ -80,21 +120,18 @@ def spearman_perm(pairs: list, seed: int = 0):
         return r
     def rho(xs, ys):
         rx, ry = rank(xs), rank(ys)
-        n = len(xs)
         mx, my = mean(rx), mean(ry)
         num = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
         den = (sum((a - mx) ** 2 for a in rx) * sum((b - my) ** 2 for b in ry)) ** 0.5
         return num / den if den else 0.0
-    xs = [p[0] for p in pairs]
-    ys = [p[1] for p in pairs]
+    xs, ys = [p[0] for p in pairs], [p[1] for p in pairs]
     obs = rho(xs, ys)
     rng = random.Random(seed)
     hits = 0
     for _ in range(PERM):
         sh = ys[:]
         rng.shuffle(sh)
-        if abs(rho(xs, sh)) >= abs(obs):
-            hits += 1
+        hits += abs(rho(xs, sh)) >= abs(obs)
     return obs, (hits + 1) / (PERM + 1)
 
 
@@ -110,148 +147,182 @@ def pfmt(p):
     return "n/a" if p is None else (f"<{1 / (PERM + 1):.1g}" if p <= 1 / (PERM + 1) else f"{p:.2g}")
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--dist", default=str(ROOT / "dist"))
-    ap.add_argument("--out", default=str(OUT), help="where to write the report (default: the docs page)")
-    ap.add_argument("--records", default=str(ROOT / "release" / "reference_records.jsonl"))
-    a = ap.parse_args()
-    twins = {t["prompt_id"]: t for t in rows(Path(a.dist) / "keystone_twins.jsonl") if t["family"] == "missing_evidence"}
-    recs = [r for r in rows(Path(a.records)) if r["family"] == "missing_evidence"]
-
-    # one observation per (item, model), then collapse to items
-    per_item = defaultdict(lambda: defaultdict(list))
-    per_model = defaultdict(lambda: defaultdict(list))
+def collect(twins: dict, recs: list) -> tuple[dict, dict]:
+    """One observation per (item, model), collapsed to items. Returns items and the per-model view."""
+    per_item, per_model = defaultdict(lambda: defaultdict(list)), defaultdict(lambda: defaultdict(list))
     for r in recs:
-        t = twins.get(r["source_id"])
+        t = twins.get(r.get("source_id"))
         if t is None:
             continue
         o, p, q = stance(r, "original"), stance(r, "perturbed"), stance(r, "paraphrase")
         if o is None:                                   # empty reply: missing data, never a stance
             continue
         committed = o == "definitive"
-        names = bool((r["behavior"].get("perturbed") or {}).get("names_missing_element"))
+        names = bool((r.get("behavior", {}).get("perturbed") or {}).get("names_missing_element"))
         cells = {"committed_original": float(committed)}
         if committed and p is not None:
             cells["dropped_on_twin"] = float(p != "definitive")
-            cells["adaptation_failure"] = float(p == "definitive" and not names)
+            cells["held_without_naming"] = float(p == "definitive" and not names)
         if committed and q is not None:
             cells["dropped_on_paraphrase"] = float(q != "definitive")
-        if p is not None:
-            cells["unsafe_on_twin"] = float(bool((r["behavior"].get("perturbed") or {}).get("unsafe_action")))
+        for cond, key in (("perturbed", "forbidden_on_twin"), ("paraphrase", "forbidden_on_paraphrase")):
+            f = forbidden(r, cond)
+            if f is not None:
+                cells[key] = float(f)
         if r.get("rubric") and r["rubric"].get("inapplicable_share") is not None:
             cells["inapplicable_share"] = float(r["rubric"]["inapplicable_share"])
         for k, v in cells.items():
             per_item[r["source_id"]][k].append(v)
             per_model[r["model"]][k].append((r["source_id"], v))
-
     items = {}
     for sid, d in per_item.items():
         t = twins[sid]
         items[sid] = {"blind": blind(t), "majority": t.get("materiality_majority"),
                       **{k: mean(v) for k, v in d.items()},
                       "n_models": len(d.get("committed_original", []))}
+    return items, per_model
 
-    def table(label_key: str, title: str) -> list:
-        lv = defaultdict(list)
-        for sid, it in items.items():
-            if it[label_key] in (1, 2, 3):
-                lv[it[label_key]].append(it)
-        L = [f"### {title}", "",
-             "| Materiality | Items | Committed on the original | Dropped commitment on the twin | Stayed definitive without naming "
-             "the change | Dropped on the paraphrase (control) | Evidence effect, twin minus paraphrase |", "|---|---|---|---|---|---|---|"]
-        for k in (3, 2, 1):
-            its = lv.get(k, [])
-            if not its:
-                L.append(f"| {k} | 0 | | | | | |")
-                continue
-            def col(key):
-                v = [i[key] for i in its if i.get(key) is not None]
-                m, c = boot_ci(v, seed=k)
-                return f"{fmt(m)} {ci(c)}" if m is not None else "n/a"
-            gap = [i["dropped_on_twin"] - i["dropped_on_paraphrase"] for i in its
-                   if i.get("dropped_on_twin") is not None and i.get("dropped_on_paraphrase") is not None]
-            mg, cg = boot_ci(gap, seed=k + 10)
-            L.append(f"| {k} | {len(its)} | {col('committed_original')} | {col('dropped_on_twin')} | {col('adaptation_failure')} | "
-                     f"{col('dropped_on_paraphrase')} | {fmt(mg)} {ci(cg)} |")
-        # trend over items and the discriminant contrast
-        def trend(key):
-            pairs = [(it[label_key], it[key]) for it in items.values()
-                     if it[label_key] in (1, 2, 3) and it.get(key) is not None]
-            return spearman_perm(pairs)
-        rho_t, p_t = trend("dropped_on_twin")
-        rho_c, p_c = trend("dropped_on_paraphrase")
-        hi = [i["dropped_on_twin"] - i["dropped_on_paraphrase"] for i in lv.get(3, [])
-              if i.get("dropped_on_twin") is not None and i.get("dropped_on_paraphrase") is not None]
-        lo = [i["dropped_on_twin"] - i["dropped_on_paraphrase"] for i in lv.get(1, [])
-              if i.get("dropped_on_twin") is not None and i.get("dropped_on_paraphrase") is not None]
-        diff = None
-        if hi and lo:
-            rng = random.Random(1)
-            obs = mean(hi) - mean(lo)
-            draws = sorted(mean([hi[rng.randrange(len(hi))] for _ in hi]) - mean([lo[rng.randrange(len(lo))] for _ in lo])
-                           for _ in range(BOOT))
-            diff = (obs, (draws[int(0.025 * BOOT)], draws[int(0.975 * BOOT)]))
-        L += ["",
-              f"Trend over items: Spearman rho {fmt(rho_t)} on the twin (permutation p {pfmt(p_t)}) against "
-              f"{fmt(rho_c)} on the paraphrase control (p {pfmt(p_c)}).",
-              "" if diff is None else
-              f"Evidence effect at materiality 3 minus materiality 1: {fmt(diff[0])} {ci(diff[1])}.", ""]
-        return L
 
-    L = ["# Criterion validity: materiality against measured behaviour", "",
-         "Both other anchors ask whether our labels agree with something physicians wrote. This one asks whether the label predicts "
-         "what it claims to predict. A twin labelled material is one whose original commitment the evidence no longer supports, so "
-         "assistants should stop committing on it more often than on a twin labelled immaterial. The replies that test this are already "
-         "in the release: five assistants on the 80 `missing_evidence` twins of the reference pilot, each reply classified, each item also "
-         "answered in a paraphrase-only version that changes wording and no evidence.", "",
-         "**Why the paraphrase column decides it.** A label that predicts the drop on both sides is tracking how much the message was "
-         "disturbed. A label that predicts the drop on the perturbed side only is tracking the evidence. The last column is that "
-         "difference, per item, and it is the number this page is for.", "",
-         "Rates are computed per item across the five assistants before being averaged, so one item contributes one observation. "
-         "Intervals are 95 percent bootstrap over items. Empty replies are missing data and enter no denominator.", ""]
-    L += ["The fourth column is the release's adaptation-failure outcome under a plainer name, because on an immaterial twin staying "
-          "definitive is the correct behaviour: that column is a quality measure only where the edit is material, and it is shown across all "
-          "three levels so the contrast is visible rather than hidden.", ""]
-    L += table("blind", "Materiality from the two rubric-blind reviewers, where they agree")
-    L += table("majority", "Materiality as the three-rater median, for comparison")
-
-    # per-model, so that one assistant cannot carry the result
-    L += ["### Per assistant", "",
-          "The same contrast computed inside each assistant's own replies, to show the result is not one model's behaviour.", "",
-          "| Assistant | Items | Dropped on twin, materiality 3 | materiality 1 | Difference |", "|---|---|---|---|---|"]
-    for model in sorted(per_model):
-        byl = defaultdict(list)
-        for sid, v in per_model[model].get("dropped_on_twin", []):
-            lab = items.get(sid, {}).get("blind")
-            if lab in (1, 2, 3):
-                byl[lab].append(v)
-        if not byl.get(3) or not byl.get(1):
-            L.append(f"| `{model.split('/')[-1]}` | {sum(len(v) for v in byl.values())} | too few at one end | | |")
+def contrast_table(items: dict, label_key: str, twin_key: str, control_key: str, title: str, note: str) -> list:
+    lv = defaultdict(list)
+    for it in items.values():
+        if it[label_key] in (1, 2, 3):
+            lv[it[label_key]].append(it)
+    if not any(len(v) >= 5 for v in lv.values()):
+        return [f"#### {title}", "", "Too few labelled items.", ""]
+    L = [f"#### {title}", "", note, "",
+         "| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |", "|---|---|---|---|---|"]
+    gaps = {}
+    # Every item first. On a run over the quick or strict set the materiality rows below are empty by
+    # construction, because those layers admit one materiality, and this row is then the whole result: the
+    # edit moved the behaviour and the reword of the same message did not.
+    allits = [i for v in lv.values() for i in v]
+    ga = [i[twin_key] - i[control_key] for i in allits
+          if i.get(twin_key) is not None and i.get(control_key) is not None]
+    def col_of(its, key, seed=0):
+        v = [i[key] for i in its if i.get(key) is not None]
+        m, c = boot_ci(v, seed=seed)
+        return f"{fmt(m)} {ci(c)}" if m is not None else "n/a"
+    mga, cga = boot_ci(ga, seed=99)
+    L.append(f"| all | {len(allits)} | {col_of(allits, twin_key, 1)} | {col_of(allits, control_key, 2)} | {fmt(mga)} {ci(cga)} |")
+    for k in (3, 2, 1):
+        its = lv.get(k, [])
+        if not its:
+            L.append(f"| {k} | 0 | | | |")
             continue
-        L.append(f"| `{model.split('/')[-1]}` | {sum(len(v) for v in byl.values())} | {fmt(mean(byl[3]))} (n={len(byl[3])}) | "
-                 f"{fmt(mean(byl[1]))} (n={len(byl[1])}) | {fmt(mean(byl[3]) - mean(byl[1]))} |")
+        def col(key):
+            v = [i[key] for i in its if i.get(key) is not None]
+            m, c = boot_ci(v, seed=k)
+            return f"{fmt(m)} {ci(c)}" if m is not None else "n/a"
+        gap = [i[twin_key] - i[control_key] for i in its
+               if i.get(twin_key) is not None and i.get(control_key) is not None]
+        gaps[k] = gap
+        mg, cg = boot_ci(gap, seed=k + 10)
+        L.append(f"| {k} | {len(its)} | {col(twin_key)} | {col(control_key)} | {fmt(mg)} {ci(cg)} |")
+    if len([k for k in (1, 2, 3) if len(lv.get(k, [])) >= 5]) < 2:
+        L += ["", "This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. "
+                  "The `all` row is the comparison the design rests on: the same item, edited two ways.", ""]
+        return L
+    def trend(key):
+        return spearman_perm([(it[label_key], it[key]) for it in items.values()
+                              if it[label_key] in (1, 2, 3) and it.get(key) is not None])
+    rt, pt = trend(twin_key)
+    rc, pc = trend(control_key)
+    d, cd = boot_diff(gaps.get(3, []), gaps.get(1, []))
+    L += ["", f"Trend over items: rho {fmt(rt)} on the twin (p {pfmt(pt)}) against {fmt(rc)} on the control (p {pfmt(pc)}). "
+              + (f"Evidence effect at materiality 3 minus 1: {fmt(d)} {ci(cd)}." if d is not None else ""), ""]
+    return L
 
-    # the rubric side: does materiality predict how much of the physician rubric stops applying
+
+def analyse(fam: str, twins: dict, recs: list) -> list:
+    items, per_model = collect(twins, recs)
+    models = sorted({r["model"] for r in recs})
+    L = [f"### `{fam}`", "",
+         f"{len(items)} items, {len(models)} assistant{'s' if len(models) != 1 else ''}, {len(recs)} records.", ""]
+    L += contrast_table(items, "blind", "dropped_on_twin", "dropped_on_paraphrase",
+                        "Dropped commitment, by rubric-blind materiality",
+                        "Share of assistants that stopped committing, among those that committed on the original. "
+                        "This is the removal families' prediction; where the correct response is a *different* action "
+                        "rather than none, read the next table instead.")
+    if any(i.get("forbidden_on_twin") is not None for i in items.values()):
+        L += contrast_table(items, "blind", "forbidden_on_twin", "forbidden_on_paraphrase",
+                            "Forbidden action, by rubric-blind materiality",
+                            "Share of assistants that took an action this twin's own annotation forbids. Defined for "
+                            "every family, so this is the cross-family outcome.")
+    hi = [(sid, v) for sid, v in per_model.items()]
+    if len(models) > 1:
+        L += ["#### Per assistant", "",
+              "The twin-side rate inside each assistant's own replies, so the result is not one model's behaviour.", "",
+              "| Assistant | Materiality 3 | Materiality 1 | Difference |", "|---|---|---|---|"]
+        for model in models:
+            byl = defaultdict(list)
+            for sid, v in per_model[model].get("dropped_on_twin", []):
+                lab = items.get(sid, {}).get("blind")
+                if lab in (1, 2, 3):
+                    byl[lab].append(v)
+            if not byl.get(3) or not byl.get(1):
+                L.append(f"| `{model.split('/')[-1]}` | too few at one end | | |")
+                continue
+            L.append(f"| `{model.split('/')[-1]}` | {fmt(mean(byl[3]))} (n={len(byl[3])}) | {fmt(mean(byl[1]))} (n={len(byl[1])}) | "
+                     f"{fmt(mean(byl[3]) - mean(byl[1]))} |")
+        L.append("")
     app = [(it["blind"], it["inapplicable_share"]) for it in items.values()
            if it["blind"] in (1, 2, 3) and it.get("inapplicable_share") is not None]
-    rho_a, p_a = spearman_perm(app)
-    L += ["", "### The rubric side", "",
-          f"On the {len(app)} items whose replies were also rubric-graded, the share of the physicians' criteria that the applicability "
-          f"judge ruled no longer judgeable tracks materiality at Spearman rho {fmt(rho_a)} (permutation p {pfmt(p_a)}). "
-          "Same labels, a different measured consequence.", ""]
+    if len(app) >= 10:
+        r, p = spearman_perm(app)
+        L += [f"On the {len(app)} items whose replies were also rubric-graded, the share of the physicians' criteria the "
+              f"applicability judge ruled no longer judgeable tracks the same label at rho {fmt(r)} (p {pfmt(p)}).", ""]
+    return L
 
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dist", default=str(ROOT / "dist"))
+    ap.add_argument("--out", default=str(OUT), help="where to write the report (default: the docs page)")
+    ap.add_argument("--records", nargs="+", default=[str(ROOT / "release" / "reference_records.jsonl")],
+                    help="records.jsonl files or run directories; a run's model comes from its summary.json")
+    ap.add_argument("--family", default="missing_evidence", help="one family, or 'all' for a section each")
+    a = ap.parse_args()
+    all_twins = rows(Path(a.dist) / "keystone_twins.jsonl")
+    all_recs = load_records(a.records)
+    fams = (sorted({r["family"] for r in all_recs if r.get("family") and r["family"] != "reference"})
+            if a.family == "all" else [a.family])
+
+    sections, done = [], []
+    for fam in fams:
+        twins = {t["prompt_id"]: t for t in all_twins if t["family"] == fam}
+        recs = [r for r in all_recs if r.get("family") == fam]
+        if len({r["source_id"] for r in recs}) < 10:
+            continue
+        done.append(fam)
+        sections += analyse(fam, twins, recs)
+    if not sections:
+        raise SystemExit("no family has enough records to analyse")
+
+    models = sorted({r["model"] for r in all_recs})
+    L = ["# Criterion validity: materiality against measured behaviour", "",
+         "The other two anchors ask whether our labels agree with something physicians wrote. This one asks whether the "
+         "label predicts what it claims to predict: on a twin whose edit is material, assistants should behave "
+         "differently, and on the paraphrase-only twin of the same item they should not. The second half is what makes "
+         "this a test rather than a correlation, because a label that predicts both sides is tracking how much the text "
+         "was disturbed rather than whether the evidence still supports the answer.", "",
+         f"Sources: {', '.join(Path(p).name if Path(p).is_file() else Path(p).name for p in a.records)}. "
+         f"Assistants: {', '.join(m.split('/')[-1] for m in models)}. Families with at least ten items: "
+         f"{', '.join('`' + f + '`' for f in done)}.", "",
+         "Rates are computed per item across assistants before being averaged, so one item is one observation. "
+         "Intervals are 95 percent bootstrap over items; empty replies are missing data and enter no denominator.", ""]
+    L += sections
     L += ["## Reading", "",
-          "The label earns its name when the twin column rises with materiality while the paraphrase column stays flat, because that is "
-          "the difference between a label that tracks evidence and a label that tracks editing. Read the last column of each table "
-          "first, then the per-assistant table to check that no single model carries it.", "",
-          "Limits worth stating. Eighty items and five assistants from one pilot, so the intervals are wide and the materiality-1 cell is "
-          "the smallest; the classification of each reply is a model's, the same judge family throughout; and this is the "
-          "`missing_evidence` family only, because that is the family the pilot covered. Running the other families is the obvious "
-          "extension and needs model calls rather than new data. A label that predicts behaviour is still a label a model wrote: the "
-          "release stays `tier: silver`, and `gold` is the tier a clinician-confirmed row carries.", ""]
+          "The label earns its name where the twin column rises with materiality while the paraphrase column stays flat. "
+          "Read the evidence-effect column first, then the per-assistant table to check that no single model carries it.", "",
+          "`Forbidden action` is the outcome to compare across families: dropping a commitment is the right response only "
+          "where the evidence went missing, while taking an action the annotation forbids is wrong everywhere.", "",
+          "Limits. Every classification here is a model's, from one judge family. A label that predicts behaviour is still "
+          "a label a model wrote: the release stays `tier: silver`, and `gold` is the tier a clinician-confirmed row "
+          "carries.", ""]
     Path(a.out).write_text("\n".join(L) + "\n")
-    print(f"{len(items)} items, {len(recs)} records -> {a.out}")
+    print(f"{len(done)} famil{'y' if len(done) == 1 else 'ies'} ({', '.join(done)}), {len(all_recs)} records, "
+          f"{len(models)} model(s) -> {a.out}")
 
 
 if __name__ == "__main__":

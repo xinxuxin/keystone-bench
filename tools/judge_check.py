@@ -24,6 +24,7 @@ import argparse
 import json
 import re
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -80,6 +81,7 @@ def main():
     ap.add_argument("--from-records", help="score judgements already on disk instead of calling the judge "
                                            "(e.g. release/judge_check_gpt41.jsonl), so a scoring change costs nothing")
     ap.add_argument("--rubric", action="store_true", help="also score every reply with the stale HealthBench rubric")
+    ap.add_argument("--workers", type=int, default=8, help="parallel judge calls; the client caches on disk, so a rerun is free")
     ap.add_argument("--out", default="runs/judge_check")
     a = ap.parse_args()
     d = find_dist()
@@ -95,39 +97,54 @@ def main():
     judge = None if stored else OpenAICompatible(a.judge, base_url=a.base_url, max_tokens=600)
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     res = defaultdict(Counter); rub = defaultdict(list); records = []
+
+    jobs = []
     for r in rows:
         p = pairs.get(r["prompt_id"])
         if p is None or not p.has_state:
             continue
-        spec = action_spec(p, "perturbed")
         for kind, reply in (r.get("replies") or {}).items():
-            if kind not in EXPECT or not reply:
-                continue
-            if stored:
-                rec0 = stored.get((r["prompt_id"], kind))
-                if rec0 is None:
-                    continue
-                b, act = rec0.get("behavior") or {}, rec0.get("action") or {}
-            else:
-                b = parse_json(judge([{"role": "user", "content": behavior_prompt(p.perturbed, reply, p.removed_or_changed)}])) or {}
-                act = parse_json(judge([{"role": "user", "content": action_prompt(p.perturbed, reply, spec)}])) or {}
-            e, ec = EXPECT[kind], expected(kind, p)
-            ok_forb = bool(act.get("forbidden")) == e["forbidden"]
-            ok_acc = bool(act.get("acceptable")) == e["acceptable"]
-            st = b.get("stance"); ok_st = st in e["stance"] if isinstance(e["stance"], tuple) else st == e["stance"]
-            res[kind]["n"] += 1; res[kind]["forbidden_ok"] += ok_forb; res[kind]["acceptable_ok"] += ok_acc; res[kind]["stance_ok"] += ok_st
-            res[kind]["forbidden_ok_cond"] += bool(act.get("forbidden")) == ec["forbidden"]
-            res[kind]["acceptable_ok_cond"] += bool(act.get("acceptable")) == ec["acceptable"]
-            rec = {"prompt_id": r["prompt_id"], "kind": kind, "behavior": b, "action": act}
-            if a.rubric and judge is not None:
-                met = []
-                for c in p.rubrics:
-                    j = parse_json(judge([{"role": "user", "content": grader_prompt(p.perturbed, reply, c["criterion"])}])) or {}
-                    met.append(j.get("criteria_met") if isinstance(j.get("criteria_met"), bool) else None)
-                sc = healthbench_score(p.rubrics, met); rec["stale_score"] = sc
-                if sc is not None:
-                    rub[kind].append(sc)
-            records.append(rec)
+            if kind in EXPECT and reply:
+                jobs.append((r, p, kind, reply))
+
+    def judge_one(job):
+        """One authored reply through both judges. Returns the two parsed verdicts."""
+        r, p, kind, reply = job
+        if stored:
+            rec0 = stored.get((r["prompt_id"], kind))
+            return (rec0.get("behavior") or {}, rec0.get("action") or {}) if rec0 else None
+        b = parse_json(judge([{"role": "user", "content": behavior_prompt(p.perturbed, reply, p.removed_or_changed)}])) or {}
+        act = parse_json(judge([{"role": "user", "content": action_prompt(p.perturbed, reply, action_spec(p, "perturbed"))}])) or {}
+        return b, act
+
+    if stored or a.workers <= 1:
+        verdicts = [judge_one(j) for j in jobs]
+    else:
+        with ThreadPoolExecutor(max_workers=a.workers) as pool:
+            verdicts = list(pool.map(judge_one, jobs))
+
+    for job, v in zip(jobs, verdicts):
+        if v is None:
+            continue
+        r, p, kind, reply = job
+        b, act = v
+        e, ec = EXPECT[kind], expected(kind, p)
+        ok_forb = bool(act.get("forbidden")) == e["forbidden"]
+        ok_acc = bool(act.get("acceptable")) == e["acceptable"]
+        st = b.get("stance"); ok_st = st in e["stance"] if isinstance(e["stance"], tuple) else st == e["stance"]
+        res[kind]["n"] += 1; res[kind]["forbidden_ok"] += ok_forb; res[kind]["acceptable_ok"] += ok_acc; res[kind]["stance_ok"] += ok_st
+        res[kind]["forbidden_ok_cond"] += bool(act.get("forbidden")) == ec["forbidden"]
+        res[kind]["acceptable_ok_cond"] += bool(act.get("acceptable")) == ec["acceptable"]
+        rec = {"prompt_id": r["prompt_id"], "kind": kind, "behavior": b, "action": act}
+        if a.rubric and judge is not None:
+            met = []
+            for c in p.rubrics:
+                j = parse_json(judge([{"role": "user", "content": grader_prompt(p.perturbed, reply, c["criterion"])}])) or {}
+                met.append(j.get("criteria_met") if isinstance(j.get("criteria_met"), bool) else None)
+            sc = healthbench_score(p.rubrics, met); rec["stale_score"] = sc
+            if sc is not None:
+                rub[kind].append(sc)
+        records.append(rec)
     (out / "records.jsonl").write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in records))
     lines = [f"# Judge check: {a.judge}", "", f"{len(records)} judged replies over {len({x['prompt_id'] for x in records})} items", "",
              "| intended type | n | forbidden as expected (fixed / item) | acceptable as expected (fixed / item) | behaviour judge: stance as expected |" + (" stale rubric score (mean) |" if a.rubric else ""),
