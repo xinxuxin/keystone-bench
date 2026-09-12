@@ -150,6 +150,17 @@ Naming what is missing works, in the same direction on all three assistants (+0.
 
 Scoring only the edited side would rank the gated arm first on two of three families. Scoring any question as a cost would reject both arms. Telling those apart is what the negative controls, the unedited condition and the per-family outcomes are for.
 
+**Regrouped by what the evidence asks for, the weak class is asking.** A family is a unit of construction; what an edit demands is not. Each twin's annotated evidence state says whether a question is now needed, a different action is now right, escalation is now right, or the original answer still stands, so the same items regroup into four classes ([`docs/BEHAVIOUR_CLASSES.md`](docs/BEHAVIOUR_CLASSES.md)):
+
+| what the evidence asks for | acceptable action on the edited side |
+|---|---|
+| a question is needed before committing | **0.69** [0.65, 0.73] |
+| urgent evaluation is now the answer | 0.74 [0.69, 0.78] |
+| a different action is now the right one | 0.87 [0.83, 0.91] |
+| the original answer still stands | 0.89 [0.85, 0.91] |
+
+Escalation moves between systems, from 0.41 on the weakest to 0.89 on the strongest. Asking does not: it is below both changing and holding on all five, by 0.14 to 0.26 pooled. Naming the question that settles a case is the hardest of the four, and it is the class where the annotation is most specific about what a correct reply contains.
+
 **The hardest family is `conflicting_evidence`.** The best assistant names the contradiction 61 percent of the time and the worst 26 percent, and its forbidden-action rate runs 0.30 to 0.78. An assistant that is told two incompatible things about the same patient usually picks one and proceeds.
 
 ### The earlier single-family pilot
