@@ -121,7 +121,20 @@ def main():
         fr = sum(r[0] for r in rows) / len(rows); pf = sum(r[1] for r in rows) / len(rows)
         m = sum(r[2] for r in rows) / len(rows); sm = sum(r[3] for r in rows) / len(rows)
         L.append(f"| {fam} | {fr:.3f} | {sm:+.3f} | {pf:.3f} | {m:+.3f} |")
-    L.append("")
+    L += ["## Reading", "",
+          "The instability is real and it is the size other people report. Re-asking the identical request flips "
+          "the forbidden-action verdict on 6.5 to 12.3 percent of cells, against the 8.7 percent an external "
+          "re-sampling study measures on unedited clinical cases ([arXiv:2609.03221](https://arxiv.org/abs/2609.03221)). "
+          "A single unpaired comparison at this scale would be reporting noise.", "",
+          "It does not survive pairing. The contrast a re-run produces on its own, built by taking the twin from one "
+          "run and the control from another, is within 0.042 of zero on every family and its interval contains zero "
+          "on every family. Noise at temperature 0 is two-sided: it moves the twin side and the control side alike, "
+          "and the paired difference cancels it. The measured effects on the same items are +0.21 and +0.48 on the "
+          "two headline families, five to twenty times the largest spurious contrast.", "",
+          "The one to watch is `salient_distractor` at -0.042 [-0.089, +0.004]. It is the largest spurious contrast "
+          "in the table and it is negative, which would if anything understate a real positive effect on that family. "
+          "The measured effect there is +0.077 [-0.051, +0.205], so the family is reported as containing zero either "
+          "way.", ""]
     text = "\n".join(L) + "\n"
     print(text)
     if a.out:
