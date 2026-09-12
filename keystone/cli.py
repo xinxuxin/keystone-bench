@@ -12,7 +12,7 @@ from pathlib import Path
 from . import __version__
 from .data import FAMILIES, LAYERS, SPLITS, find_dist, load_manifest, load_pairs, load_rows
 from .metrics import cohen_kappa, pair_action_outcomes, pair_outcomes, panel_records, primary_hypothesis_supported, summarize
-from .runner import OpenAICompatible, evaluate, report_markdown, write_run
+from .runner import OpenAICompatible, make_client, evaluate, report_markdown, write_run
 
 
 def cmd_build(a):
@@ -338,8 +338,8 @@ def read_system_arg(value: str | None) -> str | None:
 
 
 def cmd_run(a):
-    respond = OpenAICompatible(a.model, base_url=a.base_url, max_tokens=a.max_tokens, cache_dir=a.cache)
-    judge = OpenAICompatible(a.judge, base_url=a.judge_base_url, max_tokens=600, cache_dir=a.cache)
+    respond = make_client(a.model, base_url=a.base_url, max_tokens=a.max_tokens, cache_dir=a.cache, repeat=a.repeat)
+    judge = make_client(a.judge, base_url=a.judge_base_url, max_tokens=600, cache_dir=a.cache)
     system = read_system_arg(a.system)
     if system:
         respond = WithSystem(respond, system)
@@ -361,7 +361,7 @@ def cmd_run(a):
         stream.close()
         meta = {"title": f"Keystone {fam} ({a.layer}, {a.split}) — {a.model}", "benchmark_version": load_manifest(a.dist)["version"], "family": fam, "layer": a.layer, "split": a.split,
                 "model": a.model, "judge": a.judge, "temperature": 0.0, "max_tokens": a.max_tokens, "rubric": a.rubric,
-                "arm": a.arm, "system_prompt": system,
+                "arm": a.arm, "system_prompt": system, "repeat": a.repeat,
                 "usage": {"model": dict(respond.usage), "judge": dict(judge.usage)}}
         summary = write_run(out, records, meta)
         print((out / "REPORT.md").read_text())
@@ -397,7 +397,7 @@ def main(argv=None):
     s.add_argument("--limit", type=int); s.add_argument("--rubric", action="store_true"); s.add_argument("--max-tokens", type=int, default=1500); s.set_defaults(f=cmd_estimate)
     s = sub.add_parser("run", help="evaluate a model with a judge")
     s.add_argument("--family", default="missing_evidence", choices=FAMILIES + ("all",)); s.add_argument("--layer", default="core", choices=LAYERS)
-    s.add_argument("--model", required=True, help="e.g. openrouter/openai/gpt-5.6-terra, openai/gpt-4.1, ollama/llama3.1:8b, or a bare id with --base-url")
+    s.add_argument("--model", required=True, help="e.g. openrouter/openai/gpt-5.6-terra, openai/gpt-4.1, ollama/llama3.1:8b, cli-codex/gpt-5.6-sol (your subscription, no API credit), or a bare id with --base-url")
     s.add_argument("--judge", required=True, help="e.g. openrouter/openai/gpt-4.1; use a different vendor than --model")
     s.add_argument("--base-url"); s.add_argument("--judge-base-url"); s.add_argument("--limit", type=int); s.add_argument("--rubric", action="store_true", help="also grade with the HealthBench rubric and the applicability judge")
     s.add_argument("--require-paraphrase", action="store_true", help="only pairs that have a released paraphrase control")
@@ -406,6 +406,8 @@ def main(argv=None):
     s.add_argument("--workers", type=int, default=8); s.add_argument("--max-tokens", type=int, default=1500); s.add_argument("--cache"); s.add_argument("--out"); s.add_argument("--verbose", action="store_true")
     s.add_argument("--system", help="system prompt for the model under test (text, or @file); the judge never sees it. Use for intervention arms")
     s.add_argument("--arm", default="baseline", help="label recorded in the run meta (e.g. baseline, acknowledge, gate)")
+    s.add_argument("--repeat", type=int, default=0, help="re-ask the identical request under a different cache key (1, 2, ...): "
+                                                         "measures the model's own run-to-run instability, the floor a paired effect has to clear")
     s.set_defaults(f=cmd_run)
     a = ap.parse_args(argv); a.f(a)
 

@@ -10,6 +10,9 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
+import subprocess
+import tempfile
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -40,7 +43,7 @@ class OpenAICompatible:
 
     def __init__(self, model: str, base_url: str | None = None, api_key: str | None = None, temperature: float = 0.0,
                  max_tokens: int = 1500, timeout: float = 180.0, retries: int = 5, cache_dir: str | os.PathLike | None = None,
-                 extra_headers: dict | None = None, extra_body: dict | None = None):
+                 extra_headers: dict | None = None, extra_body: dict | None = None, repeat: int = 0):
         provider, _, rest = model.partition("/")
         if provider in PROVIDERS and rest:
             default_url, key_env = PROVIDERS[provider]
@@ -60,11 +63,13 @@ class OpenAICompatible:
         self.cache_dir = Path(cache_dir) if cache_dir else Path(os.environ.get("KEYSTONE_CACHE", Path.home() / ".cache" / "keystone"))
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.extra_headers, self.extra_body = extra_headers or {}, extra_body or {}
+        self.repeat = repeat   # cache-key only: re-asks the identical request, measuring the server's own nondeterminism
         self.usage = {"calls": 0, "cached": 0, "input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0}
         self._lock = threading.Lock()
 
     def _cache_path(self, messages: list[dict], max_tokens: int | None = None) -> Path:
-        key = json.dumps({"m": self.model_id, "u": self.base_url, "msgs": messages, "t": self.temperature, "n": max_tokens or self.max_tokens, "x": self.extra_body}, sort_keys=True)
+        key = json.dumps({"m": self.model_id, "u": self.base_url, "msgs": messages, "t": self.temperature, "n": max_tokens or self.max_tokens,
+                          "x": self.extra_body, **({"r": self.repeat} if self.repeat else {})}, sort_keys=True)
         return self.cache_dir / (hashlib.sha256(key.encode()).hexdigest() + ".json")
 
     def __call__(self, messages: list[dict], max_tokens: int | None = None) -> str:
@@ -109,6 +114,135 @@ class OpenAICompatible:
                 last = e
                 time.sleep(min(2 ** attempt, 30))
         raise RuntimeError(f"{self.name}: {self.retries} attempts failed: {last}")
+
+
+
+CLI_TOOLS = {   # subscription command-line assistants, used through the login the user already has
+    "cli-claude": "claude",
+    "cli-codex": "codex",
+}
+
+
+class SubscriptionCLI:
+    """A coding-assistant CLI (`claude`, `codex`) driven as a one-shot completion endpoint.
+
+    model: 'cli-codex/gpt-5.6-sol', 'cli-claude/sonnet', or either with 'default' for the CLI's own default.
+    This runs on the subscription the user is already logged into, so it costs no API credit; `.usage`
+    records tokens and, where the CLI reports one, a reference price that is NOT charged. Same interface,
+    cache and retry behaviour as OpenAICompatible, so either can be passed as the model or the judge.
+
+    Throughput is a process launch per call, so keep `workers` modest; the CLIs are also rate limited by
+    the subscription, and a shared login is shared with whatever else is using it.
+    """
+
+    def __init__(self, model: str, temperature: float = 0.0, max_tokens: int = 1500, timeout: float = 300.0,
+                 retries: int = 3, cache_dir: str | os.PathLike | None = None, repeat: int = 0):
+        tool, _, name = model.partition("/")
+        if tool not in CLI_TOOLS or not name:
+            raise ValueError(f"expected cli-claude/<model> or cli-codex/<model>, got {model!r}")
+        self.tool, self.model_name, self.model_id, self.name = tool, name, model, model
+        self.temperature, self.max_tokens, self.timeout, self.retries, self.repeat = temperature, max_tokens, timeout, retries, repeat
+        self.cache_dir = Path(cache_dir) if cache_dir else Path(os.environ.get("KEYSTONE_CACHE", Path.home() / ".cache" / "keystone"))
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.usage = {"calls": 0, "cached": 0, "input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0, "reference_cost_usd": 0.0}
+        self._lock = threading.Lock()
+        if not shutil.which(CLI_TOOLS[tool]):
+            raise RuntimeError(f"{CLI_TOOLS[tool]} is not on PATH; install it or use an API model")
+
+    def _cache_path(self, messages: list[dict], max_tokens: int | None = None) -> Path:
+        key = json.dumps({"m": self.model_id, "u": "cli", "msgs": messages, "t": self.temperature, "n": max_tokens or self.max_tokens,
+                          **({"r": self.repeat} if self.repeat else {})}, sort_keys=True)
+        return self.cache_dir / (hashlib.sha256(key.encode()).hexdigest() + ".json")
+
+    @staticmethod
+    def _flatten(messages: list[dict]) -> tuple[str, str | None]:
+        """(prompt, system). A CLI takes one block of text, so a conversation is written out as a transcript."""
+        system = "\n\n".join(m["content"] for m in messages if m["role"] == "system") or None
+        rest = [m for m in messages if m["role"] != "system"]
+        if len(rest) == 1 and rest[0]["role"] == "user":
+            return rest[0]["content"], system
+        return "\n\n".join(f"[{m['role']}]\n{m['content']}" for m in rest) + "\n\n[assistant]", system
+
+    def _claude(self, prompt: str, system: str | None) -> tuple[str, dict]:
+        cmd = ["claude", "-p", "--tools", "", "--no-session-persistence", "--max-turns", "1", "--output-format", "json",
+               "--system-prompt", system or "You are a helpful assistant. Answer the user directly."]
+        if self.model_name != "default":
+            cmd += ["--model", self.model_name]
+        with tempfile.TemporaryDirectory() as cwd:   # a scratch cwd keeps the repository's CLAUDE.md out of the prompt
+            r = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=self.timeout, cwd=cwd)
+        try:
+            j = json.loads(r.stdout.strip().splitlines()[-1])
+        except (json.JSONDecodeError, IndexError):
+            raise RuntimeError(f"claude exited {r.returncode} without JSON: {(r.stderr or r.stdout)[:200]}")
+        if j.get("is_error"):
+            raise RuntimeError(f"claude: {str(j.get('result'))[:200]}")
+        u = j.get("usage") or {}
+        return j.get("result") or "", {"input_tokens": u.get("input_tokens") or 0, "output_tokens": u.get("output_tokens") or 0,
+                                       "reference_cost_usd": float(j.get("total_cost_usd") or 0.0)}
+
+    def _codex(self, prompt: str, system: str | None) -> tuple[str, dict]:
+        with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as tf:
+            out_path = tf.name
+        cmd = ["codex", "exec", "--skip-git-repo-check", "--ephemeral", "--json", "-s", "read-only", "-o", out_path]
+        if self.model_name != "default":
+            cmd += ["-m", self.model_name]
+        cmd.append("-")
+        text_in = f"[Instructions]\n{system}\n\n{prompt}" if system else prompt
+        try:
+            with tempfile.TemporaryDirectory() as cwd:
+                r = subprocess.run(cmd, input=text_in, capture_output=True, text=True, timeout=self.timeout, cwd=cwd)
+            text = Path(out_path).read_text() if Path(out_path).exists() else ""
+        finally:
+            Path(out_path).unlink(missing_ok=True)
+        usage = {"input_tokens": 0, "output_tokens": 0, "reference_cost_usd": 0.0}
+        for line in r.stdout.splitlines():
+            try:
+                ev = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if ev.get("type") == "turn.completed" and isinstance(ev.get("usage"), dict):
+                usage["input_tokens"] = ev["usage"].get("input_tokens") or 0
+                usage["output_tokens"] = ev["usage"].get("output_tokens") or 0
+        if not text.strip():
+            raise RuntimeError(f"codex exited {r.returncode} with no output: {((r.stderr or '') + r.stdout)[-200:]}")
+        return text.strip(), usage
+
+    def __call__(self, messages: list[dict], max_tokens: int | None = None) -> str:
+        max_tokens = max_tokens or self.max_tokens
+        cp = self._cache_path(messages, max_tokens)
+        if cp.exists():
+            try:
+                d = json.loads(cp.read_text())
+                with self._lock:
+                    self.usage["calls"] += 1; self.usage["cached"] += 1
+                return d["text"]
+            except (json.JSONDecodeError, KeyError):
+                cp.unlink(missing_ok=True)
+        prompt, system = self._flatten(messages)
+        last: Exception | None = None
+        for attempt in range(self.retries):
+            try:
+                text, u = self._claude(prompt, system) if self.tool == "cli-claude" else self._codex(prompt, system)
+                with self._lock:
+                    self.usage["calls"] += 1
+                    self.usage["input_tokens"] += u["input_tokens"]; self.usage["output_tokens"] += u["output_tokens"]
+                    self.usage["reference_cost_usd"] += u["reference_cost_usd"]   # what an API call would have cost; not charged
+                tmp = cp.with_suffix(f".{os.getpid()}.{threading.get_ident()}.tmp")
+                tmp.write_text(json.dumps({"text": text, "usage": u, "model": self.model_id}, ensure_ascii=False))
+                os.replace(tmp, cp)
+                return text
+            except Exception as e:  # noqa: BLE001 - a CLI fails for transient reasons too (rate limit, restart)
+                last = e
+                time.sleep(min(5 * 2 ** attempt, 60))
+        raise RuntimeError(f"{self.name}: {self.retries} attempts failed: {last}")
+
+
+def make_client(model: str, **kw):
+    """SubscriptionCLI for a 'cli-*' model id, OpenAICompatible otherwise. Unknown keywords are dropped for the CLI."""
+    if model.partition("/")[0] in CLI_TOOLS:
+        keep = {k: v for k, v in kw.items() if k in ("temperature", "max_tokens", "timeout", "retries", "cache_dir", "repeat")}
+        return SubscriptionCLI(model, **keep)
+    return OpenAICompatible(model, **kw)
 
 
 def _judge_json(judge: Complete, prompt: str, factor: int = 3) -> dict:

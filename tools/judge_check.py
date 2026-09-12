@@ -30,7 +30,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from keystone import OpenAICompatible, load_pairs  # noqa: E402
+from keystone import load_pairs  # noqa: E402
+from keystone.runner import make_client  # noqa: E402
 from keystone.data import find_dist, load_rows  # noqa: E402
 from keystone.metrics import healthbench_score  # noqa: E402
 from keystone.prompts import action_prompt, behavior_prompt, grader_prompt, parse_json  # noqa: E402
@@ -95,7 +96,7 @@ def main():
     if a.from_records:
         stored = {(r["prompt_id"], r["kind"]): r for r in load_rows(Path(a.from_records))}
         print(f"scoring {len(stored)} stored judgements from {a.from_records}, no calls")
-    judge = None if stored else OpenAICompatible(a.judge, base_url=a.base_url, max_tokens=600)
+    judge = None if stored else make_client(a.judge, base_url=a.base_url, max_tokens=600)
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     res = defaultdict(Counter); rub = defaultdict(list); records = []
 
