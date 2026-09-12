@@ -132,7 +132,9 @@ class SubscriptionCLI:
     cache and retry behaviour as OpenAICompatible, so either can be passed as the model or the judge.
 
     Throughput is a process launch per call, so keep `workers` modest; the CLIs are also rate limited by
-    the subscription, and a shared login is shared with whatever else is using it.
+    the subscription, and a shared login is shared with whatever else is using it. Measured here: a single
+    codex call takes about four seconds, but two or more concurrent calls stall indefinitely, so run this
+    client with `workers=1` and treat it as a way to evaluate without an API key rather than a way to go fast.
     """
 
     def __init__(self, model: str, temperature: float = 0.0, max_tokens: int = 1500, timeout: float = 300.0,
