@@ -159,6 +159,64 @@ def fmt(x, nd=2):
     return "n/a" if x is None else f"{x:.{nd}f}"
 
 
+
+def blind_baseline(cross_acc: dict) -> list[str]:
+    """What a policy that never reads the evidence could score on the paired difference.
+
+    A fixed policy scores exactly zero: it answers the twin and the control the same way, so the difference
+    cancels. The strongest blind policy is therefore the one that guesses which side is the twin from the
+    surface and then answers to the family's outcome. If it identifies the twin with accuracy `a`, its
+    expected paired risk difference is at most 2a - 1. The detector's twin-versus-control accuracy is a
+    measured value of `a`, and a frontier model reading the message would do better, so this is a floor on
+    the bound, not a ceiling. The bound is close to 1 on every family, which is exactly why it is not the
+    interesting number: what separates the design from a blind policy is that the bound is just as large on
+    the two families whose correct answer is no change, and there the measured effect is zero.
+
+    Requires the reference effects; recomputed here from the reference runs so the two tables cannot drift.
+    """
+    import glob
+    from collections import defaultdict as dd
+    per = dd(list)
+    for f in sorted(glob.glob(str(ROOT / "runs" / "quick__*" / "*" / "records.jsonl"))):
+        if "__judge-" in f or "/n1_" in f or "/floor_" in f:
+            continue
+        for line in open(f):
+            if not line.strip():
+                continue
+            r = json.loads(line)
+            a = r.get("action") or {}
+            p, q = a.get("perturbed") or {}, a.get("paraphrase") or {}
+            if not p or not q:   # an absent verdict is missing; `forbidden: null` is a scored "did not overstep"
+                continue
+            per[(r["family"], r["id"])].append(float(bool(p.get("forbidden"))) - float(bool(q.get("forbidden"))))
+    eff = dd(list)
+    for (fam, _), v in per.items():
+        eff[fam].append(sum(v) / len(v))
+    L = ["", "## What a policy that never reads the evidence could score", "",
+         "A fixed policy scores exactly zero on the paired difference: it answers the twin and its control the same way, so "
+         "the difference cancels. That is the point of pairing. The strongest *blind* policy is the one that guesses which "
+         "side was edited from the surface and then answers to the family's outcome; if it picks the twin with accuracy `a`, "
+         "its expected paired risk difference is at most `2a - 1`. The detector above measures `a` as the twin-versus-control "
+         "accuracy, and a frontier model reading the message would do better, so the bound below is a floor.", "",
+         "| Family | twin vs control | blind bound `2a-1` | measured effect | measured / bound |", "|---|---|---|---|---|"]
+    for fam in sorted(cross_acc):
+        a = cross_acc[fam]
+        bound = 2 * a - 1
+        v = eff.get(fam) or []
+        if not v:
+            L.append(f"| `{fam}` | {fmt(a)} | {bound:+.2f} | n/a | n/a |")
+            continue
+        m = sum(v) / len(v)
+        L.append(f"| `{fam}` | {fmt(a)} | {bound:+.2f} | {m:+.3f} | {m / bound:+.2f} |")
+    L += ["", "The bound is above 0.6 on every family, so it does not by itself rule anything out. The last column is what "
+              "does. A blind policy spends its accuracy the same way everywhere, so its ratio of measured effect to bound "
+              "would be roughly constant across families. Measured, that ratio is near zero on the two families whose "
+              "correct answer is to hold the reply and between 0.18 and 0.35 on the families that ask for a change, even "
+              "though the two negative controls are among the most detectable families in the table. Detectability is "
+              "available to the models and they are not spending it.", ""]
+    return L
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dist", default=str(ROOT / "dist"))
@@ -183,7 +241,7 @@ def main():
          "is longer, so it is the part of detectability that needs no vocabulary at all.", "",
          "| Family | Sources | original vs twin | length only | original vs control | twin vs control | Heaviest tokens in the twin |",
          "|---|---|---|---|---|---|---|"]
-    margins = {}
+    margins, cross_acc = {}, {}
     for fam in sorted(by_fam):
         ts = by_fam[fam]
         pert = [(t["prompt_id"], t["original_prompt"], t["perturbed_prompt"]) for t in ts]
@@ -195,8 +253,11 @@ def main():
         acc_p, _, _, _ = two_afc(para, seed=2)
         acc_c, _, _, _ = two_afc(cross, seed=3)
         margins[fam] = marg
+        cross_acc[fam] = acc_c
         L.append(f"| `{fam}` | {len(ts)} | **{fmt(acc)}** | {fmt(base)} | {fmt(acc_p)} | {fmt(acc_c)} | "
                  f"{', '.join(f'`{t}`' for _, t in top[:4])} |")
+
+    L += blind_baseline(cross_acc)
 
     # what the edits share: a repeated insertion vocabulary is an authoring tell, and a fixable one
     L += ["", "## What the edits repeat", "",

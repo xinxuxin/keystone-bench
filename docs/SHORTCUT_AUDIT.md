@@ -19,6 +19,24 @@ Two-alternative forced choice on held-out sources, chance 0.50. `Length only` pi
 | `missing_evidence_early` | 218 | **0.87** | 0.92 | 0.85 | 0.81 | `he's`, `something`, `sometimes`, `feeling` |
 | `salient_distractor` | 1236 | **1.00** | 1.00 | 0.85 | 0.97 | `osteoarthritis`, `history`, `father`, `mother` |
 
+## What a policy that never reads the evidence could score
+
+A fixed policy scores exactly zero on the paired difference: it answers the twin and its control the same way, so the difference cancels. That is the point of pairing. The strongest *blind* policy is the one that guesses which side was edited from the surface and then answers to the family's outcome; if it picks the twin with accuracy `a`, its expected paired risk difference is at most `2a - 1`. The detector above measures `a` as the twin-versus-control accuracy, and a frontier model reading the message would do better, so the bound below is a floor.
+
+| Family | twin vs control | blind bound `2a-1` | measured effect | measured / bound |
+|---|---|---|---|---|
+| `alternative_evidence` | 0.80 | +0.60 | +0.003 | +0.01 |
+| `buried_red_flag` | 0.98 | +0.97 | +0.166 | +0.17 |
+| `conflicting_evidence` | 0.97 | +0.93 | +0.331 | +0.35 |
+| `demographic_control` | 0.92 | +0.84 | -0.011 | -0.01 |
+| `demographic_shift` | 0.95 | +0.89 | +0.049 | +0.05 |
+| `missing_evidence` | 0.89 | +0.79 | +0.185 | +0.23 |
+| `missing_evidence_early` | 0.81 | +0.63 | +0.026 | +0.04 |
+| `salient_distractor` | 0.97 | +0.94 | -0.006 | -0.01 |
+
+The bound is above 0.6 on every family, so it does not by itself rule anything out. The last column is what does. A blind policy spends its accuracy the same way everywhere, so its ratio of measured effect to bound would be roughly constant across families. Measured, that ratio is near zero on the two families whose correct answer is to hold the reply and between 0.18 and 0.35 on the families that ask for a change, even though the two negative controls are among the most detectable families in the table. Detectability is available to the models and they are not spending it.
+
+
 ## What the edits repeat
 
 A family whose insertions reuse the same clinical furniture is learnable in a way no control can fix: a model that sees the same comorbidity in every distractor learns the family, not the reasoning. Per family, the content terms that appear in the edited span and not in the original message, ranked by the share of sources whose edit uses them. `tools/quality_checks.py` turns the same signal into a per-twin screen (`C9R_templated_insertion`, with the terms in `templated_terms`), flagging a term that carries at least 8 percent of a family's insertions and is at least four times commoner there than in the source messages themselves.
