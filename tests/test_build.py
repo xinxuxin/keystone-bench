@@ -126,3 +126,30 @@ def test_the_published_hash_check_fails_on_a_changed_file(tmp_path):
         shutil.copy(dist / name, copy / name)
     (copy / "keystone_twins.jsonl").write_text((copy / "keystone_twins.jsonl").read_text() + "\n")
     assert build.check(copy, ROOT / "release") == 1
+
+
+def test_version_fields_are_absent_before_0_6_0():
+    """A release without per-twin revisions rebuilds in the old record shape, so its published hashes still match."""
+    from keystone.build import TWIN_FIELDS, VERSION_FIELDS, twin_fields
+    old = twin_fields(False)
+    assert not (set(old) & set(VERSION_FIELDS))
+    assert old.index("reviewer_model") == old.index("reviewer_single_edit") + 1
+    assert twin_fields(True) == TWIN_FIELDS
+    assert TWIN_FIELDS.index("paraphrase_edited_turn") == TWIN_FIELDS.index("paraphrase_fidelity_severity") + 1
+
+
+def test_paraphrase_control_rewords_the_edited_turn(tmp_path):
+    """The control must reword the turn the twin edits; for missing_evidence_early that is not the last turn."""
+    import json
+    from keystone.data import find_dist, load_pairs
+    d = find_dist()
+    for fam in ("missing_evidence_early", "missing_evidence"):
+        pairs = [p for p in load_pairs(fam, "core", d) if p.paraphrase]
+        if not pairs:
+            continue
+        for p in pairs[:20]:
+            k = p.meta.get("paraphrase_edited_turn")
+            k = k if isinstance(k, int) else len(p.original) - 1
+            differ = [i for i, (a, b) in enumerate(zip(p.original, p.paraphrase)) if a["content"] != b["content"]]
+            assert differ in ([], [k]), f"{p.id}: control changed turns {differ}, expected {k}"
+
