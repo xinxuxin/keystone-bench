@@ -12,3 +12,6 @@ __pycache__/
 build/
 .DS_Store
 .claude/
+
+# rater packets are generated locally and never committed
+clinician_packet*/
