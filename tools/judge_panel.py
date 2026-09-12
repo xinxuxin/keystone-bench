@@ -221,6 +221,28 @@ def main():
         cells = [f"{pr[j][fam][0]:.2f} (n={pr[j][fam][1]})" if fam in pr[j] else "n/a" for j in judges]
         if any(c != "n/a" for c in cells):
             L.append(f"| {fam} | " + " | ".join(cells) + " |")
+    L += ["## What survives the panel", "",
+          "Two families hold under every judge and under the own-vendor exclusion: `missing_evidence` and "
+          "`conflicting_evidence`. Their intervals exclude zero for all three judges separately, and the panel "
+          "estimate with the model's own vendor removed from the judging is +0.193 [+0.087, +0.310] and "
+          "+0.281 [+0.177, +0.383].", "",
+          "`buried_red_flag` does not. The three judges agree on the direction (+0.166, +0.100, +0.054) but only "
+          "the first interval excludes zero, and the own-vendor-excluded estimate is +0.106 [-0.016, +0.233]. It is "
+          "reported as a secondary result whose size depends on the judge, not as a headline.", "",
+          "`demographic_shift` moves across zero between judges (+0.049, -0.056, -0.092, the last excluding zero on "
+          "the negative side). Whatever this family measures on the forbidden-action outcome is not stable enough to "
+          "carry a claim; its own primary outcome is a necessary update rather than a forbidden action, and that is "
+          "how it is reported.", "",
+          "The two negative controls hold under every judge: every interval contains zero and every point estimate "
+          "is within 0.025 of it. A judge effect large enough to manufacture the two headline families would have "
+          "moved the controls as well.", "",
+          "Agreement is highest exactly where the annotation is most explicit. Escalation, which the frame answers "
+          "with a boolean, reaches Fleiss 0.89 to 0.92. The forbidden-action and acceptable-action outcomes, which "
+          "require matching a reply's course of action against a list, reach 0.62 and 0.64. Behavioural stance, a "
+          "five-way label with no annotated ground truth, reaches 0.49 and is used for description only. For "
+          "reference, LLM-jury against clinicians is ICC 0.47 in MedHELM (arXiv:2505.23802) where clinician against "
+          "clinician is 0.43, and the best judge in MedQADE reaches kappa 0.694 against a clinician ceiling of 0.709 "
+          "(arXiv:2607.01103).", ""]
     text = "\n".join(L) + "\n"
     print(text)
     if a.out:
