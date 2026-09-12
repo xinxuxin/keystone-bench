@@ -131,3 +131,29 @@ Fields that appear only in `keystone_twins.jsonl` (the full twin record):
 | `clinician_confirmed` | bool or null | set when a clinician has confirmed the row (gold tier); null until then |
 | `tempting_adjustment` | str or null | `demographic_control`: what an over-adjusting assistant might wrongly change |
 
+## Versioning (0.6.0)
+
+A twin can be rewritten. A rewrite carries a higher `revision` and the row it replaces stays in the release,
+marked `deprecated`, so a result computed on an earlier version can still be mapped to the text it was
+computed on. Superseded rows are published separately in `release/deprecated_metadata.jsonl` and
+`release/deprecated_edits.jsonl` and rebuild into `dist/deprecated_twins.jsonl`; they are in no layer and no
+`healthbench_style` file. The public id of a twin does not change when it is rewritten, so an id always names
+the current version of that (source, family) pair.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `revision` | int | 1 for an original twin, 2 or more for a rewrite. Present on every row |
+| `supersedes` | int or null | the revision this row replaces |
+| `superseded_by` | int or null | the revision that replaced this row; null unless `deprecated` |
+| `deprecated` | bool | a higher revision of the same (source, family) exists; the row is published for provenance only |
+| `rewrite_reason` | str or null | why the twin was rewritten (0.6.0: a templated insertion flagged by `C9R_templated_insertion`) |
+| `specific_used` | str or null | the concrete clinical content the rewrite inserted, used to hold any one item under 8 percent of its family |
+| `inherits_annotations` | bool | the rewrite changed wording only, so the evidence state, its review and the rubric dependence carry over from the revision it replaces; materiality is re-rated |
+
+## The control's turn (0.6.0)
+
+| Field | Type | Meaning |
+|---|---|---|
+| `paraphrase_edited_turn` | int or null | index of the turn the paraphrase-only control rewords. The last user turn for every family except `missing_evidence_early`, whose twin edits an earlier turn and whose control must reword that same turn |
+| `paraphrase_turns` | list or null | the whole conversation with only that turn reworded. Present only where `paraphrase_edited_turn` is not the last turn |
+

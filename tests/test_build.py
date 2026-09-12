@@ -148,8 +148,8 @@ def test_paraphrase_control_rewords_the_edited_turn(tmp_path):
         if not pairs:
             continue
         for p in pairs[:20]:
-            k = p.meta.get("paraphrase_edited_turn")
-            k = k if isinstance(k, int) else len(p.original) - 1
+            # the perturbed file's metadata does not carry the control's turn index; for this family it is the edited turn
+            k = p.edited_turn if 0 <= p.edited_turn < len(p.original) else len(p.original) - 1
             differ = [i for i, (a, b) in enumerate(zip(p.original, p.paraphrase)) if a["content"] != b["content"]]
             assert differ in ([], [k]), f"{p.id}: control changed turns {differ}, expected {k}"
 

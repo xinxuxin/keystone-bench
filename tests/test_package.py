@@ -63,7 +63,10 @@ def test_load_pairs(family):
     assert p.perturbed_message != p.original_edited_message
     assert p.rubrics and p.in_core
     if p.paraphrase is not None:
-        assert p.conversation("paraphrase")[-1]["content"] not in (p.last_user_message, p.perturbed_message)
+        # the control rewords the turn its twin edits, and must differ from both the original wording of that
+        # turn and the twin's edit of it
+        kp = p.edited_turn if 0 <= p.edited_turn < len(p.original) else len(p.original) - 1
+        assert p.conversation("paraphrase")[kp]["content"] not in (p.original[kp]["content"], p.perturbed[kp]["content"])
     assert len(load_pairs(family, "all", limit=3)) == 3
     assert all(q.paraphrase is not None for q in load_pairs(family, "core", require_paraphrase=True))
 

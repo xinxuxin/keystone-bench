@@ -31,7 +31,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-VERSION = "0.5.0"
+VERSION = "0.6.0"
 CACHE = Path(os.environ.get("KEYSTONE_CACHE", Path.home() / ".cache" / "keystone"))
 RAW = "https://raw.githubusercontent.com/xinxuxin/keystone-bench/v{version}/release/{name}"
 RELEASE_FILES = ("metadata.jsonl", "edits.jsonl", "reference_ids.json", "reference_results.json",

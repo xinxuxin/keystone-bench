@@ -172,11 +172,19 @@ def test_paraphrase_release_rule(twins):
 
 
 def test_paraphrase_is_shared_across_families(twins):
-    """The paraphrase control depends only on the source message, so all four twins of a source carry the same one."""
+    """The control rewords the turn its twin edits, so it is shared by every family that edits the last turn.
+
+    `missing_evidence_early` edits an earlier turn and carries its own control for that turn, which is the
+    whole point of the family: a control that rewords a different turn is not that twin's control."""
     by = {}
     for t in twins:
+        if t["family"] == "missing_evidence_early":
+            continue
         by.setdefault(t["prompt_id"], set()).add(t.get("paraphrase_prompt"))
     assert all(len(v) == 1 for v in by.values())
+    early = [t for t in twins if t["family"] == "missing_evidence_early" and t.get("paraphrase_prompt")]
+    assert early, "the early family should ship its own turn-level control"
+    assert all(isinstance(t.get("paraphrase_edited_turn"), int) and t["paraphrase_edited_turn"] == t["edited_turn"] for t in early)
 
 
 # ---------------------------------------------------------------- healthbench_style layer
@@ -218,7 +226,9 @@ def test_multi_turn_prefix_is_byte_identical(hb, src):
             s = src[r["keystone"]["source_prompt_id"]]
             assert [m["role"] for m in r["prompt"]] == [m["role"] for m in s["prompt"]]
             k = r["keystone"].get("edited_turn"); k = k if isinstance(k, int) else len(s["prompt"]) - 1
-            edited = k if cond == "perturbed" else len(s["prompt"]) - 1   # the paraphrase control always rewords the last turn
+            kp = r["keystone"].get("paraphrase_edited_turn")
+            kp = kp if isinstance(kp, int) else len(s["prompt"]) - 1
+            edited = k if cond == "perturbed" else kp   # the control rewords the turn its twin edits
             assert [m["content"] for i, m in enumerate(r["prompt"]) if i != edited] == [m["content"] for i, m in enumerate(s["prompt"]) if i != edited]
             assert r["rubrics"] == s["rubrics"]
             assert r["keystone"]["turns"] == len(s["prompt"])
@@ -239,7 +249,9 @@ def test_healthbench_style_agrees_with_twins(hb, twins):
                 assert r["prompt"][k]["content"] == t["perturbed_prompt"]
             if cond == "paraphrase":
                 assert t["paraphrase_released"]
-                assert r["prompt"][-1]["content"] == t["paraphrase_prompt"]
+                kp = r["keystone"].get("paraphrase_edited_turn")
+                kp = kp if isinstance(kp, int) else len(r["prompt"]) - 1
+                assert r["prompt"][kp]["content"] == t["paraphrase_prompt"]
             assert r["keystone"]["in_core"] == t["in_core"]
             assert r["keystone"]["materiality_majority"] == t["materiality_majority"]
         if cond == "paraphrase":
@@ -291,7 +303,8 @@ MV_FIELDS = {"source_prompt_id", "family", "condition", "group", "turns", "in_co
              "expected_safe_behavior", "materiality_majority", "materiality_raters", "author", "reviewer_natural", "reviewer_single_edit",
              "reviewer_natural_codex", "reviewer_single_edit_codex", "quality_flags", "paraphrase_author", "paraphrase_faithful", "split", "in_quick", "tier", "state_consistent", "acts_as_control", "in_primary", "state_review_behaviour_agree",
              "evidence_state", "alternative_action", "acceptable_actions", "forbidden_actions", "decisive_questions", "absent_is_not_negative",
-             "escalation_sufficient", "state_annotator", "state_review_agree", "mechanism", "advice_should_change", "edited_turn"}
+             "escalation_sufficient", "state_annotator", "state_review_agree", "mechanism", "advice_should_change", "edited_turn",
+             "paraphrase_edited_turn", "revision", "supersedes"}
 TWIN_FIELDS = {"prompt_id", "family", "original_prompt", "perturbed_prompt", "removed_or_changed", "why_load_bearing", "expected_safe_behavior",
                "materiality", "confidence", "author", "reviewer_materiality", "reviewer_note", "reviewer_natural", "reviewer_single_edit",
                "codex_materiality", "codex_materiality_note", "codex_natural", "codex_single_edit", "paraphrase_prompt", "paraphrase_note",
@@ -301,7 +314,11 @@ TWIN_FIELDS = {"prompt_id", "family", "original_prompt", "perturbed_prompt", "re
                "reviewer_model", "has_decision_frame", "evidence_state", "alternative_action", "acceptable_actions", "forbidden_actions", "decisive_questions",
                "absent_is_not_negative", "escalation_sufficient", "state_annotator", "state_note", "state_review_agree", "state_review", "state_reviewer",
                "mechanism", "advice_should_change", "mechanism_note", "alternative_fact", "expected_action", "split", "tier", "clinician_confirmed",
-               "state_consistent", "acts_as_control", "state_review_behaviour_agree", "in_primary", "in_quick", "edited_turn", "tempting_adjustment"}
+               "state_consistent", "acts_as_control", "state_review_behaviour_agree", "in_primary", "in_quick", "edited_turn", "tempting_adjustment",
+               "revision", "supersedes", "rewrite_reason", "specific_used", "inherits_annotations",
+               "paraphrase_edited_turn", "deprecated", "superseded_by"}
+# only present where the control rewords a turn other than the last one
+TWIN_OPTIONAL = {"paraphrase_turns"}
 
 
 def test_schema_doc_matches_files(hb, twins):
@@ -312,7 +329,7 @@ def test_schema_doc_matches_files(hb, twins):
             assert set(r) == HB_FIELDS, (fam, cond, set(r) ^ HB_FIELDS)
             assert set(r["keystone"]) == MV_FIELDS, (fam, cond, set(r["keystone"]) ^ MV_FIELDS)
     for t in twins:
-        assert set(t) == TWIN_FIELDS, set(t) ^ TWIN_FIELDS
+        assert TWIN_FIELDS <= set(t) <= TWIN_FIELDS | TWIN_OPTIONAL, set(t) ^ TWIN_FIELDS
     for f in HB_FIELDS | MV_FIELDS | TWIN_FIELDS:
         assert f"`{f}`" in doc, f"{f} not documented in docs/SCHEMA.md"
 
