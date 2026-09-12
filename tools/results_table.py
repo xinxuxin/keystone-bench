@@ -144,6 +144,15 @@ def main():
     L += ["## Submitting a run", "",
           "See [`../results/community/README.md`](../results/community/README.md). Regenerate this page with "
           "`python tools/results_table.py runs/quick__*`.", ""]
+    L += ["", "## The checks this table is read against", "",
+          "Every number above is one judge (GPT-4.1) on one layer. Five separate pages say how far it travels.", "",
+          "| check | what it asks | where |", "|---|---|---|",
+          "| Judge panel | do the same replies score the same under Claude Sonnet and Gemini Flash, and with the model's own vendor removed from its judging | [`JUDGE_PANEL.md`](JUDGE_PANEL.md) |",
+          "| Instability floor | how much of a paired contrast a re-run of the identical request produces on its own | [`INSTABILITY_FLOOR.md`](INSTABILITY_FLOOR.md) |",
+          "| Item analysis | discrimination, the ceiling from items already mishandled unedited, the item count a confirmatory run needs, and whether the effect tracks the size of the edit | [`ITEM_ANALYSIS.md`](ITEM_ANALYSIS.md) |",
+          "| Shortcut audit | how detectable each edit is, what the edits repeat, and what a policy that never reads the evidence could score | [`SHORTCUT_AUDIT.md`](SHORTCUT_AUDIT.md) |",
+          "| Intervention | whether a minimal instruction lowers unsupported action without buying it with blind caution | [`INTERVENTION.md`](INTERVENTION.md) |",
+          ""]
     Path(a.out).write_text("\n".join(L) + "\n")
     print(f"{len(models)} models, {len(fams)} families -> {a.out}")
 
