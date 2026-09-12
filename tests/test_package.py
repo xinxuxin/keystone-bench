@@ -426,3 +426,25 @@ def test_single_family_summary_stays_flat():
     s = summarize([_pair_record("missing_evidence", "definitive", "seeks_context") for _ in range(5)])
     assert "by_family" not in s
     assert s["composition"]["families"] == 1 and s["composition"]["control_share"] == 0.0
+
+
+def test_family_table_leads_with_primary_outcome():
+    """Every family's row starts with the outcome it was built to measure, and the tool table agrees on the key."""
+    import json, glob
+    from keystone.metrics import PRIMARY_OUTCOME, summarize
+    from keystone.runner import report_markdown
+    files = sorted(glob.glob("results/reference/*/*__quick.jsonl"))
+    assert files, "reference results missing"
+    recs = []
+    for f in files[:16]:
+        recs += [json.loads(l) for l in open(f) if l.strip()]
+    rep = report_markdown(summarize(recs))
+    assert "| Family | Pairs | Primary outcome |" in rep
+    for fam, (key, label) in PRIMARY_OUTCOME.items():
+        if any(r.get("family") == fam for r in recs):
+            assert f"| `{fam}` |" in rep and label in rep
+    import importlib.util, pathlib
+    spec = importlib.util.spec_from_file_location("results_table", pathlib.Path("tools/results_table.py"))
+    mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+    assert {f: v[0] for f, v in mod.HEADLINE.items()} == {f: v[0] for f, v in PRIMARY_OUTCOME.items()}
+

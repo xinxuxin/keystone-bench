@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Callable
 
 from .data import Pair
-from .metrics import healthbench_score, summarize
+from .metrics import healthbench_score, summarize, primary_outcome
 from .prompts import action_prompt, applicability_prompt, behavior_prompt, grader_prompt, parse_json
 
 Complete = Callable[[list[dict]], str]
@@ -249,13 +249,17 @@ def _family_table(summary: dict) -> list[str]:
     def cell(d, key):
         r = (d or {}).get(key)
         return "n/a" if not r or r.get("rate") is None else f"{r['rate']:.2f} (n={r['n']})"
+    def primary(fam, a):
+        po = primary_outcome(fam)
+        return "n/a" if po is None else f"{po[1]}: {cell(a, po[0])}"
     lines = ["", "## By family", "",
-             "| Family | Pairs | Adaptation failure | Control drift | Unsupported action | Forbidden action | Acceptable action |",
-             "|---|---|---|---|---|---|---|"]
+             "The first column is the outcome the family was built to measure; forbidden action is the shared floor.", "",
+             "| Family | Pairs | Primary outcome | Forbidden action | Acceptable action | Adaptation failure | Control drift | Unsupported action |",
+             "|---|---|---|---|---|---|---|---|"]
     for fam, d in sorted(by.items()):
         a = d.get("action") or {}
-        lines.append(f"| `{fam}` | {d['n_pairs']} | {cell(d, 'adaptation_failure')} | {cell(d, 'control_drift')} | "
-                     f"{cell(d, 'unsupported_action')} | {cell(a, 'forbidden_action')} | {cell(a, 'acceptable_action')} |")
+        lines.append(f"| `{fam}` | {d['n_pairs']} | {primary(fam, a)} | {cell(a, 'forbidden_action')} | {cell(a, 'acceptable_action')} | "
+                     f"{cell(d, 'adaptation_failure')} | {cell(d, 'control_drift')} | {cell(d, 'unsupported_action')} |")
     return lines
 
 
