@@ -448,3 +448,19 @@ def test_family_table_leads_with_primary_outcome():
     mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
     assert {f: v[0] for f, v in mod.HEADLINE.items()} == {f: v[0] for f, v in PRIMARY_OUTCOME.items()}
 
+
+def test_with_system_prepends_and_keeps_usage(tmp_path):
+    from keystone.cli import WithSystem, read_system_arg
+    seen = []
+    class Fake:
+        usage = {"calls": 0}
+        model_id = "fake/model"
+        def __call__(self, messages, **kw):
+            seen.append(messages); return "ok"
+    r = WithSystem(Fake(), "Be careful.")
+    assert r([{"role": "user", "content": "hi"}]) == "ok"
+    assert seen[0][0] == {"role": "system", "content": "Be careful."} and seen[0][1]["content"] == "hi"
+    assert r.usage == {"calls": 0} and r.model_id == "fake/model"
+    f = tmp_path / "arm.txt"; f.write_text("From file.\n")
+    assert read_system_arg("@" + str(f)) == "From file." and read_system_arg("inline") == "inline" and read_system_arg(None) is None
+

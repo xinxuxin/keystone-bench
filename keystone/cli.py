@@ -310,9 +310,39 @@ def cmd_estimate(a):
             print(f"  judge, with rubric: + {2 * n_rubric} grader calls + {n_rubric} applicability calls (each re-sends the conversation)")
 
 
+class WithSystem:
+    """Prepend a fixed system message to every call of the model under test (an intervention arm).
+
+    The judge never sees it. The cache key includes the messages, so each arm is cached separately."""
+
+    def __init__(self, respond, system: str):
+        self.respond, self.system = respond, system
+
+    def __call__(self, messages, **kw):
+        return self.respond([{"role": "system", "content": self.system}] + list(messages), **kw)
+
+    @property
+    def usage(self):
+        return self.respond.usage
+
+    @property
+    def model_id(self):
+        return self.respond.model_id
+
+
+def read_system_arg(value: str | None) -> str | None:
+    """--system takes the text itself or @path to a file holding it."""
+    if not value:
+        return None
+    return Path(value[1:]).read_text().strip() if value.startswith("@") else value
+
+
 def cmd_run(a):
     respond = OpenAICompatible(a.model, base_url=a.base_url, max_tokens=a.max_tokens, cache_dir=a.cache)
     judge = OpenAICompatible(a.judge, base_url=a.judge_base_url, max_tokens=600, cache_dir=a.cache)
+    system = read_system_arg(a.system)
+    if system:
+        respond = WithSystem(respond, system)
     if respond.model_id.split("/")[0] == judge.model_id.split("/")[0]:
         print("warning: judge and model under test share a vendor prefix; the protocol asks for different families", file=sys.stderr)
     fams = FAMILIES if a.family == "all" else (a.family,)
@@ -331,6 +361,7 @@ def cmd_run(a):
         stream.close()
         meta = {"title": f"Keystone {fam} ({a.layer}, {a.split}) — {a.model}", "benchmark_version": load_manifest(a.dist)["version"], "family": fam, "layer": a.layer, "split": a.split,
                 "model": a.model, "judge": a.judge, "temperature": 0.0, "max_tokens": a.max_tokens, "rubric": a.rubric,
+                "arm": a.arm, "system_prompt": system,
                 "usage": {"model": dict(respond.usage), "judge": dict(judge.usage)}}
         summary = write_run(out, records, meta)
         print((out / "REPORT.md").read_text())
@@ -373,6 +404,8 @@ def main(argv=None):
     s.add_argument("--split", default="all", choices=SPLITS, help="dev or test split by source (default all)")
     s.add_argument("--no-action", action="store_true", help="skip the action judge (decision-evidence outcomes)")
     s.add_argument("--workers", type=int, default=8); s.add_argument("--max-tokens", type=int, default=1500); s.add_argument("--cache"); s.add_argument("--out"); s.add_argument("--verbose", action="store_true")
+    s.add_argument("--system", help="system prompt for the model under test (text, or @file); the judge never sees it. Use for intervention arms")
+    s.add_argument("--arm", default="baseline", help="label recorded in the run meta (e.g. baseline, acknowledge, gate)")
     s.set_defaults(f=cmd_run)
     a = ap.parse_args(argv); a.f(a)
 
