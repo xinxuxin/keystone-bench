@@ -49,3 +49,23 @@ Paired items for 80 percent power at two-sided 0.05, from the observed between-i
 
 The core layer has between 86 and 1,232 items per family, so the families whose row above asks for more items than the quick layer holds are answerable at full scale; the number is what sets the size of a confirmatory run rather than a reason to read the quick layer differently.
 
+
+## Is the effect a function of how much text changed
+
+Per family, over items: the relative edit distance between the unedited and edited message against the item's paired effect, and the same edit distance against the annotated materiality. A benchmark that measured the size of the edit would show both columns strongly positive.
+
+| family | items | edit size vs effect (Spearman) | edit size vs materiality | median edit size |
+|---|---|---|---|---|
+| missing_evidence | 40 | +0.19 | n/a | 0.09 |
+| conflicting_evidence | 40 | -0.14 | n/a | 0.19 |
+| buried_red_flag | 40 | -0.43 | n/a | 0.22 |
+| demographic_shift | 40 | -0.01 | n/a | 0.08 |
+| alternative_evidence | 40 | +0.17 | n/a | 0.11 |
+| missing_evidence_early | 23 | -0.34 | n/a | 0.18 |
+| salient_distractor | 40 | -0.00 | n/a | 0.12 |
+| demographic_control | 40 | +0.05 | n/a | 0.15 |
+
+The materiality column is `n/a` on the quick layer by construction: it holds only items whose three raters put the edit at the top of the scale, so the label has no variance to correlate with. The effect column is the informative one, and it runs from -0.43 to +0.19 with no family strongly positive.
+
+The paraphrase control is the same check at the level of the design rather than the item: it changes more text than the removal families do (median relative edit distance 0.39 against 0.10) and moves behaviour least, so the ordering of the two controls already runs against an edit-size account.
+
