@@ -112,10 +112,17 @@ def main():
         r, p, kind, reply = job
         if stored:
             rec0 = stored.get((r["prompt_id"], kind))
-            return (rec0.get("behavior") or {}, rec0.get("action") or {}) if rec0 else None
+            return (rec0.get("behavior") or {}, rec0.get("action") or {}, rec0.get("stale_met")) if rec0 else None
         b = parse_json(judge([{"role": "user", "content": behavior_prompt(p.perturbed, reply, p.removed_or_changed)}])) or {}
         act = parse_json(judge([{"role": "user", "content": action_prompt(p.perturbed, reply, action_spec(p, "perturbed"))}])) or {}
-        return b, act
+        met = None
+        if a.rubric:
+            # the stale score: every criterion of the unchanged physician rubric, graded on this reply to the twin
+            met = []
+            for c in p.rubrics:
+                j = parse_json(judge([{"role": "user", "content": grader_prompt(p.perturbed, reply, c["criterion"])}])) or {}
+                met.append(j.get("criteria_met") if isinstance(j.get("criteria_met"), bool) else None)
+        return b, act, met
 
     if stored or a.workers <= 1:
         verdicts = [judge_one(j) for j in jobs]
@@ -127,7 +134,7 @@ def main():
         if v is None:
             continue
         r, p, kind, reply = job
-        b, act = v
+        b, act, met = v
         e, ec = EXPECT[kind], expected(kind, p)
         ok_forb = bool(act.get("forbidden")) == e["forbidden"]
         ok_acc = bool(act.get("acceptable")) == e["acceptable"]
@@ -136,12 +143,8 @@ def main():
         res[kind]["forbidden_ok_cond"] += bool(act.get("forbidden")) == ec["forbidden"]
         res[kind]["acceptable_ok_cond"] += bool(act.get("acceptable")) == ec["acceptable"]
         rec = {"prompt_id": r["prompt_id"], "kind": kind, "behavior": b, "action": act}
-        if a.rubric and judge is not None:
-            met = []
-            for c in p.rubrics:
-                j = parse_json(judge([{"role": "user", "content": grader_prompt(p.perturbed, reply, c["criterion"])}])) or {}
-                met.append(j.get("criteria_met") if isinstance(j.get("criteria_met"), bool) else None)
-            sc = healthbench_score(p.rubrics, met); rec["stale_score"] = sc
+        if met is not None:
+            sc = healthbench_score(p.rubrics, met); rec["stale_score"] = sc; rec["stale_met"] = met
             if sc is not None:
                 rub[kind].append(sc)
         records.append(rec)

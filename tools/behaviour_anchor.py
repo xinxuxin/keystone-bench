@@ -188,25 +188,27 @@ def contrast_table(items: dict, label_key: str, twin_key: str, control_key: str,
     for it in items.values():
         if it[label_key] in (1, 2, 3):
             lv[it[label_key]].append(it)
-    if not any(len(v) >= 5 for v in lv.values()):
-        return [f"#### {title}", "", "Too few labelled items.", ""]
+    # The `all` row is every item with both sides judged, whatever its materiality label. Restricting it to
+    # labelled items silently selected a subset (19 of 40 missing_evidence items) and overstated the effect.
+    paired = [i for i in items.values() if i.get(twin_key) is not None and i.get(control_key) is not None]
+    if len(paired) < 5:
+        return [f"#### {title}", "", "Too few paired items.", ""]
     L = [f"#### {title}", "", note, "",
          "| Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |", "|---|---|---|---|---|"]
     gaps = {}
     # Every item first. On a run over the quick or strict set the materiality rows below are empty by
     # construction, because those layers admit one materiality, and this row is then the whole result: the
     # edit moved the behaviour and the reword of the same message did not.
-    allits = [i for v in lv.values() for i in v]
-    ga = [i[twin_key] - i[control_key] for i in allits
-          if i.get(twin_key) is not None and i.get(control_key) is not None]
+    ga = [i[twin_key] - i[control_key] for i in paired]
     def col_of(its, key, seed=0):
         v = [i[key] for i in its if i.get(key) is not None]
         m, c = boot_ci(v, seed=seed)
         return f"{fmt(m)} {ci(c)}" if m is not None else "n/a"
     mga, cga = boot_ci(ga, seed=99)
-    L.append(f"| all | {len(allits)} | {col_of(allits, twin_key, 1)} | {col_of(allits, control_key, 2)} | {fmt(mga)} {ci(cga)} |")
+    L.append(f"| all | {len(paired)} | {col_of(paired, twin_key, 1)} | {col_of(paired, control_key, 2)} | {fmt(mga)} {ci(cga)} |")
     for k in (3, 2, 1):
-        its = lv.get(k, [])
+        # n is the number of items that carry both cells, not every item with the label
+        its = [i for i in lv.get(k, []) if i.get(twin_key) is not None and i.get(control_key) is not None]
         if not its:
             L.append(f"| {k} | 0 | | | |")
             continue

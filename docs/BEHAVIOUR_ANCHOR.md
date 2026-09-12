@@ -16,8 +16,8 @@ Share of assistants that stopped committing, among those that committed on the o
 
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
-| all | 30 | 0.320 [0.182, 0.463] | 0.198 [0.086, 0.324] | 0.122 [0.052, 0.205] |
-| 3 | 30 | 0.320 [0.188, 0.464] | 0.198 [0.089, 0.324] | 0.122 [0.045, 0.204] |
+| all | 39 | 0.274 [0.169, 0.394] | 0.168 [0.083, 0.267] | 0.106 [0.044, 0.174] |
+| 3 | 29 | 0.320 [0.188, 0.464] | 0.198 [0.089, 0.324] | 0.122 [0.045, 0.204] |
 | 2 | 0 | | | |
 | 1 | 0 | | | |
 
@@ -29,7 +29,7 @@ Share of assistants that took an action this twin's own annotation forbids. Defi
 
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
-| all | 30 | 0.142 [0.087, 0.202] | 0.155 [0.075, 0.248] | -0.013 [-0.102, 0.070] |
+| all | 40 | 0.146 [0.086, 0.212] | 0.149 [0.085, 0.224] | -0.002 [-0.079, 0.075] |
 | 3 | 30 | 0.142 [0.088, 0.198] | 0.155 [0.075, 0.247] | -0.013 [-0.102, 0.068] |
 | 2 | 0 | | | |
 | 1 | 0 | | | |
@@ -58,8 +58,8 @@ Share of assistants that stopped committing, among those that committed on the o
 
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
-| all | 40 | 0.231 [0.129, 0.345] | 0.064 [0.021, 0.118] | 0.167 [0.060, 0.282] |
-| 3 | 40 | 0.231 [0.131, 0.341] | 0.064 [0.021, 0.117] | 0.167 [0.057, 0.287] |
+| all | 38 | 0.231 [0.129, 0.345] | 0.064 [0.021, 0.118] | 0.167 [0.060, 0.282] |
+| 3 | 38 | 0.231 [0.131, 0.341] | 0.064 [0.021, 0.117] | 0.167 [0.057, 0.287] |
 | 2 | 0 | | | |
 | 1 | 0 | | | |
 
@@ -100,7 +100,7 @@ Share of assistants that stopped committing, among those that committed on the o
 
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
-| all | 23 | 0.416 [0.278, 0.555] | 0.104 [0.028, 0.211] | 0.312 [0.155, 0.459] |
+| all | 39 | 0.368 [0.259, 0.481] | 0.112 [0.049, 0.188] | 0.257 [0.143, 0.379] |
 | 3 | 23 | 0.416 [0.274, 0.558] | 0.104 [0.028, 0.211] | 0.312 [0.158, 0.463] |
 | 2 | 0 | | | |
 | 1 | 0 | | | |
@@ -113,7 +113,7 @@ Share of assistants that took an action this twin's own annotation forbids. Defi
 
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
-| all | 23 | 0.374 [0.272, 0.478] | 0.083 [0.026, 0.152] | 0.291 [0.191, 0.404] |
+| all | 40 | 0.450 [0.354, 0.550] | 0.118 [0.062, 0.185] | 0.333 [0.235, 0.436] |
 | 3 | 23 | 0.374 [0.274, 0.480] | 0.083 [0.026, 0.157] | 0.291 [0.189, 0.402] |
 | 2 | 0 | | | |
 | 1 | 0 | | | |
@@ -142,10 +142,10 @@ Share of assistants that stopped committing, among those that committed on the o
 
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
-| all | 40 | 0.431 [0.304, 0.561] | 0.209 [0.109, 0.318] | 0.223 [0.096, 0.346] |
+| all | 37 | 0.431 [0.304, 0.561] | 0.209 [0.109, 0.318] | 0.223 [0.096, 0.346] |
 | 3 | 0 | | | |
 | 2 | 0 | | | |
-| 1 | 40 | 0.431 [0.304, 0.561] | 0.209 [0.107, 0.321] | 0.223 [0.100, 0.349] |
+| 1 | 37 | 0.431 [0.304, 0.561] | 0.209 [0.107, 0.321] | 0.223 [0.100, 0.349] |
 
 This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
 
@@ -184,8 +184,8 @@ Share of assistants that stopped committing, among those that committed on the o
 
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
-| all | 32 | 0.340 [0.216, 0.474] | 0.037 [0.000, 0.087] | 0.304 [0.165, 0.440] |
-| 3 | 32 | 0.340 [0.221, 0.469] | 0.037 [0.000, 0.086] | 0.304 [0.160, 0.443] |
+| all | 36 | 0.319 [0.216, 0.434] | 0.054 [0.013, 0.109] | 0.264 [0.149, 0.387] |
+| 3 | 28 | 0.340 [0.221, 0.469] | 0.037 [0.000, 0.086] | 0.304 [0.160, 0.443] |
 | 2 | 0 | | | |
 | 1 | 0 | | | |
 
@@ -197,7 +197,7 @@ Share of assistants that took an action this twin's own annotation forbids. Defi
 
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
-| all | 32 | 0.108 [0.064, 0.158] | 0.050 [0.019, 0.088] | 0.058 [0.006, 0.114] |
+| all | 40 | 0.136 [0.080, 0.205] | 0.086 [0.041, 0.138] | 0.050 [-0.009, 0.111] |
 | 3 | 32 | 0.108 [0.064, 0.158] | 0.050 [0.019, 0.088] | 0.058 [0.006, 0.111] |
 | 2 | 0 | | | |
 | 1 | 0 | | | |
@@ -226,10 +226,10 @@ Share of assistants that stopped committing, among those that committed on the o
 
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
-| all | 75 | 0.351 [0.273, 0.433] | 0.061 [0.019, 0.114] | 0.290 [0.201, 0.373] |
-| 3 | 34 | 0.520 [0.414, 0.626] | 0.064 [0.012, 0.133] | 0.456 [0.336, 0.574] |
-| 2 | 30 | 0.227 [0.121, 0.341] | 0.034 [0.000, 0.103] | 0.193 [0.101, 0.298] |
-| 1 | 11 | 0.130 [0.000, 0.315] | 0.139 [0.000, 0.361] | -0.009 [-0.306, 0.269] |
+| all | 112 | 0.379 [0.319, 0.439] | 0.071 [0.035, 0.112] | 0.308 [0.244, 0.372] |
+| 3 | 33 | 0.520 [0.414, 0.626] | 0.064 [0.012, 0.133] | 0.456 [0.336, 0.574] |
+| 2 | 29 | 0.227 [0.121, 0.341] | 0.034 [0.000, 0.103] | 0.193 [0.101, 0.298] |
+| 1 | 9 | 0.130 [0.000, 0.315] | 0.139 [0.000, 0.361] | -0.009 [-0.306, 0.269] |
 
 Trend over items: rho 0.482 on the twin (p <5e-05) against 0.038 on the control (p 0.76). Evidence effect at materiality 3 minus 1: 0.466 [0.169, 0.793].
 
@@ -239,10 +239,10 @@ Share of assistants that took an action this twin's own annotation forbids. Defi
 
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
-| all | 75 | 0.411 [0.242, 0.589] | 0.074 [0.011, 0.168] | 0.337 [0.168, 0.505] |
-| 3 | 34 | 0.411 [0.242, 0.589] | 0.074 [0.011, 0.168] | 0.337 [0.179, 0.516] |
-| 2 | 30 | n/a | n/a | n/a  |
-| 1 | 11 | n/a | n/a | n/a  |
+| all | 40 | 0.256 [0.155, 0.370] | 0.071 [0.030, 0.125] | 0.185 [0.085, 0.291] |
+| 3 | 19 | 0.411 [0.242, 0.589] | 0.074 [0.011, 0.168] | 0.337 [0.179, 0.516] |
+| 2 | 0 | | | |
+| 1 | 0 | | | |
 
 Trend over items: rho 0.000 on the twin (p 1) against 0.000 on the control (p 1). 
 
@@ -275,8 +275,8 @@ Share of assistants that stopped committing, among those that committed on the o
 
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
-| all | 23 | 0.360 [0.225, 0.501] | 0.167 [0.071, 0.283] | 0.193 [0.071, 0.327] |
-| 3 | 23 | 0.360 [0.227, 0.505] | 0.167 [0.073, 0.283] | 0.193 [0.070, 0.320] |
+| all | 22 | 0.360 [0.225, 0.501] | 0.167 [0.071, 0.283] | 0.193 [0.071, 0.327] |
+| 3 | 22 | 0.360 [0.227, 0.505] | 0.167 [0.073, 0.283] | 0.193 [0.070, 0.320] |
 | 2 | 0 | | | |
 | 1 | 0 | | | |
 

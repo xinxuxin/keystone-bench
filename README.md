@@ -119,10 +119,10 @@ Five assistants over the quick set, **eight families**, 303 twins each with its 
 
 | | `missing_evidence` | `conflicting_evidence` | `buried_red_flag` | `demographic_shift` | `salient_distractor` | `demographic_control` |
 |---|---|---|---|---|---|---|
-| twin minus control | **+0.34** | **+0.33** | **+0.19** | **+0.07** | −0.02 | −0.00 |
-| 95% interval | [0.17, 0.51] | [0.22, 0.45] | [0.06, 0.32] | [0.01, 0.14] | [−0.07, 0.03] | [−0.05, 0.06] |
+| twin minus control | **+0.19** | **+0.33** | **+0.17** | +0.05 | −0.01 | −0.01 |
+| 95% interval | [0.09, 0.29] | [0.24, 0.44] | [0.05, 0.28] | [−0.01, 0.11] | [−0.05, 0.03] | [−0.06, 0.03] |
 
-The two negative-control families sit on zero, where the correct behaviour is to answer unchanged, and the perturbation families do not. That contrast is what separates a benchmark that measures evidence-sensitivity from one that measures sensitivity to being edited, and it is now measured rather than argued ([`docs/BEHAVIOUR_ANCHOR.md`](docs/BEHAVIOUR_ANCHOR.md)).
+Every row is all 40 quick-set items of that family with both sides judged, averaged per item across the five assistants, with a 95 percent bootstrap interval over items; a GEE clustered by item with the assistant as a fixed effect gives the same marginal differences. The two negative-control families sit on zero, where the correct behaviour is to answer unchanged; three perturbation families do not, and `demographic_shift` is small with an interval that reaches zero. That contrast is what separates a benchmark that measures evidence-sensitivity from one that measures sensitivity to being edited, and it is now measured rather than argued ([`docs/BEHAVIOUR_ANCHOR.md`](docs/BEHAVIOUR_ANCHOR.md)).
 
 **The hardest family is `conflicting_evidence`.** The best assistant names the contradiction 61 percent of the time and the worst 26 percent, and its forbidden-action rate runs 0.30 to 0.78. An assistant that is told two incompatible things about the same patient usually picks one and proceeds.
 
