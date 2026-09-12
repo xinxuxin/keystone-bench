@@ -139,13 +139,15 @@ Two system prompts, the same items, the same judge, the judge blind to the arm. 
 | | baseline | name what is missing | and gate the action |
 |---|---|---|---|
 | explicit acknowledgement, edited side | 0.72 | 0.97 | 0.90 |
-| unsupported action, edited side (change from baseline) | | **−0.134** [−0.218, −0.050] | **−0.125** [−0.225, −0.033] |
-| asked or refused where the message already settles it | | **+0.440** [+0.355, +0.520] | **+0.450** [+0.370, +0.530] |
-| held the line **and** still answered directly | 0.475 | 0.185 | 0.217 |
+| unsupported action, edited side | 0.300 | **0.160** | 0.175 |
+| gave a usable course of action, unedited side | 0.880 | 0.850 | 0.820 |
+| **held the line and still answered** | 0.625 | **0.731** | 0.700 |
 
-Both instructions land and both work on the side they were written for. Both pay about three times over on the other side, and the clause added to prevent exactly that changes neither half (benefit +0.017 [−0.042, +0.084], cost +0.010 [−0.050, +0.070] between the two arms). On `buried_red_flag` the gated arm is worse than baseline, because an assistant told to hold back when a decisive fact is absent stops escalating where escalating now is the answer.
+Naming what is missing cuts unsupported action on the edited side by **−0.134 [−0.218, −0.050]** and raises the joint outcome, which scores both sides of one item at once, by **+0.101 [+0.008, +0.193]**. It does not buy that by withholding answers: on the two negative-control families the change in withheld answers is −0.013 [−0.089, +0.076].
 
-An evaluation that scored only the edited side would have recorded the first row and called this a fix. Two more assistants are running.
+It does make the assistant talkative. The share of replies that ask something at all rises by 0.44, because the instruction puts the list of missing information at the top and the recommendation underneath. That is a cost to a reader and it is reported, but it is not the assistant refusing to answer, and telling the two apart needs both the negative controls and the unedited condition.
+
+The gate clause contributes nothing here: every contrast between the two arms contains zero. On `buried_red_flag` it is worse than baseline (+0.150 [+0.025, +0.300]), the one family where telling an assistant to hold back costs it an escalation that was already warranted. Two more assistants are running.
 
 **The hardest family is `conflicting_evidence`.** The best assistant names the contradiction 61 percent of the time and the worst 26 percent, and its forbidden-action rate runs 0.30 to 0.78. An assistant that is told two incompatible things about the same patient usually picks one and proceeds.
 
