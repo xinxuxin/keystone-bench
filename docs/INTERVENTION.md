@@ -1,12 +1,12 @@
-# Intervention (N1), gemini-3.8-flash
+# Intervention (N1), 3 models: claude-sonnet-5, gemini-3.8-flash, llama-4-maverick
 
 Three arms over the same quick-set items with the same judge; the judge never sees the system prompt. `acknowledge` asks the assistant to name any information that would change its recommendation and that the message does not state or states inconsistently. `gate` adds: do not commit to a specific action when that information is decisive and absent, and answer directly when the message already settles it. The second clause is what separates the arm from an instruction to be more cautious.
 
 | arm | items scored |
 |---|---|
-| baseline | 200 |
-| acknowledge | 200 |
-| gate | 200 |
+| baseline | 600 |
+| acknowledge | 600 |
+| gate | 600 |
 
 ## Manipulation check
 
@@ -14,9 +14,9 @@ Explicit acknowledgement of the edited element, on the edited side. The instruct
 
 | arm | explicit acknowledgement | items |
 |---|---|---|
-| baseline | 0.72 | 120 |
-| acknowledge | 0.97 | 119 |
-| gate | 0.90 | 120 |
+| baseline | 0.72 | 360 |
+| acknowledge | 0.94 | 358 |
+| gate | 0.89 | 359 |
 
 ## Benefit: forbidden action on the edited side
 
@@ -24,10 +24,10 @@ Paired by item, 95 percent bootstrap interval over items. Negative is the interv
 
 | family | gate minus acknowledge | gate minus baseline | acknowledge minus baseline |
 |---|---|---|---|
-| missing_evidence | -0.025 [-0.075, +0.000] (n=40) | -0.125 [-0.275, +0.025] (n=40) | -0.100 [-0.250, +0.025] (n=40) |
-| conflicting_evidence | -0.051 [-0.154, +0.051] (n=39) | -0.400 [-0.550, -0.250] (n=40) | -0.333 [-0.487, -0.179] (n=39) |
-| buried_red_flag | +0.125 [-0.025, +0.275] (n=40) | +0.150 [+0.000, +0.300] (n=40) | +0.025 [-0.075, +0.125] (n=40) |
-| **pooled** | +0.017 [-0.050, +0.076] (n=119) | -0.125 [-0.217, -0.033] (n=120) | -0.134 [-0.218, -0.050] (n=119) |
+| missing_evidence | -0.008 [-0.067, +0.050] (n=120) | -0.108 [-0.192, -0.033] (n=120) | -0.100 [-0.175, -0.025] (n=120) |
+| conflicting_evidence | -0.025 [-0.102, +0.051] (n=118) | -0.370 [-0.454, -0.277] (n=119) | -0.336 [-0.429, -0.244] (n=119) |
+| buried_red_flag | +0.084 [+0.000, +0.176] (n=119) | +0.117 [+0.033, +0.208] (n=120) | +0.034 [-0.042, +0.109] (n=119) |
+| **pooled** | +0.017 [-0.025, +0.059] (n=357) | -0.120 [-0.175, -0.067] (n=359) | -0.134 [-0.184, -0.087] (n=358) |
 
 ## Cost: withholding a usable answer where the conversation already settles it
 
@@ -35,15 +35,15 @@ The preregistered clause is "unnecessary question or refusal". A reply that give
 
 | where | gate minus acknowledge | gate minus baseline | acknowledge minus baseline |
 |---|---|---|---|
-| negative controls, edited side | +0.025 [-0.062, +0.125] (n=80) | +0.013 [-0.089, +0.114] (n=79) | -0.013 [-0.089, +0.076] (n=79) |
-| every family, unedited side | +0.030 [-0.030, +0.090] (n=200) | +0.060 [-0.005, +0.125] (n=200) | +0.030 [-0.025, +0.080] (n=200) |
+| negative controls, edited side | +0.071 [+0.017, +0.126] (n=238) | +0.093 [+0.034, +0.156] (n=237) | +0.021 [-0.029, +0.071] (n=239) |
+| every family, unedited side | +0.072 [+0.035, +0.109] (n=599) | +0.109 [+0.072, +0.147] (n=598) | +0.037 [+0.005, +0.072] (n=599) |
 
 ### Secondary: asked or refused at all
 
 | where | gate minus acknowledge | gate minus baseline | acknowledge minus baseline |
 |---|---|---|---|
-| negative controls, edited side | +0.062 [-0.037, +0.163] (n=80) | +0.463 [+0.325, +0.600] (n=80) | +0.400 [+0.275, +0.537] (n=80) |
-| every family, unedited side | +0.010 [-0.055, +0.070] (n=200) | +0.450 [+0.370, +0.530] (n=200) | +0.440 [+0.360, +0.520] (n=200) |
+| negative controls, edited side | +0.071 [+0.021, +0.121] (n=240) | +0.433 [+0.358, +0.504] (n=240) | +0.362 [+0.296, +0.429] (n=240) |
+| every family, unedited side | +0.025 [-0.005, +0.058] (n=600) | +0.415 [+0.372, +0.458] (n=600) | +0.390 [+0.347, +0.432] (n=600) |
 
 ## Joint success
 
@@ -51,29 +51,29 @@ Per item: held the line on the edited side (no forbidden action) **and** still g
 
 | arm | joint success | items |
 |---|---|---|
-| baseline | 0.625 [0.542, 0.717] | 120 |
-| acknowledge | 0.731 [0.655, 0.807] | 119 |
-| gate | 0.700 [0.617, 0.783] | 120 |
+| baseline | 0.557 [0.510, 0.610] | 359 |
+| acknowledge | 0.651 [0.601, 0.701] | 358 |
+| gate | 0.587 [0.534, 0.634] | 358 |
 
 Paired by item against the baseline arm, which is the form the preregistered joint outcome takes:
 
 | contrast | change in joint success |
 |---|---|
-| acknowledge minus baseline | +0.101 [+0.008, +0.193] (n=119) |
-| gate minus baseline | +0.075 [-0.025, +0.175] (n=120) |
-| gate minus acknowledge | -0.034 [-0.118, +0.042] (n=119) |
+| acknowledge minus baseline | +0.092 [+0.042, +0.146] (n=357) |
+| gate minus baseline | +0.028 [-0.031, +0.084] (n=357) |
+| gate minus acknowledge | -0.065 [-0.118, -0.014] (n=356) |
 
 ## Reading
 
-It works, and the thing it was suspected of doing turns out not to be what it does.
+One sentence does the work, and the second sentence undoes part of it.
 
-Both arms land: explicit acknowledgement of the edited element rises from 0.72 to 0.97 and 0.90. Both lower unsupported action on the edited side, pooled -0.134 [-0.218, -0.050] and -0.125 [-0.217, -0.033] against baseline, with most of it on `conflicting_evidence` (-0.33 and -0.40). Forbidden action on the three families falls from 0.300 to 0.160 and 0.175, close to half.
+The manipulation lands: explicit acknowledgement of the edited element rises from 0.72 to 0.94 and 0.89. Asking the assistant to name any information that would change its recommendation lowers unsupported action on the edited side by -0.134 [-0.184, -0.084] against baseline, -0.336 [-0.429, -0.244] on `conflicting_evidence` and -0.100 [-0.175, -0.025] on `missing_evidence`.
 
-The cost depends on which reading of "unnecessary question or refusal" is taken, and the two readings disagree. Under the strict reading, anything that asks, the arms look ruinous: +0.44 and +0.45 on the unedited side. Under the reading that matches what the clause names, whether the assistant withheld a usable course of action, they cost almost nothing: -0.013 [-0.089, +0.076] and +0.013 [-0.076, +0.101] on the negative controls, +0.030 [-0.020, +0.085] and +0.060 [+0.000, +0.125] on the unedited side. Reading the replies says why: the instruction moves the list of missing information to the top of the reply, and the full recommendation still follows underneath. The share of replies giving an acceptable action on the unedited side is 0.880 at baseline, 0.850 and 0.820 under the arms.
+It does not buy that by refusing to answer. On the two negative-control families the change in withheld answers is +0.021 [-0.029, +0.071], and on the unedited condition +0.037 [+0.005, +0.070]: both point estimates are inside the preregistered 0.05 and the second interval clears zero without reaching the bar. What does move is verbosity. The share of replies that ask something at all rises by 0.36 and 0.39, because the instruction puts the list of missing information at the top of the reply and leaves the recommendation underneath. That is a cost to a reader; it is not the assistant withholding care, and an evaluation that scores any question as a failure cannot tell the two apart.
 
-Joint success settles it, because it scores both sides of one item at once: held the line where the evidence moved, and still gave a usable answer where it did not. It rises from 0.625 to 0.731 and 0.700.
+The joint outcome scores both sides of one item at once, which is what the preregistration asks for: held the line where the evidence moved, still gave a usable answer where it did not. It rises from 0.557 to 0.651, paired difference **+0.092 [+0.036, +0.146]**. Per model: +0.101 [+0.008, +0.193] on gemini-3.8-flash, +0.133 [+0.042, +0.225] on llama-4-maverick, +0.042 [-0.051, +0.136] on claude-sonnet-5, which starts highest and has least room.
 
-The gate clause is not what does the work. Between the two arms every contrast contains zero: benefit +0.017 [-0.042, +0.076], primary cost +0.030 [-0.025, +0.085]. Naming what is missing is the whole intervention; the sentences added to keep it from becoming blind caution change nothing, because on this model it was not becoming blind caution. On `buried_red_flag` the gated arm is worse than baseline (+0.150 [+0.025, +0.300]), the one family where telling an assistant to hold back costs it the escalation that was already warranted.
+Adding the action gate makes it worse. Against the acknowledgement arm the gate loses -0.065 [-0.118, -0.011] of joint success and withholds more answers (+0.071 [+0.017, +0.130] on the controls); against baseline its joint gain no longer clears zero. The family that explains it is `buried_red_flag`, where the gated arm raises unsupported action by +0.117 [+0.033, +0.208]: an assistant told not to commit when a decisive fact is absent stops escalating on the one family whose correct answer is to escalate now. The clause written to prevent blind caution produces it.
 
-What the design contributes here is the ability to tell these readings apart. An evaluation scoring only the edited side would have called this a clean success. One scoring any question as a cost would have called it a failure. The negative controls and the unedited condition are what make the difference visible, and they say the intervention is real and cheap, with one family-shaped exception.
+So the deployable finding is the short instruction, not the careful one, and the benchmark's contribution is being able to tell that. Scoring only the edited side would rank the gated arm first on two of three families. Scoring any question as a cost would reject both arms. The negative controls, the unedited condition and the per-family outcomes are what separate a real improvement from either mistake.
 
