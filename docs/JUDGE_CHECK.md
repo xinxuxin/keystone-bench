@@ -152,3 +152,32 @@ Re-run of the full validity set (123 items × 6 authored reply types, judge GPT-
 
 The two fields are parsed on 99.8% of replies. The gap on `generic_questions` (0.11 against 0.36) is the reason the field exists: an acknowledgement-versus-action table needs a measure of acknowledgement that is not satisfied by asking a checklist of questions. Records: `runs/judge_check_0_6_0_behaviour` (cost $2.08).
 
+## Sensitivity and invariance, separately
+
+A judge can be perfectly self-consistent and still not detect the thing it is supposed to detect; the two
+properties are statistically independent and a single agreement number hides which one is missing
+([arXiv:2608.24419](https://arxiv.org/abs/2608.24419)). This release measures them with two different
+instruments on the same items.
+
+**Sensitivity** is this page: 123 items, six authored reply types per item, and the question is whether the
+judge's verdict changes when the reply's intent changes. **Invariance** is [`JUDGE_PANEL.md`](JUDGE_PANEL.md):
+the same replies scored by three vendors, and the question is whether the verdict stays put when only the
+judge changes.
+
+| what the judge is asked | sensitivity (authored types separated) | invariance (Fleiss over three vendors) | used for |
+|---|---|---|---|
+| is the reply's course of action forbidden | 0.93 to 1.00 on the three types with an unambiguous answer | 0.62 | the primary outcome |
+| is it acceptable | 0.93 to 1.00 on the same three | 0.64 | the primary outcome |
+| did it ask the decisive question or answer conditionally | 0.85 on `conditional_correct`, 0.11 on `generic_questions` | 0.59 | a family primary outcome |
+| did it escalate | not separately authored | 0.89 to 0.92 | a family primary outcome |
+| behavioural stance, five ways | 0.67 to 1.00 depending on type | 0.49 | description only, never an outcome |
+
+The pattern is the same in both columns and it is the reason the outcomes are defined the way they are. Where
+the annotation states the answer as a list or a boolean, the judge both separates the authored types and
+agrees with other vendors. Where the label is an open five-way judgement with no annotated ground truth, both
+numbers fall, and that label carries no result in this release.
+
+The weakest cell is `acknowledge_then_act`, at 0.67 sensitivity on stance and 0.63 to 0.76 on the action
+verdict: a reply that names the gap and then commits anyway is the hardest case for every judge tried, which
+is exactly why the acknowledgement and the action are recorded as two separate fields rather than one.
+
