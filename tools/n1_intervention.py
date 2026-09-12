@@ -31,10 +31,12 @@ BOOT = int(os.environ.get("KEYSTONE_BOOT", "2000"))
 
 
 def load_arm(runs: str, model: str, arm: str) -> dict:
-    """{(family, id): record}. The baseline arm is the ordinary quick run."""
-    pat = os.path.join(runs, f"quick__{model}" if arm == "baseline" else f"n1_{arm}__{model}", "*", "records.jsonl")
+    """{(family, id): record}. The baseline arm prefers a re-judged run (which carries the acknowledgement
+    field the reference runs predate) and falls back to the reference quick run."""
+    dirs = [f"n1_{arm}__{model}"] if arm != "baseline" else [f"n1_baseline__{model}", f"quick__{model}"]
+    pat = next((os.path.join(runs, d, "*", "records.jsonl") for d in dirs if glob.glob(os.path.join(runs, d, "*", "records.jsonl"))), None)
     out = {}
-    for f in sorted(glob.glob(pat)):
+    for f in sorted(glob.glob(pat) if pat else []):
         for line in open(f):
             if line.strip():
                 r = json.loads(line); out[(r["family"], r["id"])] = r
@@ -104,9 +106,19 @@ def rate(d: dict, families: list[str], cond: str, fn) -> tuple[float, int]:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", default="gemini-3.8-flash"); ap.add_argument("--runs", default="runs"); ap.add_argument("--out")
+    ap.add_argument("--model", default="gemini-3.8-flash", help="one model, or 'all' to pool every model that has all three arms")
+    ap.add_argument("--runs", default="runs"); ap.add_argument("--out")
     a = ap.parse_args()
-    arms = {arm: load_arm(a.runs, a.model, arm) for arm in ARMS}
+    if a.model == "all":
+        models = sorted({Path(d).name.split("__", 1)[1] for d in glob.glob(os.path.join(a.runs, "n1_gate__*"))})
+        arms = {arm: {} for arm in ARMS}
+        for m in models:
+            for arm in ARMS:
+                for k, v in load_arm(a.runs, m, arm).items():
+                    arms[arm][(k[0], f"{m}::{k[1]}")] = v      # model-scoped item key: pairing stays within a model
+        a.model = f"{len(models)} models: {', '.join(models)}"
+    else:
+        arms = {arm: load_arm(a.runs, a.model, arm) for arm in ARMS}
     have = [k for k, v in arms.items() if v]
     L = [f"# Intervention (N1), {a.model}", "",
          "Three arms over the same quick-set items with the same judge; the judge never sees the system prompt. "
@@ -183,7 +195,29 @@ def main():
         if xs:
             m, lo, hi = boot_ci(xs, seed=11)
             L.append(f"| {arm} | {m:.3f} [{lo:.3f}, {hi:.3f}] | {len(xs)} |")
-    L.append("")
+    L += ["## Reading", "",
+          "The instruction works on the side it was written for and pays for it on the other side.", "",
+          "Both arms raise explicit acknowledgement (0.72 at baseline to 0.97 and 0.90), so the manipulation "
+          "landed. Both lower unsupported action on the edited side, pooled -0.134 and -0.125 against baseline, "
+          "with the whole of that effect coming from `conflicting_evidence` (-0.33 and -0.40). On "
+          "`buried_red_flag` the gate arm is worse than baseline (+0.150 [+0.000, +0.300]): an assistant told to "
+          "hold back when a decisive fact is absent stops escalating on the family where the correct answer is to "
+          "escalate now.", "",
+          "The cost is where the result is. Asking or refusing on a conversation that already settles the question "
+          "rises by 0.45 against baseline, on the negative-control families and on the unedited side alike, against "
+          "a preregistered bar of 0.05. Joint success, holding the line on the edited side while still answering "
+          "the unedited one, falls from 0.475 to 0.185 and 0.217.", "",
+          "The clause that was supposed to prevent this did not. `gate` differs from `acknowledge` only by the "
+          "sentences telling the assistant not to commit when a decisive fact is absent and to answer directly "
+          "when the message already settles it. Between the two arms the benefit is +0.017 [-0.042, +0.084] and "
+          "the cost is +0.010 [-0.050, +0.070]: on this model the second instruction changes neither half. The "
+          "preregistered decision rule for the intervention (benefit interval excluding zero, cost interval "
+          "inside 0.05) is not met.", "",
+          "What that leaves is a measurement, not a fix. Both instructions trade one failure for its opposite at "
+          "roughly one to three: 0.13 fewer unsupported actions for 0.45 more unnecessary questions. A benchmark "
+          "that scored only the edited side would have recorded the first number and called the intervention a "
+          "success. The paired design with negative controls is what makes the trade visible, and the size of it "
+          "is the argument for looking at training rather than at prompting.", ""]
     text = "\n".join(L) + "\n"
     print(text)
     if a.out:
