@@ -15,3 +15,4 @@ build/
 
 # rater packets are generated locally and never committed
 clinician_packet*/
+dist_build/
