@@ -4,20 +4,20 @@ Every family is reported on the outcome it was designed around, because the fami
 
 ## Quick set, 5 assistants, 8 families
 
-Benchmark 0.5.0, layer `quick`, judge `gpt-4.1`, temperature 0.0, 1500 output tokens, generated 2026-09-12. The quick set is 40 twins per family from the dev split, each with its original, its twin and its paraphrase-only control.
+Benchmark 0.6.0, layer `quick`, judge `gpt-4.1`, temperature 0.0, 1500 output tokens, generated 2026-09-12. The quick set is 40 twins per family from the dev split, each with its original, its twin and its paraphrase-only control.
 
 ### What each family asks for
 
 | Family | The behaviour it asks for | claude-sonnet-5 | deepseek-v4-pro-0813 | gemini-3.8-flash | gpt-5.6-terra | llama-4-maverick |
 |---|---|---|---|---|---|---|
-| `alternative_evidence` | changed the action to the one the new value supports | 0.90 | 0.90 | 0.79 | 0.80 | 0.71 |
-| `buried_red_flag` | made urgent evaluation the main answer | 0.50 | 0.67 | 0.72 | 0.82 | 0.28 |
-| `conflicting_evidence` | named the contradiction and asked which side is true | 0.34 | 0.32 | 0.22 | 0.26 | 0.16 |
-| `demographic_control` | answered unchanged despite the tempting attribute | 0.72 | 0.72 | 0.72 | 0.80 | 0.65 |
-| `demographic_shift` | adjusted the advice to the changed attribute | 0.97 | 0.87 | 0.90 | 0.90 | 0.58 |
-| `missing_evidence` | asked the question that settles it, or answered conditionally on it | 0.63 | 0.52 | 0.34 | 0.66 | 0.17 |
-| `missing_evidence_early` | same, with the fact removed from an earlier turn | 0.48 | 0.38 | 0.24 | 0.57 | 0.29 |
-| `salient_distractor` | answered unchanged despite the irrelevant insertion | 0.75 | 0.85 | 0.70 | 0.85 | 0.62 |
+| `alternative_evidence` | changed the action to the one the new value supports | 0.90 | 0.94 | 0.87 | 0.81 | 0.74 |
+| `buried_red_flag` | made urgent evaluation the main answer | 0.78 | 0.71 | 0.82 | 0.88 | 0.38 |
+| `conflicting_evidence` | named the contradiction and asked which side is true | 0.55 | 0.44 | 0.39 | 0.47 | 0.24 |
+| `demographic_control` | answered unchanged despite the tempting attribute | 0.95 | 0.95 | 0.87 | 0.90 | 0.75 |
+| `demographic_shift` | adjusted the advice to the changed attribute | 0.96 | 0.88 | 0.85 | 0.96 | 0.81 |
+| `missing_evidence` | asked the question that settles it, or answered conditionally on it | 0.69 | 0.64 | 0.49 | 0.74 | 0.34 |
+| `missing_evidence_early` | same, with the fact removed from an earlier turn | 0.54 | 0.41 | 0.43 | 0.59 | 0.30 |
+| `salient_distractor` | answered unchanged despite the irrelevant insertion | 0.88 | 0.92 | 0.93 | 0.93 | 0.78 |
 
 ### Forbidden action, the cross-family outcome
 
@@ -25,13 +25,13 @@ The share of replies to the twin that take an action the twin's own annotation r
 
 | Family | claude-sonnet-5 | deepseek-v4-pro-0813 | gemini-3.8-flash | gpt-5.6-terra | llama-4-maverick |
 |---|---|---|---|---|---|
-| `alternative_evidence` | 0.07 (n=40) | 0.10 (n=39) | 0.18 (n=38) | 0.15 (n=39) | 0.25 (n=40) |
-| `buried_red_flag` | 0.39 (n=38) | 0.33 (n=36) | 0.17 (n=40) | 0.15 (n=40) | 0.57 (n=40) |
-| `conflicting_evidence` | 0.33 (n=40) | 0.31 (n=36) | 0.36 (n=39) | 0.40 (n=40) | 0.68 (n=40) |
+| `alternative_evidence` | 0.07 (n=40) | 0.08 (n=39) | 0.10 (n=39) | 0.15 (n=40) | 0.33 (n=40) |
+| `buried_red_flag` | 0.25 (n=40) | 0.29 (n=38) | 0.20 (n=40) | 0.15 (n=40) | 0.62 (n=40) |
+| `conflicting_evidence` | 0.33 (n=40) | 0.32 (n=38) | 0.42 (n=40) | 0.28 (n=40) | 0.75 (n=40) |
 | `demographic_control` | n/a | n/a | n/a | n/a | n/a |
-| `demographic_shift` | 0.05 (n=39) | 0.12 (n=40) | 0.08 (n=39) | 0.10 (n=39) | 0.40 (n=40) |
-| `missing_evidence` | 0.28 (n=40) | 0.32 (n=38) | 0.28 (n=39) | 0.20 (n=40) | 0.40 (n=40) |
-| `missing_evidence_early` | 0.35 (n=23) | 0.35 (n=23) | 0.35 (n=23) | 0.22 (n=23) | 0.26 (n=23) |
+| `demographic_shift` | 0.07 (n=40) | 0.15 (n=39) | 0.15 (n=40) | 0.05 (n=40) | 0.33 (n=40) |
+| `missing_evidence` | 0.23 (n=40) | 0.24 (n=38) | 0.33 (n=40) | 0.17 (n=40) | 0.35 (n=40) |
+| `missing_evidence_early` | 0.10 (n=39) | 0.33 (n=39) | 0.28 (n=39) | 0.13 (n=39) | 0.28 (n=39) |
 | `salient_distractor` | n/a | n/a | n/a | n/a | n/a |
 
 ### The paraphrase control
@@ -40,16 +40,16 @@ Reworded, no evidence changed. A run whose spurious shift exceeds 0.10 on a fami
 
 | Family | claude-sonnet-5 | deepseek-v4-pro-0813 | gemini-3.8-flash | gpt-5.6-terra | llama-4-maverick |
 |---|---|---|---|---|---|
-| `alternative_evidence` | **0.33** | **0.14** | **0.13** | **0.11** | **0.12** |
-| `buried_red_flag` | 0.04 | **0.12** | **0.16** | **0.20** | **0.13** |
-| `conflicting_evidence` | **0.24** | **0.24** | **0.12** | 0.08 | **0.15** |
-| `demographic_control` | **0.11** | 0.05 | **0.11** | 0.06 | **0.16** |
-| `demographic_shift` | 0.08 | 0.00 | 0.04 | 0.08 | 0.04 |
-| `missing_evidence` | 0.04 | 0.03 | 0.07 | 0.04 | **0.13** |
-| `missing_evidence_early` | **0.44** | **0.23** | **0.17** | 0.10 | **0.25** |
-| `salient_distractor` | **0.12** | 0.07 | 0.07 | 0.08 | **0.12** |
+| `alternative_evidence` | **0.21** | **0.13** | 0.07 | 0.08 | **0.20** |
+| `buried_red_flag` | **0.14** | 0.07 | 0.09 | **0.14** | **0.12** |
+| `conflicting_evidence` | **0.29** | 0.04 | 0.03 | **0.11** | **0.19** |
+| `demographic_control` | **0.18** | **0.14** | 0.09 | **0.15** | **0.13** |
+| `demographic_shift` | **0.12** | 0.04 | 0.03 | **0.10** | 0.07 |
+| `missing_evidence` | 0.07 | 0.08 | 0.00 | **0.12** | 0.09 |
+| `missing_evidence_early` | **0.29** | 0.08 | 0.04 | **0.19** | 0.04 |
+| `salient_distractor` | **0.17** | **0.12** | 0.06 | 0.00 | **0.16** |
 
-Empty replies, which are missing data and enter no denominator: claude-sonnet-5 2, deepseek-v4-pro-0813 30, gemini-3.8-flash 7, gpt-5.6-terra 1, llama-4-maverick 0.
+Empty replies, which are missing data and enter no denominator: claude-sonnet-5 2, deepseek-v4-pro-0813 38, gemini-3.8-flash 6, gpt-5.6-terra 1, llama-4-maverick 0.
 
 ## Earlier pilot, `missing_evidence` only
 

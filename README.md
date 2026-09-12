@@ -117,12 +117,12 @@ Five assistants over the quick set, **eight families**, 303 twins each with its 
 
 **The effect is the evidence, measured on eight families.** The same item is edited two ways: the twin changes one fact, the control only rewords. The share of replies taking an action the annotation forbids, twin minus control, per item:
 
-| | `missing_evidence` | `conflicting_evidence` | `buried_red_flag` | `demographic_shift` | `salient_distractor` | `demographic_control` |
-|---|---|---|---|---|---|---|
-| twin minus control | **+0.19** | **+0.33** | **+0.17** | +0.05 | −0.01 | −0.01 |
-| 95% interval | [0.09, 0.29] | [0.24, 0.44] | [0.05, 0.28] | [−0.01, 0.11] | [−0.05, 0.03] | [−0.06, 0.03] |
+| | `missing_evidence` | `conflicting_evidence` | `buried_red_flag` | `demographic_shift` | `missing_evidence_early` | `salient_distractor` | `demographic_control` |
+|---|---|---|---|---|---|---|---|
+| twin minus control | **+0.20** | **+0.31** | **+0.19** | **+0.10** | **+0.11** | +0.01 | −0.00 |
+| 95% interval | [0.10, 0.31] | [0.21, 0.42] | [0.06, 0.32] | [0.04, 0.18] | [0.04, 0.19] | [−0.03, 0.05] | [−0.04, 0.04] |
 
-Every row is all 40 quick-set items of that family with both sides judged, averaged per item across the five assistants, with a 95 percent bootstrap interval over items; a GEE clustered by item with the assistant as a fixed effect gives the same marginal differences. The two negative-control families sit on zero, where the correct behaviour is to answer unchanged; three perturbation families do not, and `demographic_shift` is small with an interval that reaches zero. That contrast is what separates a benchmark that measures evidence-sensitivity from one that measures sensitivity to being edited, and it is now measured rather than argued ([`docs/BEHAVIOUR_ANCHOR.md`](docs/BEHAVIOUR_ANCHOR.md)).
+Every row is all 40 quick-set items of that family with both sides judged, averaged per item across the five assistants, with a 95 percent bootstrap interval over items; a GEE clustered by item with the assistant as a fixed effect gives the same marginal differences. The two negative-control families sit on zero, where the correct behaviour is to answer unchanged; five perturbation families do not. `alternative_evidence`, whose own outcome is a necessary update rather than a forbidden action, is at +0.00 on this one and is read through its own column in [`docs/RESULTS.md`](docs/RESULTS.md). That contrast is what separates a benchmark that measures evidence-sensitivity from one that measures sensitivity to being edited, and it is now measured rather than argued ([`docs/BEHAVIOUR_ANCHOR.md`](docs/BEHAVIOUR_ANCHOR.md)).
 
 **Re-judged by two more vendors, two of the three hold.** Every reply above was scored again by Claude Sonnet and by Gemini Flash under the same frozen prompts ([`docs/JUDGE_PANEL.md`](docs/JUDGE_PANEL.md)). `missing_evidence` and `conflicting_evidence` exclude zero under all three judges separately, and under a panel estimate that removes the model's own vendor from its judging they are **+0.19 [0.09, 0.31]** and **+0.28 [0.18, 0.38]**. `buried_red_flag` keeps its direction under all three (+0.17, +0.10, +0.05) but only the first interval excludes zero, so it is reported as a secondary result whose size depends on the judge. Both negative controls stay on zero under every judge, which is what rules out a judge effect large enough to manufacture the other two. Agreement is Fleiss 0.89 to 0.92 on escalation, 0.62 on forbidden action, and 0.49 on the descriptive stance label.
 

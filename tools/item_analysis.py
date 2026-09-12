@@ -38,10 +38,10 @@ def outcome(rec: dict, cond: str, key: str = "forbidden"):
     return None
 
 
-def load(runs: str, layer: str) -> dict:
+def load(runs: str, layer: str, prefix: str | None = None) -> dict:
     """{(family, item): {model: {cond: {key: value}}}}"""
     out = defaultdict(dict)
-    for d in sorted(glob.glob(os.path.join(runs, f"{layer}__*"))):
+    for d in sorted(glob.glob(os.path.join(runs, f"{prefix or layer}__*"))):
         model = Path(d).name.split("__", 1)[1]
         if "__judge-" in model or model.startswith(("n1_", "floor_")):
             continue
@@ -75,6 +75,9 @@ def n_for_power(effect: float, sd: float, power: float = 0.80, alpha: float = 0.
 
 
 
+PREFIX = "quick"
+
+
 def discriminant() -> list[str]:
     """Is the effect a function of how much text changed, rather than of what changed.
 
@@ -93,7 +96,7 @@ def discriminant() -> list[str]:
                 d = 1.0 - difflib.SequenceMatcher(None, o, e).ratio()
                 twins[(t["family"], f"{t['prompt_id']}::{t['family']}")] = (d, t.get("materiality_majority"), len(e) - len(o))
     per = dd(list)
-    for f in sorted(glob.glob(str(Path(__file__).resolve().parents[1] / "runs" / "quick__*" / "*" / "records.jsonl"))):
+    for f in sorted(glob.glob(str(Path(__file__).resolve().parents[1] / "runs" / f"{PREFIX}__*" / "*" / "records.jsonl"))):
         if "__judge-" in f:
             continue
         for line in open(f):
@@ -154,8 +157,11 @@ def discriminant() -> list[str]:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", default="runs"); ap.add_argument("--layer", default="quick"); ap.add_argument("--out")
+    ap.add_argument("--prefix", help="run-directory prefix, when it differs from the layer name (e.g. q060)")
     a = ap.parse_args()
-    data = load(a.runs, a.layer)
+    global PREFIX
+    PREFIX = a.prefix or a.layer
+    data = load(a.runs, a.layer, a.prefix)
     models = sorted({m for v in data.values() for m in v})
     L = ["# Item analysis", "",
          f"Layer `{a.layer}`, {len({k[1] for k in data})} items over {len(FAMILIES)} families, evaluated on "

@@ -160,6 +160,9 @@ def fmt(x, nd=2):
 
 
 
+RUN_PREFIX = "quick"
+
+
 def blind_baseline(cross_acc: dict) -> list[str]:
     """What a policy that never reads the evidence could score on the paired difference.
 
@@ -177,7 +180,7 @@ def blind_baseline(cross_acc: dict) -> list[str]:
     import glob
     from collections import defaultdict as dd
     per = dd(list)
-    for f in sorted(glob.glob(str(ROOT / "runs" / "quick__*" / "*" / "records.jsonl"))):
+    for f in sorted(glob.glob(str(ROOT / "runs" / f"{RUN_PREFIX}__*" / "*" / "records.jsonl"))):
         if "__judge-" in f or "/n1_" in f or "/floor_" in f:
             continue
         for line in open(f):
@@ -211,7 +214,7 @@ def blind_baseline(cross_acc: dict) -> list[str]:
     L += ["", "The bound is above 0.6 on every family, so it does not by itself rule anything out. The last column is what "
               "does. A blind policy spends its accuracy the same way everywhere, so its ratio of measured effect to bound "
               "would be roughly constant across families. Measured, that ratio is near zero on the two families whose "
-              "correct answer is to hold the reply and 0.17 to 0.35 on the three families with a headline effect, even "
+              "correct answer is to hold the reply and 0.11 to 0.34 on the five families whose correct answer is to change it, even "
               "though the two negative controls are among the most detectable families in the table. Detectability is "
               "available to the models and they are not spending it.", ""]
     return L
@@ -222,7 +225,10 @@ def main():
     ap.add_argument("--dist", default=str(ROOT / "dist"))
     ap.add_argument("--out", default=str(OUT), help="where to write the report (default: the docs page)")
     ap.add_argument("--records", default=str(ROOT / "release" / "reference_records.jsonl"))
+    ap.add_argument("--prefix", default="quick", help="run-directory prefix for the reference effects")
     a = ap.parse_args()
+    global RUN_PREFIX
+    RUN_PREFIX = a.prefix
     twins = rows(Path(a.dist) / "keystone_twins.jsonl")
     by_fam = defaultdict(list)
     for t in twins:

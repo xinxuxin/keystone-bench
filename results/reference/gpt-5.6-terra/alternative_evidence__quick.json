@@ -1,8 +1,8 @@
 {
- "generated": "2026-09-11T21:49:15+00:00",
+ "generated": "2026-09-12T19:07:53+00:00",
  "meta": {
   "title": "Keystone alternative_evidence (quick, all) — openrouter/openai/gpt-5.6-terra",
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "family": "alternative_evidence",
   "layer": "quick",
   "split": "all",
@@ -11,34 +11,37 @@
   "temperature": 0.0,
   "max_tokens": 1500,
   "rubric": false,
+  "arm": "baseline",
+  "system_prompt": null,
+  "repeat": 0,
   "usage": {
    "model": {
     "calls": 600,
-    "cached": 48,
-    "input_tokens": 66551,
-    "output_tokens": 314249,
-    "cost_usd": 3.9040900000000023
+    "cached": 511,
+    "input_tokens": 14436,
+    "output_tokens": 51170,
+    "cost_usd": 0.6429119999999999
    },
    "judge": {
     "calls": 1200,
-    "cached": 96,
-    "input_tokens": 1453279,
-    "output_tokens": 120330,
-    "cost_usd": 3.8691980000000026
+    "cached": 563,
+    "input_tokens": 809839,
+    "output_tokens": 72108,
+    "cost_usd": 2.1965419999999978
    }
   }
  },
  "summary": {
   "n_pairs": 40,
   "n_empty_replies": 0,
-  "n_original_definitive": 34,
+  "n_original_definitive": 24,
   "adaptation_failure": {
-   "k": 22,
-   "n": 34,
-   "rate": 0.6470588235294118,
+   "k": 14,
+   "n": 24,
+   "rate": 0.5833333333333334,
    "wilson95": [
-    0.4791365883001342,
-    0.7851228510470394
+    0.3883433764938864,
+    0.7553265275346177
    ]
   },
   "control_drift": {
@@ -57,12 +60,12 @@
    ]
   },
   "answered_when_sufficient": {
-   "k": 38,
+   "k": 34,
    "n": 40,
-   "rate": 0.95,
+   "rate": 0.85,
    "wilson95": [
-    0.834958291820748,
-    0.9861796228538989
+    0.7092737396097997,
+    0.9293890829149256
    ]
   },
   "held_answer_on_control": {
@@ -72,30 +75,30 @@
    "wilson95": null
   },
   "ack_but_answer": {
-   "k": 4,
-   "n": 34,
-   "rate": 0.11764705882352941,
+   "k": 6,
+   "n": 24,
+   "rate": 0.25,
    "wilson95": [
-    0.04671370973436122,
-    0.26621174796298774
+    0.1199920347934233,
+    0.4489982531210644
    ]
   },
   "unsafe_action": {
-   "k": 2,
-   "n": 34,
-   "rate": 0.058823529411764705,
+   "k": 6,
+   "n": 24,
+   "rate": 0.25,
    "wilson95": [
-    0.016282313063842452,
-    0.1909393688946371
+    0.1199920347934233,
+    0.4489982531210644
    ]
   },
   "spurious_shift": {
-   "k": 4,
-   "n": 34,
-   "rate": 0.11764705882352941,
+   "k": 2,
+   "n": 24,
+   "rate": 0.08333333333333333,
    "wilson95": [
-    0.04671370973436122,
-    0.26621174796298774
+    0.023158327842973503,
+    0.258492152014506
    ]
   },
   "pert_seeks_context": {
@@ -108,15 +111,6 @@
    ]
   },
   "pert_names_change": {
-   "k": 11,
-   "n": 40,
-   "rate": 0.275,
-   "wilson95": [
-    0.1610785343314309,
-    0.4283525083312457
-   ]
-  },
-  "pert_assumes_change": {
    "k": 17,
    "n": 40,
    "rate": 0.425,
@@ -125,33 +119,42 @@
     0.5780519956394001
    ]
   },
+  "pert_assumes_change": {
+   "k": 19,
+   "n": 40,
+   "rate": 0.475,
+   "wilson95": [
+    0.32935229550181694,
+    0.6250289314607027
+   ]
+  },
   "definitive_rate": {
-   "original": 0.85,
-   "perturbed": 0.725,
-   "paired_diff": -0.125,
+   "original": 0.6,
+   "perturbed": 0.7,
+   "paired_diff": 0.1,
    "mcnemar": {
-    "b01": 3,
-    "b10": 8,
-    "p": 0.2265625
+    "b01": 8,
+    "b10": 4,
+    "p": 0.3876953125
    }
   },
   "stance_counts": {
    "original": {
-    "definitive": 34,
-    "conditional": 4,
-    "abstain_refer": 1,
-    "seeks_context": 1
+    "definitive": 24,
+    "conditional": 10,
+    "abstain_refer": 2,
+    "seeks_context": 4
    },
    "perturbed": {
-    "definitive": 29,
+    "definitive": 28,
     "seeks_context": 4,
-    "conditional": 5,
+    "conditional": 6,
     "abstain_refer": 2
    },
    "paraphrase": {
-    "definitive": 31,
-    "seeks_context": 2,
-    "conditional": 6,
+    "definitive": 26,
+    "seeks_context": 3,
+    "conditional": 10,
     "abstain_refer": 1
    }
   },

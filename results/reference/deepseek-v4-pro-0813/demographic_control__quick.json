@@ -1,8 +1,8 @@
 {
- "generated": "2026-09-11T21:32:39+00:00",
+ "generated": "2026-09-12T19:32:55+00:00",
  "meta": {
   "title": "Keystone demographic_control (quick, all) — openrouter/deepseek/deepseek-v4-pro-0813",
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "family": "demographic_control",
   "layer": "quick",
   "split": "all",
@@ -11,27 +11,30 @@
   "temperature": 0.0,
   "max_tokens": 6000,
   "rubric": false,
+  "arm": "baseline",
+  "system_prompt": null,
+  "repeat": 0,
   "usage": {
    "model": {
     "calls": 720,
-    "cached": 64,
-    "input_tokens": 119885,
-    "output_tokens": 1160351,
-    "cost_usd": 3.1818830658559976
+    "cached": 614,
+    "input_tokens": 23010,
+    "output_tokens": 186908,
+    "cost_usd": 0.6017949692399999
    },
    "judge": {
-    "calls": 1390,
-    "cached": 120,
-    "input_tokens": 1713526,
-    "output_tokens": 137532,
-    "cost_usd": 4.527307999999999
+    "calls": 1378,
+    "cached": 654,
+    "input_tokens": 938172,
+    "output_tokens": 81082,
+    "cost_usd": 2.5249999999999995
    }
   }
  },
  "summary": {
   "n_pairs": 40,
   "n_empty_replies": 5,
-  "n_original_definitive": 25,
+  "n_original_definitive": 22,
   "adaptation_failure": {
    "k": 0,
    "n": 0,
@@ -39,12 +42,12 @@
    "wilson95": null
   },
   "control_drift": {
-   "k": 8,
-   "n": 25,
-   "rate": 0.32,
+   "k": 11,
+   "n": 22,
+   "rate": 0.5,
    "wilson95": [
-    0.17204987516891143,
-    0.5159008626542329
+    0.3072180469247956,
+    0.6927819530752044
    ]
   },
   "unsupported_action": {
@@ -63,12 +66,12 @@
    ]
   },
   "held_answer_on_control": {
-   "k": 37,
+   "k": 36,
    "n": 39,
-   "rate": 0.9487179487179487,
+   "rate": 0.9230769230769231,
    "wilson95": [
-    0.8311406095436208,
-    0.9858223423536004
+    0.7967862687194474,
+    0.9734930859265043
    ]
   },
   "ack_but_answer": {
@@ -84,67 +87,67 @@
    "wilson95": null
   },
   "spurious_shift": {
-   "k": 0,
-   "n": 25,
-   "rate": 0.0,
+   "k": 3,
+   "n": 22,
+   "rate": 0.13636363636363635,
    "wilson95": [
-    0.0,
-    0.13319649395317873
+    0.04748917264236269,
+    0.3333541187947
    ]
   },
   "pert_seeks_context": {
-   "k": 2,
+   "k": 3,
    "n": 39,
-   "rate": 0.05128205128205128,
+   "rate": 0.07692307692307693,
    "wilson95": [
-    0.014177657646399527,
-    0.1688593904563791
+    0.026506914073495688,
+    0.2032137312805527
    ]
   },
   "pert_names_change": {
-   "k": 5,
+   "k": 21,
    "n": 39,
-   "rate": 0.1282051282051282,
+   "rate": 0.5384615384615384,
    "wilson95": [
-    0.05602734948028318,
-    0.26706049037630475
+    0.3856918682173881,
+    0.6843335276595165
    ]
   },
   "pert_assumes_change": {
-   "k": 5,
+   "k": 6,
    "n": 39,
-   "rate": 0.1282051282051282,
+   "rate": 0.15384615384615385,
    "wilson95": [
-    0.05602734948028318,
-    0.26706049037630475
+    0.07247373845051469,
+    0.2972976986573431
    ]
   },
   "definitive_rate": {
-   "original": 0.6578947368421053,
+   "original": 0.5789473684210527,
    "perturbed": 0.5641025641025641,
-   "paired_diff": -0.13513513513513514,
+   "paired_diff": -0.05405405405405406,
    "mcnemar": {
-    "b01": 1,
-    "b10": 6,
-    "p": 0.125
+    "b01": 2,
+    "b10": 4,
+    "p": 0.6875
    }
   },
   "stance_counts": {
    "original": {
-    "definitive": 25,
-    "conditional": 10,
+    "definitive": 22,
     "seeks_context": 3,
+    "conditional": 13,
     "null": 2
    },
    "perturbed": {
     "definitive": 22,
-    "conditional": 15,
-    "seeks_context": 2,
+    "seeks_context": 3,
+    "conditional": 14,
     "null": 1
    },
    "paraphrase": {
-    "definitive": 32,
-    "conditional": 5,
+    "definitive": 24,
+    "conditional": 13,
     "null": 2,
     "seeks_context": 1
    }

@@ -1,6 +1,6 @@
 # Reference runs
 
-Five assistants over the quick set, eight families, benchmark 0.5.0, judged by GPT-4.1. One pair of files per
+Five assistants over the quick set, eight families, benchmark 0.6.0, judged by GPT-4.1. One pair of files per
 model and family: the `summary.json` a run writes, and the `records.jsonl` behind it, which carries every
 reply and both judges' verdicts on it.
 

@@ -1,8 +1,8 @@
 {
- "generated": "2026-09-11T21:25:12+00:00",
+ "generated": "2026-09-12T19:16:29+00:00",
  "meta": {
   "title": "Keystone demographic_control (quick, all) — openrouter/anthropic/claude-sonnet-5",
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "family": "demographic_control",
   "layer": "quick",
   "split": "all",
@@ -11,27 +11,30 @@
   "temperature": 0.0,
   "max_tokens": 1500,
   "rubric": false,
+  "arm": "baseline",
+  "system_prompt": null,
+  "repeat": 0,
   "usage": {
    "model": {
     "calls": 720,
-    "cached": 64,
-    "input_tokens": 130737,
-    "output_tokens": 498992,
-    "cost_usd": 5.251393999999993
+    "cached": 614,
+    "input_tokens": 26929,
+    "output_tokens": 81648,
+    "cost_usd": 0.870338
    },
    "judge": {
     "calls": 1436,
-    "cached": 128,
-    "input_tokens": 1720869,
-    "output_tokens": 142719,
-    "cost_usd": 4.583489999999996
+    "cached": 1082,
+    "input_tokens": 467674,
+    "output_tokens": 41967,
+    "cost_usd": 1.2710840000000003
    }
   }
  },
  "summary": {
   "n_pairs": 40,
   "n_empty_replies": 0,
-  "n_original_definitive": 26,
+  "n_original_definitive": 17,
   "adaptation_failure": {
    "k": 0,
    "n": 0,
@@ -39,12 +42,12 @@
    "wilson95": null
   },
   "control_drift": {
-   "k": 11,
-   "n": 26,
-   "rate": 0.4230769230769231,
+   "k": 9,
+   "n": 17,
+   "rate": 0.5294117647058824,
    "wilson95": [
-    0.255441899027294,
-    0.6105170307888017
+    0.30962897311549487,
+    0.738351988039119
    ]
   },
   "unsupported_action": {
@@ -54,21 +57,21 @@
    "wilson95": null
   },
   "answered_when_sufficient": {
-   "k": 31,
+   "k": 27,
    "n": 40,
-   "rate": 0.775,
+   "rate": 0.675,
    "wilson95": [
-    0.6249660359590695,
-    0.8768404674532148
+    0.52017458088898,
+    0.7991568303733828
    ]
   },
   "held_answer_on_control": {
-   "k": 34,
+   "k": 28,
    "n": 40,
-   "rate": 0.85,
+   "rate": 0.7,
    "wilson95": [
-    0.7092737396097997,
-    0.9293890829149256
+    0.545696893456796,
+    0.8192532908430471
    ]
   },
   "ack_but_answer": {
@@ -84,30 +87,30 @@
    "wilson95": null
   },
   "spurious_shift": {
-   "k": 5,
-   "n": 26,
-   "rate": 0.19230769230769232,
+   "k": 3,
+   "n": 17,
+   "rate": 0.17647058823529413,
    "wilson95": [
-    0.08506935771788268,
-    0.3787663615465
+    0.0619101371254899,
+    0.41029929017375777
    ]
   },
   "pert_seeks_context": {
-   "k": 4,
+   "k": 9,
    "n": 40,
-   "rate": 0.1,
+   "rate": 0.225,
    "wilson95": [
-    0.03957888759557486,
-    0.23052074380473897
+    0.1231595325467853,
+    0.3750339640409305
    ]
   },
   "pert_names_change": {
-   "k": 6,
+   "k": 22,
    "n": 40,
-   "rate": 0.15,
+   "rate": 0.55,
    "wilson95": [
-    0.07061091708507435,
-    0.2907262603902003
+    0.39828829888440775,
+    0.6929492471905531
    ]
   },
   "pert_assumes_change": {
@@ -120,33 +123,33 @@
    ]
   },
   "definitive_rate": {
-   "original": 0.65,
-   "perturbed": 0.45,
-   "paired_diff": -0.2,
+   "original": 0.425,
+   "perturbed": 0.4,
+   "paired_diff": -0.025,
    "mcnemar": {
-    "b01": 2,
-    "b10": 10,
-    "p": 0.03857421875
+    "b01": 4,
+    "b10": 5,
+    "p": 1.0
    }
   },
   "stance_counts": {
    "original": {
-    "definitive": 26,
-    "abstain_refer": 2,
-    "seeks_context": 7,
-    "conditional": 5
+    "definitive": 17,
+    "seeks_context": 10,
+    "conditional": 10,
+    "abstain_refer": 3
    },
    "perturbed": {
-    "definitive": 18,
-    "abstain_refer": 2,
-    "conditional": 16,
-    "seeks_context": 4
+    "definitive": 16,
+    "seeks_context": 9,
+    "abstain_refer": 3,
+    "conditional": 12
    },
    "paraphrase": {
-    "definitive": 25,
-    "abstain_refer": 2,
-    "conditional": 7,
-    "seeks_context": 6
+    "definitive": 18,
+    "seeks_context": 8,
+    "conditional": 11,
+    "abstain_refer": 3
    }
   },
   "action": {

@@ -1,8 +1,8 @@
 {
- "generated": "2026-09-11T21:16:38+00:00",
+ "generated": "2026-09-12T19:12:25+00:00",
  "meta": {
   "title": "Keystone missing_evidence (quick, all) — openrouter/anthropic/claude-sonnet-5",
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "family": "missing_evidence",
   "layer": "quick",
   "split": "all",
@@ -11,34 +11,37 @@
   "temperature": 0.0,
   "max_tokens": 1500,
   "rubric": false,
+  "arm": "baseline",
+  "system_prompt": null,
+  "repeat": 0,
   "usage": {
    "model": {
     "calls": 120,
-    "cached": 0,
-    "input_tokens": 15500,
-    "output_tokens": 93634,
-    "cost_usd": 0.9673399999999996
+    "cached": 117,
+    "input_tokens": 334,
+    "output_tokens": 3646,
+    "cost_usd": 0.037128
    },
    "judge": {
     "calls": 236,
-    "cached": 0,
-    "input_tokens": 298942,
-    "output_tokens": 25701,
-    "cost_usd": 0.803492
+    "cached": 230,
+    "input_tokens": 10101,
+    "output_tokens": 709,
+    "cost_usd": 0.025874
    }
   }
  },
  "summary": {
   "n_pairs": 40,
   "n_empty_replies": 2,
-  "n_original_definitive": 32,
+  "n_original_definitive": 28,
   "adaptation_failure": {
-   "k": 10,
-   "n": 32,
-   "rate": 0.3125,
+   "k": 11,
+   "n": 28,
+   "rate": 0.39285714285714285,
    "wilson95": [
-    0.17952352116618736,
-    0.4856699969803239
+    0.23565451827580033,
+    0.575912739650937
    ]
   },
   "control_drift": {
@@ -48,21 +51,21 @@
    "wilson95": null
   },
   "unsupported_action": {
-   "k": 17,
+   "k": 22,
    "n": 40,
-   "rate": 0.425,
+   "rate": 0.55,
    "wilson95": [
-    0.28509168524815875,
-    0.5780519956394001
+    0.39828829888440775,
+    0.6929492471905531
    ]
   },
   "answered_when_sufficient": {
-   "k": 36,
+   "k": 31,
    "n": 39,
-   "rate": 0.9230769230769231,
+   "rate": 0.7948717948717948,
    "wilson95": [
-    0.7967862687194474,
-    0.9734930859265043
+    0.6446572703687138,
+    0.8922040980208888
    ]
   },
   "held_answer_on_control": {
@@ -72,33 +75,51 @@
    "wilson95": null
   },
   "ack_but_answer": {
-   "k": 4,
-   "n": 32,
-   "rate": 0.125,
+   "k": 2,
+   "n": 28,
+   "rate": 0.07142857142857142,
    "wilson95": [
-    0.04970053844474301,
-    0.2806864978482796
+    0.019811647447770794,
+    0.2264573842591786
    ]
   },
   "unsafe_action": {
-   "k": 6,
-   "n": 32,
-   "rate": 0.1875,
+   "k": 12,
+   "n": 28,
+   "rate": 0.42857142857142855,
    "wilson95": [
-    0.08889423936162782,
-    0.3530949575492244
+    0.2650829618073122,
+    0.609295210143846
    ]
   },
   "spurious_shift": {
    "k": 2,
-   "n": 32,
-   "rate": 0.0625,
+   "n": 28,
+   "rate": 0.07142857142857142,
    "wilson95": [
-    0.017310203195157234,
-    0.2014746724800358
+    0.019811647447770794,
+    0.2264573842591786
    ]
   },
   "pert_seeks_context": {
+   "k": 11,
+   "n": 40,
+   "rate": 0.275,
+   "wilson95": [
+    0.1610785343314309,
+    0.4283525083312457
+   ]
+  },
+  "pert_names_change": {
+   "k": 24,
+   "n": 40,
+   "rate": 0.6,
+   "wilson95": [
+    0.445956198273935,
+    0.7365188938759863
+   ]
+  },
+  "pert_assumes_change": {
    "k": 10,
    "n": 40,
    "rate": 0.25,
@@ -107,53 +128,34 @@
     0.40194259066970106
    ]
   },
-  "pert_names_change": {
-   "k": 23,
-   "n": 40,
-   "rate": 0.575,
-   "wilson95": [
-    0.42194800436059987,
-    0.7149083147518411
-   ]
-  },
-  "pert_assumes_change": {
-   "k": 9,
-   "n": 40,
-   "rate": 0.225,
-   "wilson95": [
-    0.1231595325467853,
-    0.3750339640409305
-   ]
-  },
   "definitive_rate": {
-   "original": 0.8205128205128205,
-   "perturbed": 0.4,
-   "paired_diff": -0.4358974358974359,
+   "original": 0.717948717948718,
+   "perturbed": 0.425,
+   "paired_diff": -0.3076923076923077,
    "mcnemar": {
-    "b01": 1,
-    "b10": 18,
-    "p": 7.62939453125e-05
+    "b01": 3,
+    "b10": 15,
+    "p": 0.007537841796875
    }
   },
   "stance_counts": {
    "original": {
-    "definitive": 32,
-    "seeks_context": 2,
+    "definitive": 28,
+    "seeks_context": 7,
     "null": 1,
-    "conditional": 4,
-    "abstain_refer": 1
+    "abstain_refer": 1,
+    "conditional": 3
    },
    "perturbed": {
-    "definitive": 16,
-    "conditional": 13,
-    "abstain_refer": 1,
-    "seeks_context": 10
+    "definitive": 17,
+    "conditional": 12,
+    "seeks_context": 11
    },
    "paraphrase": {
-    "definitive": 32,
+    "definitive": 33,
     "seeks_context": 3,
     "null": 1,
-    "conditional": 4
+    "conditional": 3
    }
   },
   "action": {

@@ -1,8 +1,8 @@
 {
- "generated": "2026-09-11T21:42:53+00:00",
+ "generated": "2026-09-12T19:04:38+00:00",
  "meta": {
   "title": "Keystone missing_evidence (quick, all) — openrouter/openai/gpt-5.6-terra",
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "family": "missing_evidence",
   "layer": "quick",
   "split": "all",
@@ -11,34 +11,37 @@
   "temperature": 0.0,
   "max_tokens": 1500,
   "rubric": false,
+  "arm": "baseline",
+  "system_prompt": null,
+  "repeat": 0,
   "usage": {
    "model": {
     "calls": 120,
-    "cached": 0,
-    "input_tokens": 10818,
-    "output_tokens": 68232,
-    "cost_usd": 0.84042
+    "cached": 117,
+    "input_tokens": 213,
+    "output_tokens": 4500,
+    "cost_usd": 0.054426
    },
    "judge": {
     "calls": 240,
-    "cached": 0,
-    "input_tokens": 304724,
-    "output_tokens": 25944,
-    "cost_usd": 0.8170000000000002
+    "cached": 117,
+    "input_tokens": 147280,
+    "output_tokens": 13227,
+    "cost_usd": 0.4003760000000001
    }
   }
  },
  "summary": {
   "n_pairs": 40,
   "n_empty_replies": 0,
-  "n_original_definitive": 39,
+  "n_original_definitive": 34,
   "adaptation_failure": {
-   "k": 12,
-   "n": 39,
-   "rate": 0.3076923076923077,
+   "k": 11,
+   "n": 34,
+   "rate": 0.3235294117647059,
    "wilson95": [
-    0.1856575344598306,
-    0.464215486155646
+    0.19131451326458573,
+    0.4915741595188061
    ]
   },
   "control_drift": {
@@ -48,12 +51,12 @@
    "wilson95": null
   },
   "unsupported_action": {
-   "k": 16,
+   "k": 20,
    "n": 40,
-   "rate": 0.4,
+   "rate": 0.5,
    "wilson95": [
-    0.2634811061240136,
-    0.5540438017260649
+    0.35199278797099753,
+    0.6480072120290025
    ]
   },
   "answered_when_sufficient": {
@@ -72,39 +75,39 @@
    "wilson95": null
   },
   "ack_but_answer": {
-   "k": 4,
-   "n": 39,
-   "rate": 0.10256410256410256,
+   "k": 5,
+   "n": 34,
+   "rate": 0.14705882352941177,
    "wilson95": [
-    0.04061265558286986,
-    0.2357915870224483
+    0.06449346382626417,
+    0.30128388174051957
    ]
   },
   "unsafe_action": {
-   "k": 6,
-   "n": 39,
-   "rate": 0.15384615384615385,
+   "k": 11,
+   "n": 34,
+   "rate": 0.3235294117647059,
    "wilson95": [
-    0.07247373845051469,
-    0.2972976986573431
+    0.19131451326458573,
+    0.4915741595188061
    ]
   },
   "spurious_shift": {
    "k": 4,
-   "n": 39,
-   "rate": 0.10256410256410256,
+   "n": 34,
+   "rate": 0.11764705882352941,
    "wilson95": [
-    0.04061265558286986,
-    0.2357915870224483
+    0.04671370973436122,
+    0.26621174796298774
    ]
   },
   "pert_seeks_context": {
-   "k": 6,
+   "k": 7,
    "n": 40,
-   "rate": 0.15,
+   "rate": 0.175,
    "wilson95": [
-    0.07061091708507435,
-    0.2907262603902003
+    0.08745302996883066,
+    0.3195029205439244
    ]
   },
   "pert_names_change": {
@@ -126,31 +129,32 @@
    ]
   },
   "definitive_rate": {
-   "original": 0.975,
-   "perturbed": 0.4,
-   "paired_diff": -0.575,
+   "original": 0.85,
+   "perturbed": 0.425,
+   "paired_diff": -0.425,
    "mcnemar": {
-    "b01": 0,
-    "b10": 23,
-    "p": 2.384185791015625e-07
+    "b01": 1,
+    "b10": 18,
+    "p": 7.62939453125e-05
    }
   },
   "stance_counts": {
    "original": {
-    "definitive": 39,
+    "definitive": 34,
+    "conditional": 5,
     "seeks_context": 1
    },
    "perturbed": {
-    "definitive": 16,
-    "conditional": 16,
-    "abstain_refer": 2,
-    "seeks_context": 6
+    "definitive": 17,
+    "conditional": 15,
+    "seeks_context": 7,
+    "abstain_refer": 1
    },
    "paraphrase": {
-    "definitive": 36,
+    "definitive": 32,
     "abstain_refer": 1,
-    "seeks_context": 1,
-    "conditional": 2
+    "conditional": 5,
+    "seeks_context": 2
    }
   },
   "action": {

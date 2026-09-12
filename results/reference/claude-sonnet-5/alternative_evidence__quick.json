@@ -1,8 +1,8 @@
 {
- "generated": "2026-09-11T21:23:29+00:00",
+ "generated": "2026-09-12T19:15:41+00:00",
  "meta": {
   "title": "Keystone alternative_evidence (quick, all) — openrouter/anthropic/claude-sonnet-5",
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "family": "alternative_evidence",
   "layer": "quick",
   "split": "all",
@@ -11,34 +11,37 @@
   "temperature": 0.0,
   "max_tokens": 1500,
   "rubric": false,
+  "arm": "baseline",
+  "system_prompt": null,
+  "repeat": 0,
   "usage": {
    "model": {
     "calls": 600,
-    "cached": 48,
-    "input_tokens": 101034,
-    "output_tokens": 419544,
-    "cost_usd": 4.3975079999999975
+    "cached": 511,
+    "input_tokens": 22992,
+    "output_tokens": 68752,
+    "cost_usd": 0.7335039999999999
    },
    "judge": {
     "calls": 1196,
-    "cached": 96,
-    "input_tokens": 1436837,
-    "output_tokens": 120120,
-    "cost_usd": 3.8346339999999994
+    "cached": 876,
+    "input_tokens": 420735,
+    "output_tokens": 37797,
+    "cost_usd": 1.1438459999999997
    }
   }
  },
  "summary": {
   "n_pairs": 40,
   "n_empty_replies": 0,
-  "n_original_definitive": 24,
+  "n_original_definitive": 19,
   "adaptation_failure": {
-   "k": 18,
-   "n": 24,
-   "rate": 0.75,
+   "k": 11,
+   "n": 19,
+   "rate": 0.5789473684210527,
    "wilson95": [
-    0.5510017468789357,
-    0.8800079652065766
+    0.36275551465160105,
+    0.7685837960796962
    ]
   },
   "control_drift": {
@@ -48,21 +51,21 @@
    "wilson95": null
   },
   "unsupported_action": {
-   "k": 26,
+   "k": 27,
    "n": 40,
-   "rate": 0.65,
+   "rate": 0.675,
    "wilson95": [
-    0.4950559699353738,
-    0.7786566682895086
+    0.52017458088898,
+    0.7991568303733828
    ]
   },
   "answered_when_sufficient": {
-   "k": 29,
+   "k": 28,
    "n": 40,
-   "rate": 0.725,
+   "rate": 0.7,
    "wilson95": [
-    0.5716474916687543,
-    0.8389214656685692
+    0.545696893456796,
+    0.8192532908430471
    ]
   },
   "held_answer_on_control": {
@@ -72,87 +75,87 @@
    "wilson95": null
   },
   "ack_but_answer": {
-   "k": 3,
-   "n": 24,
-   "rate": 0.125,
+   "k": 5,
+   "n": 19,
+   "rate": 0.2631578947368421,
    "wilson95": [
-    0.04344255039315584,
-    0.3100428814785757
+    0.11806238339540162,
+    0.48791968441070643
    ]
   },
   "unsafe_action": {
-   "k": 4,
-   "n": 24,
-   "rate": 0.16666666666666666,
+   "k": 5,
+   "n": 19,
+   "rate": 0.2631578947368421,
    "wilson95": [
-    0.06678568000728924,
-    0.3585347038786943
+    0.11806238339540162,
+    0.48791968441070643
    ]
   },
   "spurious_shift": {
    "k": 4,
-   "n": 24,
-   "rate": 0.16666666666666666,
+   "n": 19,
+   "rate": 0.21052631578947367,
    "wilson95": [
-    0.06678568000728924,
-    0.3585347038786943
+    0.08507538491591576,
+    0.43334714240266087
    ]
   },
   "pert_seeks_context": {
-   "k": 8,
+   "k": 9,
    "n": 40,
-   "rate": 0.2,
+   "rate": 0.225,
    "wilson95": [
-    0.10499864973166874,
-    0.34757607381856676
+    0.1231595325467853,
+    0.3750339640409305
    ]
   },
   "pert_names_change": {
-   "k": 12,
+   "k": 18,
    "n": 40,
-   "rate": 0.3,
+   "rate": 0.45,
    "wilson95": [
-    0.18074670915695296,
-    0.454303106543204
+    0.30705075280944694,
+    0.6017117011155924
    ]
   },
   "pert_assumes_change": {
-   "k": 14,
+   "k": 17,
    "n": 40,
-   "rate": 0.35,
+   "rate": 0.425,
    "wilson95": [
-    0.2213433317104915,
-    0.5049440300646263
+    0.28509168524815875,
+    0.5780519956394001
    ]
   },
   "definitive_rate": {
-   "original": 0.6,
+   "original": 0.475,
    "perturbed": 0.65,
-   "paired_diff": 0.05,
+   "paired_diff": 0.175,
    "mcnemar": {
-    "b01": 5,
+    "b01": 10,
     "b10": 3,
-    "p": 0.7265625
+    "p": 0.09228515625
    }
   },
   "stance_counts": {
    "original": {
-    "definitive": 24,
-    "seeks_context": 9,
-    "conditional": 5,
-    "abstain_refer": 2
+    "definitive": 19,
+    "seeks_context": 11,
+    "conditional": 9,
+    "abstain_refer": 1
    },
    "perturbed": {
     "definitive": 26,
-    "seeks_context": 8,
-    "conditional": 5,
+    "seeks_context": 9,
+    "conditional": 4,
     "abstain_refer": 1
    },
    "paraphrase": {
-    "definitive": 25,
-    "seeks_context": 6,
-    "conditional": 7,
-    "abstain_refer": 2
+    "definitive": 20,
+    "seeks_context": 8,
+    "conditional": 9,
+    "abstain_refer": 3
    }
   },
   "action": {

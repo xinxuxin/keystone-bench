@@ -1,8 +1,8 @@
 {
- "generated": "2026-09-11T21:27:38+00:00",
+ "generated": "2026-09-12T19:31:42+00:00",
  "meta": {
   "title": "Keystone alternative_evidence (quick, all) — openrouter/deepseek/deepseek-v4-pro-0813",
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "family": "alternative_evidence",
   "layer": "quick",
   "split": "all",
@@ -11,34 +11,37 @@
   "temperature": 0.0,
   "max_tokens": 6000,
   "rubric": false,
+  "arm": "baseline",
+  "system_prompt": null,
+  "repeat": 0,
   "usage": {
    "model": {
     "calls": 600,
-    "cached": 48,
-    "input_tokens": 96259,
-    "output_tokens": 971491,
-    "cost_usd": 2.6275029701759975
+    "cached": 511,
+    "input_tokens": 19602,
+    "output_tokens": 159731,
+    "cost_usd": 0.5329368939199999
    },
    "judge": {
-    "calls": 1160,
-    "cached": 90,
-    "input_tokens": 1423862,
-    "output_tokens": 115934,
-    "cost_usd": 3.7751959999999998
+    "calls": 1148,
+    "cached": 541,
+    "input_tokens": 778871,
+    "output_tokens": 68127,
+    "cost_usd": 2.1027579999999997
    }
   }
  },
  "summary": {
   "n_pairs": 40,
   "n_empty_replies": 6,
-  "n_original_definitive": 35,
+  "n_original_definitive": 32,
   "adaptation_failure": {
-   "k": 23,
-   "n": 34,
-   "rate": 0.6764705882352942,
+   "k": 20,
+   "n": 31,
+   "rate": 0.6451612903225806,
    "wilson95": [
-    0.5084258404811939,
-    0.8086854867354143
+    0.469476380428149,
+    0.7888355225843418
    ]
   },
   "control_drift": {
@@ -48,12 +51,12 @@
    "wilson95": null
   },
   "unsupported_action": {
-   "k": 32,
+   "k": 30,
    "n": 39,
-   "rate": 0.8205128205128205,
+   "rate": 0.7692307692307693,
    "wilson95": [
-    0.6733164837555724,
-    0.9102284818853
+    0.6166343954261704,
+    0.8735433757121625
    ]
   },
   "answered_when_sufficient": {
@@ -73,86 +76,87 @@
   },
   "ack_but_answer": {
    "k": 7,
-   "n": 34,
-   "rate": 0.20588235294117646,
+   "n": 31,
+   "rate": 0.22580645161290322,
    "wilson95": [
-    0.1034939602235132,
-    0.3679871610821398
+    0.11394991594498799,
+    0.3981276005869738
    ]
   },
   "unsafe_action": {
-   "k": 4,
-   "n": 34,
-   "rate": 0.11764705882352941,
+   "k": 7,
+   "n": 31,
+   "rate": 0.22580645161290322,
    "wilson95": [
-    0.04671370973436122,
-    0.26621174796298774
+    0.11394991594498799,
+    0.3981276005869738
    ]
   },
   "spurious_shift": {
-   "k": 1,
-   "n": 32,
-   "rate": 0.03125,
+   "k": 4,
+   "n": 30,
+   "rate": 0.13333333333333333,
    "wilson95": [
-    0.005537717362550945,
-    0.15744607800372734
+    0.05309569424218104,
+    0.2968168394441695
    ]
   },
   "pert_seeks_context": {
-   "k": 1,
+   "k": 2,
    "n": 39,
-   "rate": 0.02564102564102564,
+   "rate": 0.05128205128205128,
    "wilson95": [
-    0.00454058606523737,
-    0.13181286478627147
+    0.014177657646399527,
+    0.1688593904563791
    ]
   },
   "pert_names_change": {
-   "k": 11,
+   "k": 13,
    "n": 39,
-   "rate": 0.28205128205128205,
+   "rate": 0.3333333333333333,
    "wilson95": [
-    0.16543325013943294,
-    0.43775617322477384
+    0.20632766106915157,
+    0.4902289567975947
    ]
   },
   "pert_assumes_change": {
-   "k": 17,
+   "k": 21,
    "n": 39,
-   "rate": 0.4358974358974359,
+   "rate": 0.5384615384615384,
    "wilson95": [
-    0.2930452416170466,
-    0.5902457652547789
+    0.3856918682173881,
+    0.6843335276595165
    ]
   },
   "definitive_rate": {
-   "original": 0.875,
-   "perturbed": 0.8205128205128205,
-   "paired_diff": -0.05128205128205128,
+   "original": 0.8,
+   "perturbed": 0.7692307692307693,
+   "paired_diff": -0.02564102564102564,
    "mcnemar": {
-    "b01": 2,
+    "b01": 3,
     "b10": 4,
-    "p": 0.6875
+    "p": 1.0
    }
   },
   "stance_counts": {
    "original": {
-    "definitive": 35,
-    "conditional": 4,
+    "definitive": 32,
+    "conditional": 7,
     "seeks_context": 1
    },
    "perturbed": {
-    "definitive": 32,
+    "definitive": 30,
     "conditional": 4,
-    "abstain_refer": 2,
-    "null": 1,
-    "seeks_context": 1
+    "seeks_context": 2,
+    "abstain_refer": 3,
+    "null": 1
    },
    "paraphrase": {
-    "definitive": 32,
-    "conditional": 2,
+    "definitive": 26,
+    "conditional": 5,
     "null": 5,
-    "seeks_context": 1
+    "abstain_refer": 2,
+    "seeks_context": 2
    }
   },
   "action": {

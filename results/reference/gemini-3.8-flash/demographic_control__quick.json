@@ -1,8 +1,8 @@
 {
- "generated": "2026-09-11T21:15:40+00:00",
+ "generated": "2026-09-12T18:51:08+00:00",
  "meta": {
   "title": "Keystone demographic_control (quick, all) — openrouter/google/gemini-3.8-flash",
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "family": "demographic_control",
   "layer": "quick",
   "split": "all",
@@ -11,27 +11,30 @@
   "temperature": 0.0,
   "max_tokens": 1500,
   "rubric": false,
+  "arm": "baseline",
+  "system_prompt": null,
+  "repeat": 0,
   "usage": {
    "model": {
     "calls": 720,
-    "cached": 64,
-    "input_tokens": 79557,
-    "output_tokens": 848193,
-    "cost_usd": 3.2403915000000008
+    "cached": 614,
+    "input_tokens": 16234,
+    "output_tokens": 141290,
+    "cost_usd": 0.5420129999999999
    },
    "judge": {
-    "calls": 1426,
-    "cached": 128,
-    "input_tokens": 1855295,
-    "output_tokens": 142156,
-    "cost_usd": 4.847837999999998
+    "calls": 1428,
+    "cached": 1076,
+    "input_tokens": 507946,
+    "output_tokens": 42129,
+    "cost_usd": 1.3529239999999998
    }
   }
  },
  "summary": {
   "n_pairs": 40,
   "n_empty_replies": 2,
-  "n_original_definitive": 32,
+  "n_original_definitive": 23,
   "adaptation_failure": {
    "k": 0,
    "n": 0,
@@ -39,12 +42,12 @@
    "wilson95": null
   },
   "control_drift": {
-   "k": 11,
-   "n": 31,
-   "rate": 0.3548387096774194,
+   "k": 13,
+   "n": 22,
+   "rate": 0.5909090909090909,
    "wilson95": [
-    0.21116447741565816,
-    0.530523619571851
+    0.38734477382893806,
+    0.7674444033117963
    ]
   },
   "unsupported_action": {
@@ -54,21 +57,21 @@
    "wilson95": null
   },
   "answered_when_sufficient": {
-   "k": 38,
+   "k": 33,
    "n": 40,
-   "rate": 0.95,
+   "rate": 0.825,
    "wilson95": [
-    0.834958291820748,
-    0.9861796228538989
+    0.6804970794560755,
+    0.9125469700311694
    ]
   },
   "held_answer_on_control": {
-   "k": 37,
+   "k": 35,
    "n": 39,
-   "rate": 0.9487179487179487,
+   "rate": 0.8974358974358975,
    "wilson95": [
-    0.8311406095436208,
-    0.9858223423536004
+    0.7642084129775517,
+    0.9593873444171301
    ]
   },
   "ack_but_answer": {
@@ -84,24 +87,15 @@
    "wilson95": null
   },
   "spurious_shift": {
-   "k": 5,
-   "n": 31,
-   "rate": 0.16129032258064516,
+   "k": 2,
+   "n": 22,
+   "rate": 0.09090909090909091,
    "wilson95": [
-    0.07092519905439934,
-    0.3263470272497887
+    0.025294896282837792,
+    0.2781538065838578
    ]
   },
   "pert_seeks_context": {
-   "k": 1,
-   "n": 39,
-   "rate": 0.02564102564102564,
-   "wilson95": [
-    0.00454058606523737,
-    0.13181286478627147
-   ]
-  },
-  "pert_names_change": {
    "k": 4,
    "n": 39,
    "rate": 0.10256410256410256,
@@ -110,45 +104,53 @@
     0.2357915870224483
    ]
   },
-  "pert_assumes_change": {
-   "k": 12,
+  "pert_names_change": {
+   "k": 22,
    "n": 39,
-   "rate": 0.3076923076923077,
+   "rate": 0.5641025641025641,
    "wilson95": [
-    0.1856575344598306,
-    0.464215486155646
+    0.40975423474522105,
+    0.7069547583829534
+   ]
+  },
+  "pert_assumes_change": {
+   "k": 8,
+   "n": 39,
+   "rate": 0.20512820512820512,
+   "wilson95": [
+    0.10779590197911117,
+    0.3553427296312862
    ]
   },
   "definitive_rate": {
-   "original": 0.8,
-   "perturbed": 0.5897435897435898,
-   "paired_diff": -0.20512820512820512,
+   "original": 0.575,
+   "perturbed": 0.5641025641025641,
+   "paired_diff": 0.0,
    "mcnemar": {
-    "b01": 1,
-    "b10": 9,
-    "p": 0.021484375
+    "b01": 6,
+    "b10": 6,
+    "p": 1.0
    }
   },
   "stance_counts": {
    "original": {
-    "definitive": 32,
-    "abstain_refer": 1,
-    "conditional": 6,
-    "seeks_context": 1
+    "definitive": 23,
+    "abstain_refer": 2,
+    "conditional": 10,
+    "seeks_context": 5
    },
    "perturbed": {
-    "definitive": 23,
-    "conditional": 14,
-    "abstain_refer": 1,
-    "null": 1,
-    "seeks_context": 1
+    "definitive": 22,
+    "seeks_context": 4,
+    "conditional": 13,
+    "null": 1
    },
    "paraphrase": {
-    "definitive": 29,
-    "conditional": 7,
+    "definitive": 24,
+    "conditional": 10,
+    "seeks_context": 4,
     "null": 1,
-    "abstain_refer": 1,
-    "seeks_context": 2
+    "abstain_refer": 1
    }
   },
   "action": {
@@ -222,12 +224,12 @@
     ]
    },
    "hedged_when_sufficient": {
-    "k": 1,
+    "k": 2,
     "n": 39,
-    "rate": 0.02564102564102564,
+    "rate": 0.05128205128205128,
     "wilson95": [
-     0.00454058606523737,
-     0.13181286478627147
+     0.014177657646399527,
+     0.1688593904563791
     ]
    },
    "n_judged": 40,

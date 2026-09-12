@@ -1,8 +1,8 @@
 {
- "generated": "2026-09-11T21:22:03+00:00",
+ "generated": "2026-09-12T19:15:25+00:00",
  "meta": {
   "title": "Keystone salient_distractor (quick, all) — openrouter/anthropic/claude-sonnet-5",
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "family": "salient_distractor",
   "layer": "quick",
   "split": "all",
@@ -11,27 +11,30 @@
   "temperature": 0.0,
   "max_tokens": 1500,
   "rubric": false,
+  "arm": "baseline",
+  "system_prompt": null,
+  "repeat": 0,
   "usage": {
    "model": {
     "calls": 480,
-    "cached": 24,
-    "input_tokens": 89580,
-    "output_tokens": 353675,
-    "cost_usd": 3.7159099999999996
+    "cached": 391,
+    "input_tokens": 22992,
+    "output_tokens": 68752,
+    "cost_usd": 0.7335039999999999
    },
    "judge": {
     "calls": 956,
-    "cached": 48,
-    "input_tokens": 1194447,
-    "output_tokens": 99157,
-    "cost_usd": 3.18215
+    "cached": 722,
+    "input_tokens": 322214,
+    "output_tokens": 28228,
+    "cost_usd": 0.8702520000000001
    }
   }
  },
  "summary": {
   "n_pairs": 40,
   "n_empty_replies": 0,
-  "n_original_definitive": 29,
+  "n_original_definitive": 23,
   "adaptation_failure": {
    "k": 0,
    "n": 0,
@@ -39,12 +42,12 @@
    "wilson95": null
   },
   "control_drift": {
-   "k": 11,
-   "n": 29,
-   "rate": 0.3793103448275862,
+   "k": 22,
+   "n": 23,
+   "rate": 0.9565217391304348,
    "wilson95": [
-    0.22687795730867344,
-    0.5599777379071503
+    0.7900841350594088,
+    0.9922835330378734
    ]
   },
   "unsupported_action": {
@@ -54,12 +57,12 @@
    "wilson95": null
   },
   "answered_when_sufficient": {
-   "k": 33,
+   "k": 28,
    "n": 40,
-   "rate": 0.825,
+   "rate": 0.7,
    "wilson95": [
-    0.6804970794560755,
-    0.9125469700311694
+    0.545696893456796,
+    0.8192532908430471
    ]
   },
   "held_answer_on_control": {
@@ -84,12 +87,12 @@
    "wilson95": null
   },
   "spurious_shift": {
-   "k": 5,
-   "n": 29,
-   "rate": 0.1724137931034483,
+   "k": 4,
+   "n": 23,
+   "rate": 0.17391304347826086,
    "wilson95": [
-    0.07597745271479928,
-    0.34548800572815114
+    0.06978540350612772,
+    0.37138054785295666
    ]
   },
   "pert_seeks_context": {
@@ -102,50 +105,51 @@
    ]
   },
   "pert_names_change": {
-   "k": 12,
+   "k": 38,
    "n": 40,
-   "rate": 0.3,
+   "rate": 0.95,
    "wilson95": [
-    0.18074670915695296,
-    0.454303106543204
+    0.834958291820748,
+    0.9861796228538989
    ]
   },
   "pert_assumes_change": {
-   "k": 1,
+   "k": 3,
    "n": 40,
-   "rate": 0.025,
+   "rate": 0.075,
    "wilson95": [
-    0.0044267174077949195,
-    0.1288165948800778
+    0.025835556771858226,
+    0.19864530159097524
    ]
   },
   "definitive_rate": {
-   "original": 0.725,
-   "perturbed": 0.7,
-   "paired_diff": -0.025,
+   "original": 0.575,
+   "perturbed": 0.625,
+   "paired_diff": 0.05,
    "mcnemar": {
-    "b01": 4,
-    "b10": 5,
-    "p": 1.0
+    "b01": 5,
+    "b10": 3,
+    "p": 0.7265625
    }
   },
   "stance_counts": {
    "original": {
-    "definitive": 29,
-    "conditional": 4,
-    "seeks_context": 6,
-    "abstain_refer": 1
+    "definitive": 23,
+    "conditional": 5,
+    "abstain_refer": 2,
+    "seeks_context": 10
    },
    "perturbed": {
-    "definitive": 28,
-    "seeks_context": 8,
+    "definitive": 25,
+    "conditional": 4,
     "abstain_refer": 3,
-    "conditional": 1
+    "seeks_context": 8
    },
    "paraphrase": {
-    "definitive": 28,
-    "seeks_context": 7,
-    "conditional": 5
+    "definitive": 24,
+    "conditional": 8,
+    "abstain_refer": 1,
+    "seeks_context": 7
    }
   },
   "action": {
@@ -165,12 +169,12 @@
     "wilson95": null
    },
    "acceptable_action": {
-    "k": 37,
+    "k": 35,
     "n": 40,
-    "rate": 0.925,
+    "rate": 0.875,
     "wilson95": [
-     0.8013546984090248,
-     0.9741644432281419
+     0.7388757932976187,
+     0.9454058022645873
     ]
    },
    "necessary_update": {
@@ -201,12 +205,12 @@
     ]
    },
    "stable_on_control": {
-    "k": 37,
+    "k": 35,
     "n": 40,
-    "rate": 0.925,
+    "rate": 0.875,
     "wilson95": [
-     0.8013546984090248,
-     0.9741644432281419
+     0.7388757932976187,
+     0.9454058022645873
     ]
    },
    "stable_on_paraphrase": {
@@ -219,23 +223,23 @@
     ]
    },
    "hedged_when_sufficient": {
-    "k": 2,
+    "k": 3,
     "n": 40,
-    "rate": 0.05,
+    "rate": 0.075,
     "wilson95": [
-     0.013820377146101098,
-     0.165041708179252
+     0.025835556771858226,
+     0.19864530159097524
     ]
    },
    "n_judged": 40,
    "by_state": {
     "sufficient_for_original_action": {
-     "k": 37,
+     "k": 35,
      "n": 40,
-     "rate": 0.925,
+     "rate": 0.875,
      "wilson95": [
-      0.8013546984090248,
-      0.9741644432281419
+      0.7388757932976187,
+      0.9454058022645873
      ]
     }
    }

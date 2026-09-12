@@ -1,8 +1,8 @@
 {
- "generated": "2026-09-11T21:08:30+00:00",
+ "generated": "2026-09-12T18:47:10+00:00",
  "meta": {
   "title": "Keystone conflicting_evidence (quick, all) — openrouter/google/gemini-3.8-flash",
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "family": "conflicting_evidence",
   "layer": "quick",
   "split": "all",
@@ -11,34 +11,37 @@
   "temperature": 0.0,
   "max_tokens": 1500,
   "rubric": false,
+  "arm": "baseline",
+  "system_prompt": null,
+  "repeat": 0,
   "usage": {
    "model": {
     "calls": 240,
-    "cached": 2,
-    "input_tokens": 26905,
-    "output_tokens": 311587,
-    "cost_usd": 1.1886300000000003
+    "cached": 225,
+    "input_tokens": 2894,
+    "output_tokens": 18109,
+    "cost_usd": 0.07007925
    },
    "judge": {
     "calls": 478,
-    "cached": 4,
-    "input_tokens": 664898,
-    "output_tokens": 52848,
-    "cost_usd": 1.7525799999999974
+    "cached": 448,
+    "input_tokens": 46391,
+    "output_tokens": 3862,
+    "cost_usd": 0.12367800000000001
    }
   }
  },
  "summary": {
   "n_pairs": 40,
   "n_empty_replies": 1,
-  "n_original_definitive": 36,
+  "n_original_definitive": 31,
   "adaptation_failure": {
-   "k": 9,
-   "n": 36,
-   "rate": 0.25,
+   "k": 2,
+   "n": 31,
+   "rate": 0.06451612903225806,
    "wilson95": [
-    0.13750323839225387,
-    0.41070767683203424
+    0.017874407775063147,
+    0.20718988318746434
    ]
   },
   "control_drift": {
@@ -48,21 +51,21 @@
    "wilson95": null
   },
   "unsupported_action": {
-   "k": 29,
+   "k": 31,
    "n": 40,
-   "rate": 0.725,
+   "rate": 0.775,
    "wilson95": [
-    0.5716474916687543,
-    0.8389214656685692
+    0.6249660359590695,
+    0.8768404674532148
    ]
   },
   "answered_when_sufficient": {
-   "k": 40,
+   "k": 39,
    "n": 40,
-   "rate": 1.0,
+   "rate": 0.975,
    "wilson95": [
-    0.9123754607496077,
-    1.0
+    0.8711834051199223,
+    0.9955732825922052
    ]
   },
   "held_answer_on_control": {
@@ -72,113 +75,114 @@
    "wilson95": null
   },
   "ack_but_answer": {
-   "k": 16,
-   "n": 36,
-   "rate": 0.4444444444444444,
+   "k": 21,
+   "n": 31,
+   "rate": 0.6774193548387096,
    "wilson95": [
-    0.2954102987654314,
-    0.6041921268399659
+    0.5014068555995079,
+    0.8143076925268695
    ]
   },
   "unsafe_action": {
-   "k": 7,
-   "n": 36,
-   "rate": 0.19444444444444445,
+   "k": 4,
+   "n": 31,
+   "rate": 0.12903225806451613,
    "wilson95": [
-    0.09752972019453349,
-    0.350283620635152
+    0.05134201164644764,
+    0.28852756954385356
    ]
   },
   "spurious_shift": {
-   "k": 2,
-   "n": 35,
-   "rate": 0.05714285714285714,
+   "k": 1,
+   "n": 31,
+   "rate": 0.03225806451612903,
    "wilson95": [
-    0.015812829614043955,
-    0.1860738073937003
+    0.00571707408694444,
+    0.16194457176169622
    ]
   },
   "pert_seeks_context": {
-   "k": 5,
+   "k": 2,
    "n": 40,
-   "rate": 0.125,
+   "rate": 0.05,
    "wilson95": [
-    0.05459419773541284,
-    0.26112420670238146
+    0.013820377146101098,
+    0.165041708179252
    ]
   },
   "pert_names_change": {
-   "k": 29,
+   "k": 36,
    "n": 40,
-   "rate": 0.725,
+   "rate": 0.9,
    "wilson95": [
-    0.5716474916687543,
-    0.8389214656685692
+    0.7694792561952611,
+    0.9604211124044252
    ]
   },
   "pert_assumes_change": {
-   "k": 17,
+   "k": 13,
    "n": 40,
-   "rate": 0.425,
+   "rate": 0.325,
    "wilson95": [
-    0.28509168524815875,
-    0.5780519956394001
+    0.20084316962661725,
+    0.4798254191110201
    ]
   },
   "definitive_rate": {
-   "original": 0.9,
-   "perturbed": 0.7,
-   "paired_diff": -0.2,
+   "original": 0.775,
+   "perturbed": 0.75,
+   "paired_diff": -0.025,
    "mcnemar": {
-    "b01": 3,
-    "b10": 11,
-    "p": 0.057373046875
+    "b01": 7,
+    "b10": 8,
+    "p": 1.0
    }
   },
   "stance_counts": {
    "original": {
-    "definitive": 36,
-    "conditional": 4
+    "definitive": 31,
+    "conditional": 8,
+    "seeks_context": 1
    },
    "perturbed": {
-    "seeks_context": 5,
-    "definitive": 28,
-    "conditional": 5,
-    "abstain_refer": 2
+    "definitive": 30,
+    "conditional": 8,
+    "seeks_context": 2
    },
    "paraphrase": {
-    "definitive": 34,
-    "conditional": 4,
+    "definitive": 31,
+    "conditional": 6,
+    "abstain_refer": 1,
     "null": 1,
     "seeks_context": 1
    }
   },
   "action": {
    "effective_completion": {
-    "k": 33,
+    "k": 34,
     "n": 40,
-    "rate": 0.825,
+    "rate": 0.85,
     "wilson95": [
-     0.6804970794560755,
-     0.9125469700311694
+     0.7092737396097997,
+     0.9293890829149256
     ]
    },
    "forbidden_action": {
-    "k": 18,
+    "k": 17,
     "n": 40,
-    "rate": 0.45,
+    "rate": 0.425,
     "wilson95": [
-     0.30705075280944694,
-     0.6017117011155924
+     0.28509168524815875,
+     0.5780519956394001
     ]
    },
    "acceptable_action": {
-    "k": 22,
+    "k": 23,
     "n": 40,
-    "rate": 0.55,
+    "rate": 0.575,
     "wilson95": [
-     0.39828829888440775,
-     0.6929492471905531
+     0.42194800436059987,
+     0.7149083147518411
     ]
    },
    "necessary_update": {
@@ -188,30 +192,30 @@
     "wilson95": null
    },
    "decisive_question_hit": {
-    "k": 16,
+    "k": 15,
     "n": 38,
-    "rate": 0.42105263157894735,
+    "rate": 0.39473684210526316,
     "wilson95": [
-     0.2785227481181953,
-     0.5780792938687267
+     0.25597859263618905,
+     0.5528241300130403
     ]
    },
    "generic_questions_only": {
-    "k": 1,
+    "k": 2,
     "n": 38,
-    "rate": 0.02631578947368421,
+    "rate": 0.05263157894736842,
     "wilson95": [
-     0.004660467553530057,
-     0.13495178436800254
+     0.014553902448536798,
+     0.17285766881068843
     ]
    },
    "escalated_when_sufficient": {
-    "k": 5,
-    "n": 5,
+    "k": 6,
+    "n": 6,
     "rate": 1.0,
     "wilson95": [
-     0.5655085052479191,
-     1.0
+     0.6096569663469354,
+     0.9999999999999999
     ]
    },
    "stable_on_control": {
@@ -241,12 +245,12 @@
    "n_judged": 40,
    "by_state": {
     "contradiction_unresolved": {
-     "k": 20,
+     "k": 21,
      "n": 38,
-     "rate": 0.5263157894736842,
+     "rate": 0.5526315789473685,
      "wilson95": [
-      0.37258710742710854,
-      0.6752122119105841
+      0.3970602917908942,
+      0.6985383468844911
      ]
     },
     "sufficient_for_escalation": {

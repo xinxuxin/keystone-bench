@@ -1,8 +1,8 @@
 {
- "generated": "2026-09-11T21:36:57+00:00",
+ "generated": "2026-09-12T19:35:23+00:00",
  "meta": {
   "title": "Keystone buried_red_flag (quick, all) — openrouter/deepseek/deepseek-v4-pro-0813",
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "family": "buried_red_flag",
   "layer": "quick",
   "split": "all",
@@ -11,34 +11,37 @@
   "temperature": 0.0,
   "max_tokens": 6000,
   "rubric": false,
+  "arm": "baseline",
+  "system_prompt": null,
+  "repeat": 0,
   "usage": {
    "model": {
     "calls": 840,
-    "cached": 78,
-    "input_tokens": 138891,
-    "output_tokens": 1333792,
-    "cost_usd": 3.719882165695997
+    "cached": 703,
+    "input_tokens": 29578,
+    "output_tokens": 242200,
+    "cost_usd": 0.7630579413599996
    },
    "judge": {
-    "calls": 1620,
-    "cached": 150,
-    "input_tokens": 1979520,
-    "output_tokens": 160209,
-    "cost_usd": 5.240711999999999
+    "calls": 1608,
+    "cached": 752,
+    "input_tokens": 1111619,
+    "output_tokens": 97142,
+    "cost_usd": 3.0003739999999994
    }
   }
  },
  "summary": {
   "n_pairs": 40,
   "n_empty_replies": 5,
-  "n_original_definitive": 34,
+  "n_original_definitive": 27,
   "adaptation_failure": {
-   "k": 14,
-   "n": 32,
-   "rate": 0.4375,
+   "k": 2,
+   "n": 27,
+   "rate": 0.07407407407407407,
    "wilson95": [
-    0.2816508596944317,
-    0.6067469796877387
+    0.020554221697383523,
+    0.2336997729073062
    ]
   },
   "control_drift": {
@@ -48,12 +51,12 @@
    "wilson95": null
   },
   "unsupported_action": {
-   "k": 32,
+   "k": 31,
    "n": 38,
-   "rate": 0.8421052631578947,
+   "rate": 0.8157894736842105,
    "wilson95": [
-    0.6958287736272311,
-    0.9255623777627731
+    0.6658083165848865,
+    0.907783515467425
    ]
   },
   "answered_when_sufficient": {
@@ -72,30 +75,30 @@
    "wilson95": null
   },
   "ack_but_answer": {
-   "k": 14,
-   "n": 32,
-   "rate": 0.4375,
+   "k": 22,
+   "n": 27,
+   "rate": 0.8148148148148148,
    "wilson95": [
-    0.2816508596944317,
-    0.6067469796877387
+    0.6330094349480825,
+    0.9181941342571468
    ]
   },
   "unsafe_action": {
-   "k": 0,
-   "n": 32,
-   "rate": 0.0,
+   "k": 1,
+   "n": 27,
+   "rate": 0.037037037037037035,
    "wilson95": [
-    0.0,
-    0.1071827150573635
+    0.006567976533097597,
+    0.1828385393415652
    ]
   },
   "spurious_shift": {
    "k": 2,
-   "n": 34,
-   "rate": 0.058823529411764705,
+   "n": 27,
+   "rate": 0.07407407407407407,
    "wilson95": [
-    0.016282313063842452,
-    0.1909393688946371
+    0.020554221697383523,
+    0.2336997729073062
    ]
   },
   "pert_seeks_context": {
@@ -108,81 +111,80 @@
    ]
   },
   "pert_names_change": {
-   "k": 22,
+   "k": 36,
    "n": 38,
-   "rate": 0.5789473684210527,
+   "rate": 0.9473684210526315,
    "wilson95": [
-    0.42192070613127325,
-    0.7214772518818047
+    0.8271423311893115,
+    0.9854460975514631
    ]
   },
   "pert_assumes_change": {
-   "k": 6,
+   "k": 1,
    "n": 38,
-   "rate": 0.15789473684210525,
+   "rate": 0.02631578947368421,
    "wilson95": [
-    0.07443762223722684,
-    0.3041712263727689
+    0.004660467553530057,
+    0.13495178436800254
    ]
   },
   "definitive_rate": {
-   "original": 0.8947368421052632,
-   "perturbed": 0.8421052631578947,
-   "paired_diff": -0.05555555555555555,
+   "original": 0.7105263157894737,
+   "perturbed": 0.8157894736842105,
+   "paired_diff": 0.08108108108108109,
    "mcnemar": {
-    "b01": 2,
-    "b10": 4,
-    "p": 0.6875
+    "b01": 6,
+    "b10": 3,
+    "p": 0.5078125
    }
   },
   "stance_counts": {
    "original": {
-    "seeks_context": 1,
-    "conditional": 2,
-    "definitive": 34,
+    "conditional": 9,
+    "definitive": 27,
     "null": 2,
-    "abstain_refer": 1
+    "abstain_refer": 2
    },
    "perturbed": {
-    "abstain_refer": 4,
-    "definitive": 32,
-    "conditional": 2,
-    "null": 2
+    "definitive": 31,
+    "null": 2,
+    "conditional": 3,
+    "abstain_refer": 4
    },
    "paraphrase": {
-    "seeks_context": 1,
-    "definitive": 35,
-    "conditional": 2,
+    "conditional": 8,
+    "definitive": 28,
     "null": 1,
+    "seeks_context": 2,
     "abstain_refer": 1
    }
   },
   "action": {
    "effective_completion": {
-    "k": 33,
+    "k": 34,
     "n": 38,
-    "rate": 0.868421052631579,
+    "rate": 0.8947368421052632,
     "wilson95": [
-     0.7267282994850112,
-     0.9424621712426856
+     0.7586916879980553,
+     0.9582981020673341
     ]
    },
    "forbidden_action": {
-    "k": 10,
+    "k": 11,
     "n": 38,
-    "rate": 0.2631578947368421,
+    "rate": 0.2894736842105263,
     "wilson95": [
-     0.14971462389701296,
-     0.42009150206375323
+     0.17003106263656131,
+     0.44757438266189764
     ]
    },
    "acceptable_action": {
-    "k": 28,
+    "k": 27,
     "n": 38,
-    "rate": 0.7368421052631579,
+    "rate": 0.7105263157894737,
     "wilson95": [
-     0.5799084979362465,
-     0.8502853761029869
+     0.5524256173381024,
+     0.8299689373634387
     ]
    },
    "necessary_update": {
@@ -204,12 +206,12 @@
     "wilson95": null
    },
    "escalated_when_sufficient": {
-    "k": 28,
+    "k": 27,
     "n": 38,
-    "rate": 0.7368421052631579,
+    "rate": 0.7105263157894737,
     "wilson95": [
-     0.5799084979362465,
-     0.8502853761029869
+     0.5524256173381024,
+     0.8299689373634387
     ]
    },
    "stable_on_control": {
@@ -219,12 +221,12 @@
     "wilson95": null
    },
    "stable_on_paraphrase": {
-    "k": 33,
+    "k": 34,
     "n": 39,
-    "rate": 0.8461538461538461,
+    "rate": 0.8717948717948718,
     "wilson95": [
-     0.7027023013426569,
-     0.9275262615494854
+     0.7329395096236953,
+     0.9439726505197168
     ]
    },
    "hedged_when_sufficient": {
@@ -236,15 +238,15 @@
      0.13495178436800254
     ]
    },
-   "n_judged": 40,
+   "n_judged": 39,
    "by_state": {
     "sufficient_for_escalation": {
-     "k": 28,
+     "k": 27,
      "n": 38,
-     "rate": 0.7368421052631579,
+     "rate": 0.7105263157894737,
      "wilson95": [
-      0.5799084979362465,
-      0.8502853761029869
+      0.5524256173381024,
+      0.8299689373634387
      ]
     }
    }

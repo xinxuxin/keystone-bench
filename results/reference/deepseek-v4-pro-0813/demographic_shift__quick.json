@@ -1,8 +1,8 @@
 {
- "generated": "2026-09-11T21:20:08+00:00",
+ "generated": "2026-09-12T19:29:50+00:00",
  "meta": {
   "title": "Keystone demographic_shift (quick, all) — openrouter/deepseek/deepseek-v4-pro-0813",
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "family": "demographic_shift",
   "layer": "quick",
   "split": "all",
@@ -11,34 +11,37 @@
   "temperature": 0.0,
   "max_tokens": 6000,
   "rubric": false,
+  "arm": "baseline",
+  "system_prompt": null,
+  "repeat": 0,
   "usage": {
    "model": {
     "calls": 360,
-    "cached": 4,
-    "input_tokens": 64905,
-    "output_tokens": 651008,
-    "cost_usd": 1.7245118781759987
+    "cached": 295,
+    "input_tokens": 15079,
+    "output_tokens": 119645,
+    "cost_usd": 0.3891884743999999
    },
    "judge": {
-    "calls": 698,
-    "cached": 8,
-    "input_tokens": 925965,
-    "output_tokens": 75249,
-    "cost_usd": 2.4539220000000013
+    "calls": 688,
+    "cached": 291,
+    "input_tokens": 515715,
+    "output_tokens": 44451,
+    "cost_usd": 1.3870380000000009
    }
   }
  },
  "summary": {
   "n_pairs": 40,
-  "n_empty_replies": 2,
-  "n_original_definitive": 31,
+  "n_empty_replies": 6,
+  "n_original_definitive": 29,
   "adaptation_failure": {
-   "k": 18,
-   "n": 31,
-   "rate": 0.5806451612903226,
+   "k": 8,
+   "n": 28,
+   "rate": 0.2857142857142857,
    "wilson95": [
-    0.40765964352020967,
-    0.7358469692645074
+    0.15253815848329969,
+    0.470596357370175
    ]
   },
   "control_drift": {
@@ -48,21 +51,21 @@
    "wilson95": null
   },
   "unsupported_action": {
-   "k": 27,
-   "n": 40,
-   "rate": 0.675,
+   "k": 31,
+   "n": 39,
+   "rate": 0.7948717948717948,
    "wilson95": [
-    0.52017458088898,
-    0.7991568303733828
+    0.6446572703687138,
+    0.8922040980208888
    ]
   },
   "answered_when_sufficient": {
    "k": 36,
-   "n": 39,
-   "rate": 0.9230769230769231,
+   "n": 38,
+   "rate": 0.9473684210526315,
    "wilson95": [
-    0.7967862687194474,
-    0.9734930859265043
+    0.8271423311893115,
+    0.9854460975514631
    ]
   },
   "held_answer_on_control": {
@@ -72,90 +75,110 @@
    "wilson95": null
   },
   "ack_but_answer": {
-   "k": 5,
-   "n": 31,
-   "rate": 0.16129032258064516,
+   "k": 16,
+   "n": 28,
+   "rate": 0.5714285714285714,
    "wilson95": [
-    0.07092519905439934,
-    0.3263470272497887
+    0.390704789856154,
+    0.7349170381926877
    ]
   },
   "unsafe_action": {
    "k": 2,
-   "n": 31,
-   "rate": 0.06451612903225806,
+   "n": 28,
+   "rate": 0.07142857142857142,
    "wilson95": [
-    0.017874407775063147,
-    0.20718988318746434
+    0.019811647447770794,
+    0.2264573842591786
    ]
   },
   "spurious_shift": {
-   "k": 0,
-   "n": 30,
-   "rate": 0.0,
+   "k": 1,
+   "n": 28,
+   "rate": 0.03571428571428571,
    "wilson95": [
-    0.0,
-    0.113517091390478
+    0.00633235649754188,
+    0.17712576118498663
    ]
   },
   "pert_seeks_context": {
-   "k": 1,
-   "n": 40,
-   "rate": 0.025,
+   "k": 0,
+   "n": 39,
+   "rate": 0.0,
    "wilson95": [
-    0.0044267174077949195,
-    0.1288165948800778
+    0.0,
+    0.08966985360023902
    ]
   },
   "pert_names_change": {
-   "k": 14,
-   "n": 40,
-   "rate": 0.35,
+   "k": 23,
+   "n": 39,
+   "rate": 0.5897435897435898,
    "wilson95": [
-    0.2213433317104915,
-    0.5049440300646263
+    0.43418348473344903,
+    0.7292091056459952
    ]
   },
   "pert_assumes_change": {
-   "k": 11,
-   "n": 40,
-   "rate": 0.275,
+   "k": 10,
+   "n": 39,
+   "rate": 0.2564102564102564,
    "wilson95": [
-    0.1610785343314309,
-    0.4283525083312457
+    0.14568625843452188,
+    0.410819567678415
    ]
   },
   "definitive_rate": {
-   "original": 0.7948717948717948,
-   "perturbed": 0.675,
-   "paired_diff": -0.1282051282051282,
+   "original": 0.7631578947368421,
+   "perturbed": 0.7692307692307693,
+   "paired_diff": 0.02702702702702703,
    "mcnemar": {
-    "b01": 3,
-    "b10": 8,
-    "p": 0.2265625
+    "b01": 5,
+    "b10": 4,
+    "p": 1.0
    }
   },
   "stance_counts": {
    "original": {
-    "definitive": 31,
-    "conditional": 5,
-    "seeks_context": 3,
-    "null": 1
-   },
-   "perturbed": {
-    "definitive": 27,
-    "conditional": 9,
-    "abstain_refer": 3,
+    "definitive": 29,
+    "conditional": 7,
+    "null": 2,
+    "abstain_refer": 1,
     "seeks_context": 1
    },
+   "perturbed": {
+    "definitive": 30,
+    "conditional": 8,
+    "null": 1,
+    "abstain_refer": 1
+   },
    "paraphrase": {
-    "definitive": 34,
-    "conditional": 5,
-    "null": 1
+    "definitive": 29,
+    "conditional": 7,
+    "null": 3,
+    "abstain_refer": 1
    }
   },
   "action": {
    "effective_completion": {
+    "k": 38,
+    "n": 38,
+    "rate": 1.0,
+    "wilson95": [
+     0.90818706741616,
+     0.9999999999999999
+    ]
+   },
+   "forbidden_action": {
+    "k": 6,
+    "n": 39,
+    "rate": 0.15384615384615385,
+    "wilson95": [
+     0.07247373845051469,
+     0.2972976986573431
+    ]
+   },
+   "acceptable_action": {
     "k": 33,
     "n": 39,
     "rate": 0.8461538461538461,
@@ -164,58 +187,40 @@
      0.9275262615494854
     ]
    },
-   "forbidden_action": {
-    "k": 4,
-    "n": 40,
-    "rate": 0.1,
-    "wilson95": [
-     0.03957888759557486,
-     0.23052074380473897
-    ]
-   },
-   "acceptable_action": {
-    "k": 36,
-    "n": 40,
-    "rate": 0.9,
-    "wilson95": [
-     0.7694792561952611,
-     0.9604211124044252
-    ]
-   },
    "necessary_update": {
-    "k": 28,
-    "n": 31,
-    "rate": 0.9032258064516129,
+    "k": 23,
+    "n": 26,
+    "rate": 0.8846153846153846,
     "wilson95": [
-     0.7509971000182295,
-     0.966535963905356
+     0.7102370691310166,
+     0.959968281788505
     ]
    },
    "decisive_question_hit": {
-    "k": 2,
-    "n": 2,
-    "rate": 1.0,
+    "k": 3,
+    "n": 5,
+    "rate": 0.6,
     "wilson95": [
-     0.34237195288961925,
-     1.0
+     0.23071993220883708,
+     0.8823817688407467
     ]
    },
    "generic_questions_only": {
     "k": 0,
-    "n": 2,
+    "n": 5,
     "rate": 0.0,
     "wilson95": [
      0.0,
-     0.6576280471103807
+     0.43449149475208104
     ]
    },
    "escalated_when_sufficient": {
     "k": 7,
-    "n": 8,
-    "rate": 0.875,
+    "n": 9,
+    "rate": 0.7777777777777778,
     "wilson95": [
-     0.5291051942301386,
-     0.9775830911367038
+     0.4525833436728054,
+     0.9367762376877727
     ]
    },
    "stable_on_control": {
@@ -225,50 +230,50 @@
     "wilson95": null
    },
    "stable_on_paraphrase": {
-    "k": 35,
-    "n": 39,
-    "rate": 0.8974358974358975,
+    "k": 36,
+    "n": 37,
+    "rate": 0.972972972972973,
     "wilson95": [
-     0.7642084129775517,
-     0.9593873444171301
+     0.8617562156243666,
+     0.9952131489450924
     ]
    },
    "hedged_when_sufficient": {
-    "k": 1,
-    "n": 38,
-    "rate": 0.02631578947368421,
+    "k": 2,
+    "n": 34,
+    "rate": 0.058823529411764705,
     "wilson95": [
-     0.004660467553530057,
-     0.13495178436800254
+     0.016282313063842452,
+     0.1909393688946371
     ]
    },
    "n_judged": 40,
    "by_state": {
     "insufficient_ambiguous": {
-     "k": 2,
-     "n": 2,
-     "rate": 1.0,
+     "k": 4,
+     "n": 5,
+     "rate": 0.8,
      "wilson95": [
-      0.34237195288961925,
-      1.0
+      0.3755282641185388,
+      0.9637768390302125
      ]
     },
     "sufficient_for_alternative_action": {
-     "k": 28,
-     "n": 31,
-     "rate": 0.9032258064516129,
+     "k": 23,
+     "n": 26,
+     "rate": 0.8846153846153846,
      "wilson95": [
-      0.7509971000182295,
-      0.966535963905356
+      0.7102370691310166,
+      0.959968281788505
      ]
     },
     "sufficient_for_escalation": {
      "k": 6,
-     "n": 7,
-     "rate": 0.8571428571428571,
+     "n": 8,
+     "rate": 0.75,
      "wilson95": [
-      0.48686549668097007,
-      0.9743210440510253
+      0.40926987910258916,
+      0.9285223111419724
      ]
     }
    }
@@ -281,9 +286,9 @@
    "control_pairs": 0,
    "control_share": 0.0,
    "by_evidence_state": {
-    "sufficient_for_alternative_action": 31,
-    "sufficient_for_escalation": 7,
-    "insufficient_ambiguous": 2
+    "sufficient_for_escalation": 8,
+    "sufficient_for_alternative_action": 27,
+    "insufficient_ambiguous": 5
    }
   }
  }
