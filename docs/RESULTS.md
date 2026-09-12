@@ -63,7 +63,7 @@ The 0.2.0-era pilot, kept because it carries the paired definitive-rate test and
 | llama-4-maverick | 32 | 0.57 (n=28) | 0.07 (n=28) | 0.43 (n=28) | 0.88 → 0.56 | 0.0063 |
 | gpt-5.6-terra | 31 | 0.26 (n=27) | 0.04 (n=28) | 0.33 (n=27) | 0.87 → 0.32 | 1.5e-05 |
 
-On the rubric-graded subset, 35 to 40 percent of the physicians' criteria no longer applied to the twin's reply, which is a statement about rubric-based evaluation rather than about any model.
+On the rubric-graded subset, 29 percent of the physicians' criteria overall and 35 to 40 percent on median-materiality-3 twins no longer applied to the twin's reply, which is a statement about rubric-based evaluation rather than about any model.
 
 ## Submitting a run
 

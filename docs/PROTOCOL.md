@@ -135,7 +135,7 @@ At least one of the following, or the construct, the perturbations, the judge or
 | subgroup heterogeneity | any subgroup differing from the overall paired difference by ≥ 0.15 |
 | rubric gap | median `context_awareness` share ≤ 15% and models almost never ask on enough-context originals |
 
-The pilot met the first two: paired definitive-rate drops of 0.31 to 0.55 with McNemar p ≤ 0.021 on every model, and 35 to 40% of criteria judged inapplicable.
+The pilot met the first two: paired definitive-rate drops of 0.31 to 0.55 with McNemar p ≤ 0.021 on every model, and 29% of criteria judged inapplicable overall, 35 to 40% on median-materiality-3 twins.
 
 ## 8. Quality gates on the data
 

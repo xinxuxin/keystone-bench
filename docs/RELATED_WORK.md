@@ -24,7 +24,7 @@ as an issue; we would rather fix this table than defend it.
 
 **The rubric is measured, not assumed.** Every benchmark in this table treats its rubric or answer key as fixed and
 asks how the model scores against it. Keystone asks the second question: after one fact is gone, how much of the
-physician's rubric can still be fairly applied to a reply. On the graded pilot items, 35 to 40 percent of criteria
+physician's rubric can still be fairly applied to a reply. On the graded pilot items, 29 percent of criteria overall and 35 to 40 percent on median-materiality-3 twins
 could not, which is a statement about rubric-based clinical evaluation rather than about any model.
 
 **The control structure.** A perturbation benchmark without controls cannot separate "the model reacted to the
@@ -32,8 +32,8 @@ evidence" from "the model reacted to being edited". Keystone ships both halves: 
 is to answer unchanged, and a paraphrase-only twin that changes the wording and nothing else. In the reference pilot
 the paraphrase moved the definitive rate by at most 0.07 while removing an element moved it by 0.31 to 0.55.
 
-**Scale on real messages with a physician standard attached.** The paired counterfactual designs above are clinician-
-authored and small, 217 pairs and 224 cases. Keystone is 7,318 twins over 1,236 real HealthBench conversations, each
+**Scale on HealthBench messages with a physician standard attached.** The paired counterfactual designs above are clinician-
+authored and small, 217 pairs and 224 cases. Keystone is 7,318 twins over 1,236 HealthBench conversations (largely synthetic by construction, each with its physician-written rubric), each
 carrying the rubric its own physicians wrote, which is what makes the applicability question askable at all.
 
 ## What is not ours
