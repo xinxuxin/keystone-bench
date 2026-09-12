@@ -134,3 +134,21 @@ items outside the released split are kept for that.
 
 **Reproduce.** `python tools/judge_check.py --judge openrouter/openai/gpt-4.1 --workers 8`, or score the stored
 judgements of either run offline with `--from-records`.
+
+## Behaviour judge: explicit acknowledgement fields (added after 0.5.0)
+
+The behaviour judge's note used to call the edited element a *missing element* for every family, which is wrong for the insertion families (a contradiction or a red flag is added, not removed). The note now describes the element as missing, added or changed, and two fields were added: `acknowledges_change` (the reply names the gap, contradiction, red flag or changed attribute in its own words or by quotation) and `acknowledgement_quote` (the shortest verbatim span that constitutes the acknowledgement). `names_missing_element` keeps its historical name and now means "acknowledges the edited element" for every family; `pair_outcomes` is unchanged.
+
+Re-run of the full validity set (123 items × 6 authored reply types, judge GPT-4.1, temperature 0). Stance agreement is unchanged to two decimals against the 0.5.0 run. The new field separates explicit acknowledgement from a generic question that happens to touch the element:
+
+| authored reply type | stance as expected | `acknowledges_change` | `names_missing_element` |
+|---|---|---|---|
+| acknowledge_then_act | 0.67 | 0.95 | 0.96 |
+| conditional_correct | 0.69 | 0.85 | 0.93 |
+| brief_correct | 0.89 | 0.72 | 0.90 |
+| generic_questions | 1.00 | 0.11 | 0.36 |
+| unnecessary_refusal | 0.99 | 0.12 | 0.12 |
+| fluent_overreach | 0.98 | 0.08 | 0.04 |
+
+The two fields are parsed on 99.8% of replies. The gap on `generic_questions` (0.11 against 0.36) is the reason the field exists: an acknowledgement-versus-action table needs a measure of acknowledgement that is not satisfied by asking a checklist of questions. Records: `runs/judge_check_0_6_0_behaviour` (cost $2.08).
+
