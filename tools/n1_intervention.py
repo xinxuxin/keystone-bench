@@ -204,6 +204,30 @@ def main():
     L.append(f"| every family, unedited side | {acell('gate', 'acknowledge', EFFECT_FAMILIES + CONTROL_FAMILIES, 'original')} | {acell('gate', 'baseline', EFFECT_FAMILIES + CONTROL_FAMILIES, 'original')} | {acell('acknowledge', 'baseline', EFFECT_FAMILIES + CONTROL_FAMILIES, 'original')} |")
     L.append("")
 
+    # per model, so a pooled number cannot hide a difference between systems
+    if a.model.startswith(("2 models", "3 models", "4 models", "5 models")):
+        import re as _re
+        L += ["## Per system", "",
+              "The withholding criterion used for the primary cost was settled while looking at one system's "
+              "acknowledgement arm, before the other systems had run. Pooling could hide a difference between "
+              "them, so every contrast is also given per system.", "",
+              "| system | benefit (ack − base) | primary cost, controls | joint outcome (ack − base) |", "|---|---|---|---|"]
+        for m in sorted({k[1].split("::", 1)[0] for k in arms["baseline"]}):
+            sub = {arm: {(f, i): r for (f, i), r in arms[arm].items() if i.startswith(m + "::")} for arm in ARMS}
+            def one(fn, fams, cond, seed):
+                v = paired(sub["acknowledge"], sub["baseline"], fams, cond, fn)
+                if not v:
+                    return "n/a"
+                mm, lo, hi = boot_ci(v, seed=seed)
+                return f"{mm:+.3f} [{lo:+.3f}, {hi:+.3f}]"
+            jv = paired(sub["acknowledge"], sub["baseline"], EFFECT_FAMILIES, "perturbed",
+                        lambda r, _c: (None if (forbidden(r, "perturbed") is None or withheld(r, "original") is None)
+                                       else float((not forbidden(r, "perturbed")) and (not withheld(r, "original")))))
+            jm, jlo, jhi = boot_ci(jv, seed=21) if jv else (float("nan"),) * 3
+            L.append(f"| {m} | {one(forbidden, EFFECT_FAMILIES, 'perturbed', 17)} | "
+                     f"{one(withheld, CONTROL_FAMILIES, 'perturbed', 19)} | {jm:+.3f} [{jlo:+.3f}, {jhi:+.3f}] |")
+        L.append("")
+
     # joint success
     L += ["## Joint success", "",
           "Per item: held the line on the edited side (no forbidden action) **and** still gave a usable course of "
@@ -250,6 +274,12 @@ def main():
           "the gated arm raises unsupported action by +0.117 [+0.033, +0.208]: an assistant told not to commit when "
           "a decisive fact is absent stops escalating on the one family whose correct answer is to escalate now. "
           "The clause written to prevent blind caution produces it.", "",
+          "The withholding criterion deserves its own sentence. It was settled while reading one system's replies, "
+          "before the other two had run, so it is a criterion chosen during exploration and it is reported as one. "
+          "What the per-system table shows is that it does not favour the system it was written on: the benefit "
+          "interval excludes zero on all three (-0.101, -0.134, -0.167) and the cost interval contains zero on all "
+          "three, with the largest cost on claude-sonnet-5 (+0.062) rather than on gemini-3.8-flash (-0.013). The "
+          "joint outcome clears zero on two of three; claude-sonnet-5 starts highest and moves least.", "",
           "So the deployable finding is the short instruction, not the careful one, and the benchmark's contribution "
           "is being able to tell that. Scoring only the edited side would rank the gated arm first on two of three "
           "families. Scoring any question as a cost would reject both arms. The negative controls, the unedited "
