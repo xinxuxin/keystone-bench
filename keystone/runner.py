@@ -63,13 +63,14 @@ class OpenAICompatible:
         self.usage = {"calls": 0, "cached": 0, "input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0}
         self._lock = threading.Lock()
 
-    def _cache_path(self, messages: list[dict]) -> Path:
-        key = json.dumps({"m": self.model_id, "u": self.base_url, "msgs": messages, "t": self.temperature, "n": self.max_tokens, "x": self.extra_body}, sort_keys=True)
+    def _cache_path(self, messages: list[dict], max_tokens: int | None = None) -> Path:
+        key = json.dumps({"m": self.model_id, "u": self.base_url, "msgs": messages, "t": self.temperature, "n": max_tokens or self.max_tokens, "x": self.extra_body}, sort_keys=True)
         return self.cache_dir / (hashlib.sha256(key.encode()).hexdigest() + ".json")
 
-    def __call__(self, messages: list[dict]) -> str:
+    def __call__(self, messages: list[dict], max_tokens: int | None = None) -> str:
         import httpx  # local import keeps `import keystone` dependency-free for offline analysis
-        cp = self._cache_path(messages)
+        max_tokens = max_tokens or self.max_tokens
+        cp = self._cache_path(messages, max_tokens)
         if cp.exists():
             try:
                 d = json.loads(cp.read_text())
@@ -81,7 +82,7 @@ class OpenAICompatible:
         headers = {"content-type": "application/json", **self.extra_headers}
         if self.api_key:
             headers["authorization"] = f"Bearer {self.api_key}"
-        body = {"model": self.model_id, "messages": messages, "temperature": self.temperature, "max_tokens": self.max_tokens, **self.extra_body}
+        body = {"model": self.model_id, "messages": messages, "temperature": self.temperature, "max_tokens": max_tokens, **self.extra_body}
         if "openrouter.ai" in self.base_url:
             body.setdefault("usage", {"include": True})
             headers.setdefault("X-Title", "keystone")
@@ -110,8 +111,21 @@ class OpenAICompatible:
         raise RuntimeError(f"{self.name}: {self.retries} attempts failed: {last}")
 
 
-def _judge_json(judge: Complete, prompt: str) -> dict:
-    return parse_json(judge([{"role": "user", "content": prompt}])) or {}
+def _judge_json(judge: Complete, prompt: str, factor: int = 3) -> dict:
+    """Parse the judge's JSON object; when parsing fails (in practice a truncated answer) ask once more with
+    `factor` times the output budget. The retry is a separate cache entry, so cached first answers stay free.
+    Verbose judges (Claude, Gemini) lost 15 to 35 percent of their verdicts at the 600-token default without this."""
+    msgs = [{"role": "user", "content": prompt}]
+    out = parse_json(judge(msgs))
+    if out is None and getattr(judge, "max_tokens", None):
+        try:
+            out = parse_json(judge(msgs, max_tokens=int(judge.max_tokens) * factor))
+        except TypeError:  # a plain callable judge without an output budget
+            out = None
+    return out or {}
+
+
+judge_json = _judge_json
 
 
 def action_spec(pair: Pair, condition: str) -> dict | None:

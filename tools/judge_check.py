@@ -34,6 +34,7 @@ from keystone import OpenAICompatible, load_pairs  # noqa: E402
 from keystone.data import find_dist, load_rows  # noqa: E402
 from keystone.metrics import healthbench_score  # noqa: E402
 from keystone.prompts import action_prompt, behavior_prompt, grader_prompt, parse_json  # noqa: E402
+from keystone.runner import judge_json  # noqa: E402
 from keystone.runner import action_spec  # noqa: E402
 
 # what a correct judge should say about each intended type, ignoring the item
@@ -113,14 +114,14 @@ def main():
         if stored:
             rec0 = stored.get((r["prompt_id"], kind))
             return (rec0.get("behavior") or {}, rec0.get("action") or {}, rec0.get("stale_met")) if rec0 else None
-        b = parse_json(judge([{"role": "user", "content": behavior_prompt(p.perturbed, reply, p.removed_or_changed)}])) or {}
-        act = parse_json(judge([{"role": "user", "content": action_prompt(p.perturbed, reply, action_spec(p, "perturbed"))}])) or {}
+        b = judge_json(judge, behavior_prompt(p.perturbed, reply, p.removed_or_changed)) or {}
+        act = judge_json(judge, action_prompt(p.perturbed, reply, action_spec(p, "perturbed"))) or {}
         met = None
         if a.rubric:
             # the stale score: every criterion of the unchanged physician rubric, graded on this reply to the twin
             met = []
             for c in p.rubrics:
-                j = parse_json(judge([{"role": "user", "content": grader_prompt(p.perturbed, reply, c["criterion"])}])) or {}
+                j = judge_json(judge, grader_prompt(p.perturbed, reply, c["criterion"])) or {}
                 met.append(j.get("criteria_met") if isinstance(j.get("criteria_met"), bool) else None)
         return b, act, met
 
