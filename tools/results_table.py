@@ -152,6 +152,9 @@ def main():
           "| Item analysis | discrimination, the ceiling from items already mishandled unedited, the item count a confirmatory run needs, and whether the effect tracks the size of the edit | [`ITEM_ANALYSIS.md`](ITEM_ANALYSIS.md) |",
           "| Shortcut audit | how detectable each edit is, what the edits repeat, and what a policy that never reads the evidence could score | [`SHORTCUT_AUDIT.md`](SHORTCUT_AUDIT.md) |",
           "| Intervention | whether a minimal instruction lowers unsupported action without buying it with blind caution | [`INTERVENTION.md`](INTERVENTION.md) |",
+          "| Confirmatory | the preregistered tests on the held-out split, where nothing was changed after a number was seen | [`CONFIRMATORY.md`](CONFIRMATORY.md) |",
+          "| Behaviour classes | the same items regrouped by what the evidence asks for: ask, change, escalate, hold | [`BEHAVIOUR_CLASSES.md`](BEHAVIOUR_CLASSES.md) |",
+          "| Turn distance | whether the decisive fact being outside the turn being answered is what costs the assistant, rather than how far back it is | [`TURN_DISTANCE.md`](TURN_DISTANCE.md) |",
           ""]
     Path(a.out).write_text("\n".join(L) + "\n")
     print(f"{len(models)} models, {len(fams)} families -> {a.out}")
