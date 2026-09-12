@@ -34,7 +34,7 @@ A fixed policy scores exactly zero on the paired difference: it answers the twin
 | `missing_evidence_early` | 0.81 | +0.63 | +0.026 | +0.04 |
 | `salient_distractor` | 0.97 | +0.94 | -0.006 | -0.01 |
 
-The bound is above 0.6 on every family, so it does not by itself rule anything out. The last column is what does. A blind policy spends its accuracy the same way everywhere, so its ratio of measured effect to bound would be roughly constant across families. Measured, that ratio is near zero on the two families whose correct answer is to hold the reply and between 0.18 and 0.35 on the families that ask for a change, even though the two negative controls are among the most detectable families in the table. Detectability is available to the models and they are not spending it.
+The bound is above 0.6 on every family, so it does not by itself rule anything out. The last column is what does. A blind policy spends its accuracy the same way everywhere, so its ratio of measured effect to bound would be roughly constant across families. Measured, that ratio is near zero on the two families whose correct answer is to hold the reply and 0.17 to 0.35 on the three families with a headline effect, even though the two negative controls are among the most detectable families in the table. Detectability is available to the models and they are not spending it.
 
 
 ## What the edits repeat
