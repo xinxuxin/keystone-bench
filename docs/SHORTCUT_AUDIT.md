@@ -19,22 +19,26 @@ Two-alternative forced choice on held-out sources, chance 0.50. `Length only` pi
 | `missing_evidence_early` | 218 | **0.87** | 0.92 | 0.73 | 0.80 | `he's`, `something`, `sometimes`, `feeling` |
 | `salient_distractor` | 1234 | **1.00** | 1.00 | 0.85 | 0.96 | `years`, `daily`, `last`, `take` |
 
-## What a policy that never reads the evidence could score
+## What a policy that never reads the evidence scores
 
-A fixed policy scores exactly zero on the paired difference: it answers the twin and its control the same way, so the difference cancels. That is the point of pairing. The strongest *blind* policy is the one that guesses which side was edited from the surface and then answers to the family's outcome; if it picks the twin with accuracy `a`, its expected paired risk difference is at most `2a - 1`. The detector above measures `a` as the twin-versus-control accuracy, and a frontier model reading the message would do better, so the bound below is a floor.
+Six fixed policies, scored by the same action rules as a real reply, each side judged against its own annotation. None of them reads the conversation. Held-out split.
 
-| Family | twin vs control | blind bound `2a-1` | measured effect | measured / bound |
-|---|---|---|---|---|
-| `alternative_evidence` | 0.80 | +0.61 | +0.003 | +0.01 |
-| `buried_red_flag` | 0.98 | +0.96 | +0.190 | +0.20 |
-| `conflicting_evidence` | 0.96 | +0.92 | +0.311 | +0.34 |
-| `demographic_control` | 0.91 | +0.82 | -0.001 | -0.00 |
-| `demographic_shift` | 0.94 | +0.89 | +0.100 | +0.11 |
-| `missing_evidence` | 0.89 | +0.79 | +0.198 | +0.25 |
-| `missing_evidence_early` | 0.80 | +0.60 | +0.110 | +0.18 |
-| `salient_distractor` | 0.96 | +0.91 | +0.009 | +0.01 |
+| policy | `missing_evidence` | `conflicting_evidence` | `buried_red_flag` | `salient_distractor` | `demographic_control` |
+|---|---|---|---|---|---|
+| `always_definitive` <br><span style='font-weight:400'>commits to the original action every time</span> | **+0.871** | **+0.993** | **+1.000** | +0.000 | +0.000 |
+| `parrot_then_act` <br><span style='font-weight:400'>names the gap, then commits anyway</span> | **+0.871** | **+0.993** | **+1.000** | +0.000 | +0.000 |
+| `always_ask` <br><span style='font-weight:400'>asks the decisive question, gives nothing</span> | +0.000 | +0.000 | +0.000 | +0.000 | +0.000 |
+| `always_conditional` <br><span style='font-weight:400'>hedges every answer on the unknown</span> | +0.000 | +0.000 | +0.000 | +0.000 | +0.000 |
+| `always_escalate` <br><span style='font-weight:400'>sends everyone to urgent evaluation</span> | +0.000 | +0.000 | +0.000 | +0.000 | +0.000 |
+| `always_refuse` <br><span style='font-weight:400'>refers out, gives nothing</span> | +0.000 | +0.000 | +0.000 | +0.000 | +0.000 |
 
-The bound is above 0.6 on every family, so it does not by itself rule anything out. The last column is what does. A blind policy spends its accuracy the same way everywhere, so its ratio of measured effect to bound would be roughly constant across families. Measured, that ratio is near zero on the two families whose correct answer is to hold the reply and 0.11 to 0.34 on the five families whose correct answer is to change it, even though the two negative controls are among the most detectable families in the table. Detectability is available to the models and they are not spending it.
+Bold marks an interval excluding zero.
+
+**On the perturbation families a blind policy scores high, and that is what the outcome is for.** `always_definitive` reaches +0.87 to +1.00: it commits to the same course of action on both sides, and on a perturbation family the edit is precisely what moves that action onto the forbidden list. A system that adapted perfectly would score 0 here and one that never adapted would score what this policy scores, so the policy sets the top of the scale rather than exposing a hole. The measured systems sit between: +0.079 to +0.284 on the same families.
+
+**On the negative controls every fixed policy scores exactly 0.000.** The edit leaves the evidence state unchanged, so both sides carry identical acceptable and forbidden lists and any reply, blind or not, is scored the same way twice. This is what rules a blind policy out: the result this benchmark reports is an effect on the perturbation families *together with* zero on the controls, and no policy that ignores the conversation can produce that pair.
+
+Detectability is reported above for the same reason but does not bound this. A measured detector's accuracy is at most the Bayes accuracy, so a value computed from it is achievable by some blind policy rather than a ceiling on all of them; the controls, not a bound, are what carry the argument.
 
 
 ## What the edits repeat
@@ -46,7 +50,7 @@ A family whose insertions reuse the same clinical furniture is learnable in a wa
 | `alternative_evidence` | 344 | `normal` 5.2%, `still` 3.8%, `it's` 3.5%, `right` 3.2%, `little` 3.2% |
 | `buried_red_flag` | 813 | `since` 18.2%, `yesterday` 15.5%, `days` 12.7%, `last` 9.2%, `right` 8.9% |
 | `conflicting_evidence` | 1229 | `last` 11.9%, `since` 11.6%, `still` 8.2%, `morning` 7.6%, `every` 7.5% |
-| `demographic_control` | 948 | `long` 8.0%, `driver` 7.3%, `truck` 7.3%, `avid` 6.6%, `haul` 6.3% |
+| `demographic_control` | 948 | `long` 8.0%, `truck` 7.3%, `driver` 7.3%, `avid` 6.6%, `haul` 6.3% |
 | `demographic_shift` | 1099 | `pregnant` 19.2%, `insurance` 18.5%, `area` 18.2%, `remote` 17.7%, `health` 16.6% |
 | `missing_evidence` | 235 | `it's` 10.6%, `don't` 8.9%, `actually` 6.8%, `sure` 4.7%, `child` 3.8% |
 | `missing_evidence_early` | 59 | `it's` 8.5%, `he's` 5.1%, `lately` 5.1%, `sometimes` 5.1%, `kind` 5.1% |

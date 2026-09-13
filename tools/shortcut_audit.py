@@ -164,59 +164,79 @@ RUN_PREFIX = "quick"
 
 
 def blind_baseline(cross_acc: dict) -> list[str]:
-    """What a policy that never reads the evidence could score on the paired difference.
+    """What a policy that never reads the evidence scores, measured rather than bounded.
 
-    A fixed policy scores exactly zero: it answers the twin and the control the same way, so the difference
-    cancels. The strongest blind policy is therefore the one that guesses which side is the twin from the
-    surface and then answers to the family's outcome. If it identifies the twin with accuracy `a`, its
-    expected paired risk difference is at most 2a - 1. The detector's twin-versus-control accuracy is a
-    measured value of `a`, and a frontier model reading the message would do better, so this is a floor on
-    the bound, not a ceiling. The bound is close to 1 on every family, which is exactly why it is not the
-    interesting number: what separates the design from a blind policy is that the bound is just as large on
-    the two families whose correct answer is no change, and there the measured effect is zero.
+    An earlier version of this page claimed that a fixed policy scores zero on a paired difference and that
+    2a-1 at the detector's accuracy bounds the strongest blind policy. Both were wrong, and the second was
+    wrong in the direction that flattered the benchmark: a measured detector's accuracy `a` is at most the
+    Bayes accuracy `a*`, so `2a-1` is a value some blind policy achieves, not a bound on all of them.
 
-    Requires the reference effects; recomputed here from the reference runs so the two tables cannot drift.
+    The honest version is measured. Six fixed policies are scored by the same action rules as a real reply,
+    using each side's own annotation. `always_definitive` commits to the original course of action every time;
+    on a perturbation family the edit is what moves that action onto the forbidden list, so the policy scores
+    a paired difference near 1 without reading anything. That is not a hole in the design, it is what the
+    outcome is defined to measure, and it sets the scale: a real system that adapted perfectly would score 0
+    and one that never adapted would score what this policy scores.
+
+    The controls are where the argument lives. On the two negative-control families every fixed policy scores
+    exactly 0.000, because the edit leaves the evidence state and therefore both sides' annotation identical.
+    A blind policy therefore cannot produce the contrast this benchmark reports, which is an effect on the
+    perturbation families *next to* zero on the controls.
     """
-    import glob
+    import glob, random, statistics
     from collections import defaultdict as dd
-    per = dd(list)
-    for f in sorted(glob.glob(str(ROOT / "runs" / f"{RUN_PREFIX}__*" / "*" / "records.jsonl"))):
-        if "__judge-" in f or "/n1_" in f or "/floor_" in f:
-            continue
-        for line in open(f):
-            if not line.strip():
-                continue
-            r = json.loads(line)
-            a = r.get("action") or {}
-            p, q = a.get("perturbed") or {}, a.get("paraphrase") or {}
-            if not p or not q:   # an absent verdict is missing; `forbidden: null` is a scored "did not overstep"
-                continue
-            per[(r["family"], r["id"])].append(float(bool(p.get("forbidden"))) - float(bool(q.get("forbidden"))))
-    eff = dd(list)
-    for (fam, _), v in per.items():
-        eff[fam].append(sum(v) / len(v))
-    L = ["", "## What a policy that never reads the evidence could score", "",
-         "A fixed policy scores exactly zero on the paired difference: it answers the twin and its control the same way, so "
-         "the difference cancels. That is the point of pairing. The strongest *blind* policy is the one that guesses which "
-         "side was edited from the surface and then answers to the family's outcome; if it picks the twin with accuracy `a`, "
-         "its expected paired risk difference is at most `2a - 1`. The detector above measures `a` as the twin-versus-control "
-         "accuracy, and a frontier model reading the message would do better, so the bound below is a floor.", "",
-         "| Family | twin vs control | blind bound `2a-1` | measured effect | measured / bound |", "|---|---|---|---|---|"]
-    for fam in sorted(cross_acc):
-        a = cross_acc[fam]
-        bound = 2 * a - 1
-        v = eff.get(fam) or []
+    import sys as _sys
+    _sys.path.insert(0, str(ROOT / "tools"))
+    from trivial_baselines import judged
+    from keystone.data import load_pairs
+    POL = [("always_definitive", "commits to the original action every time"),
+           ("parrot_then_act", "names the gap, then commits anyway"),
+           ("always_ask", "asks the decisive question, gives nothing"),
+           ("always_conditional", "hedges every answer on the unknown"),
+           ("always_escalate", "sends everyone to urgent evaluation"),
+           ("always_refuse", "refers out, gives nothing")]
+    FAM = ["missing_evidence", "conflicting_evidence", "buried_red_flag", "salient_distractor", "demographic_control"]
+
+    def boot(v, seed=0):
         if not v:
-            L.append(f"| `{fam}` | {fmt(a)} | {bound:+.2f} | n/a | n/a |")
-            continue
-        m = sum(v) / len(v)
-        L.append(f"| `{fam}` | {fmt(a)} | {bound:+.2f} | {m:+.3f} | {m / bound:+.2f} |")
-    L += ["", "The bound is above 0.6 on every family, so it does not by itself rule anything out. The last column is what "
-              "does. A blind policy spends its accuracy the same way everywhere, so its ratio of measured effect to bound "
-              "would be roughly constant across families. Measured, that ratio is near zero on the two families whose "
-              "correct answer is to hold the reply and 0.11 to 0.34 on the five families whose correct answer is to change it, even "
-              "though the two negative controls are among the most detectable families in the table. Detectability is "
-              "available to the models and they are not spending it.", ""]
+            return float("nan"), float("nan"), float("nan")
+        rng = random.Random(seed); n = len(v)
+        ms = sorted(sum(v[rng.randrange(n)] for _ in range(n)) / n for _ in range(2000))
+        return sum(v) / n, ms[50], ms[1949]
+
+    pairs = {f: [p for p in load_pairs(f, "core", split="test") if p.has_state and p.paraphrase is not None] for f in FAM}
+    L = ["", "## What a policy that never reads the evidence scores", "",
+         "Six fixed policies, scored by the same action rules as a real reply, each side judged against its own "
+         "annotation. None of them reads the conversation. Held-out split.", "",
+         "| policy | " + " | ".join(f"`{f}`" for f in FAM) + " |", "|---|" + "---|" * len(FAM)]
+    for pol, desc in POL:
+        cells = []
+        for fam in FAM:
+            ds = []
+            for p in pairs[fam]:
+                e = judged(pol, p.evidence_state, "perturbed")
+                c = judged(pol, p.evidence_state, "paraphrase")
+                ds.append(float(bool(e.get("forbidden"))) - float(bool(c.get("forbidden"))))
+            if len(ds) < 20:
+                cells.append("n/a"); continue
+            m, lo, hi = boot(ds, seed=abs(hash(pol + fam)) % 997)
+            cells.append(f"**{m:+.3f}**" if (lo > 0 or hi < 0) else f"{m:+.3f}")
+        L.append(f"| `{pol}` <br><span style='font-weight:400'>{desc}</span> | " + " | ".join(cells) + " |")
+    L += ["", "Bold marks an interval excluding zero.", "",
+          "**On the perturbation families a blind policy scores high, and that is what the outcome is for.** "
+          "`always_definitive` reaches +0.87 to +1.00: it commits to the same course of action on both sides, and "
+          "on a perturbation family the edit is precisely what moves that action onto the forbidden list. A system "
+          "that adapted perfectly would score 0 here and one that never adapted would score what this policy "
+          "scores, so the policy sets the top of the scale rather than exposing a hole. The measured systems sit "
+          "between: +0.079 to +0.284 on the same families.", "",
+          "**On the negative controls every fixed policy scores exactly 0.000.** The edit leaves the evidence "
+          "state unchanged, so both sides carry identical acceptable and forbidden lists and any reply, blind or "
+          "not, is scored the same way twice. This is what rules a blind policy out: the result this benchmark "
+          "reports is an effect on the perturbation families *together with* zero on the controls, and no policy "
+          "that ignores the conversation can produce that pair.", "",
+          "Detectability is reported above for the same reason but does not bound this. A measured detector's "
+          "accuracy is at most the Bayes accuracy, so a value computed from it is achievable by some blind policy "
+          "rather than a ceiling on all of them; the controls, not a bound, are what carry the argument.", ""]
     return L
 
 

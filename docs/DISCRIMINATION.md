@@ -8,21 +8,25 @@ The prediction is asymmetric. On a perturbation family, systems should differ: r
 
 Split: held-out. Permutations: 4000.
 
-| family | kind | sources | systems | sd between systems | range | permutation p |
+| family | kind | sources | systems | sd between systems (90% CI) | range | permutation p |
 |---|---|---|---|---|---|---|
-| `missing_evidence` | perturbation | 85 | 10 | 0.069 | 0.195 | 0.0163 |
-| `conflicting_evidence` | perturbation | 139 | 10 | 0.104 | 0.360 | 0.0003 |
-| `buried_red_flag` | perturbation | 148 | 10 | 0.134 | 0.480 | 0.0003 |
-| `demographic_shift` | perturbation | 64 | 10 | 0.075 | 0.281 | 0.0255 |
-| `alternative_evidence` | perturbation | 68 | 10 | 0.039 | 0.132 | 0.7270 |
-| `salient_distractor` | **negative control** | 219 | 10 | 0.015 | 0.053 | 0.8592 |
-| `demographic_control` | **negative control** | 161 | 10 | 0.019 | 0.056 | 0.8197 |
+| `missing_evidence` | perturbation | 85 | 10 | 0.069 [0.060, 0.105] | 0.195 | 0.0163 |
+| `conflicting_evidence` | perturbation | 139 | 10 | 0.104 [0.090, 0.135] | 0.360 | 0.0003 |
+| `buried_red_flag` | perturbation | 148 | 10 | 0.134 [0.115, 0.161] | 0.480 | 0.0003 |
+| `demographic_shift` | perturbation | 64 | 10 | 0.075 [0.062, 0.122] | 0.281 | 0.0253 |
+| `alternative_evidence` | perturbation | 68 | 10 | 0.039 [0.034, 0.089] | 0.132 | 0.7232 |
+| `salient_distractor` | **negative control** | 219 | 10 | 0.015 [0.017, 0.037] | 0.053 | 0.8602 |
+| `demographic_control` | **negative control** | 161 | 10 | 0.019 [0.020, 0.044] | 0.056 | 0.8123 |
 
 ## Reading
 
-Every perturbation family separates the systems: spreads of 0.07, 0.10, 0.13, 0.07, 0.04 at p 0.0163, 0.0003, 0.0003, 0.0255, 0.7270. Neither negative control does: spreads of 0.015 and 0.019 at p 0.86 and 0.82.
+**What this statistic is.** It is the spread between systems in *how much the edit moves them*, not the spread in how well they answer. Two systems whose forbidden-action rates are 0.05 and 0.35 but who both rise by 0.10 under the edit contribute nothing to it. Read it as the heterogeneity of the perturbation effect, and read absolute levels from the per-system table in [`CONFIRMATORY.md`](CONFIRMATORY.md).
 
-The two halves use the same items per source, the same judge, the same outcome and the same test. What differs is whether the edit changes what a careful clinician would do. Where it does, the systems come apart; where it does not, they stay together. A benchmark that separated systems on both halves would be separating them on something other than evidence sensitivity, and a benchmark that separated them on neither would not be worth running.
+Every perturbation family shows heterogeneity: sd 0.069, 0.104, 0.134, 0.075, 0.039 at permutation p 0.0163, 0.0003, 0.0003, 0.0253, 0.7232. On the two negative controls the point estimates are 0.015 and 0.019 with 90 percent upper limits of 0.037 and 0.044.
 
-This is also what the per-family spread means for a leaderboard. On `buried_red_flag` the systems run from +0.007 to +0.486 on the same items with the same judge. A single number averaged over families would hide that, and an ordering built from it would be an ordering of one weighted average among many.
+**The large p-values on the controls are not evidence of no difference, and the intervals say how far this can be pushed.** The controls' 90 percent upper limits are 0.036 and 0.045, which overlaps the point estimate of the weakest perturbation family (`alternative_evidence`, 0.039) and sits below the other four (0.069 to 0.134). So the honest statement is a separation between the controls and the four families that carry results, not a demonstration that the controls are flat. With eleven systems this is the resolution available; a flatness claim would need a preregistered equivalence margin and more systems, and we make neither.
+
+**What the permutation null assumes.** Labels are permuted within each source, which holds source difficulty fixed and destroys only which system answered it. That is an exchangeability null, stronger than equality of means: it also fails if systems differ in variance or in which sources they miss. Rejecting it therefore licenses "these systems are not interchangeable on this family", not the narrower "their means differ". The paired difference is permuted as one unit, the system panel is fixed across families, and 4,000 permutations put the smallest reportable p at 1/4001, so the two families at 0.0003 are at that floor and their evidence should not be ranked against each other.
+
+On `buried_red_flag` the systems run from +0.007 to +0.486 on the same items with the same judge. A single number averaged over families would hide that.
 

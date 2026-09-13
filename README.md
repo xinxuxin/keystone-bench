@@ -140,16 +140,17 @@ C1 holds on all three families after Benjamini-Hochberg. C1b, the same restricte
 
 **The benchmark separates systems, and only where it should.** Same sources, same judge, same outcome, same test on both halves; the statistic is the standard deviation of the systems' mean paired differences and the null permutes system labels within each source ([`docs/DISCRIMINATION.md`](docs/DISCRIMINATION.md)):
 
-| | sd between systems | permutation p |
+| | sd between systems (90% CI) | permutation p |
 |---|---|---|
-| `buried_red_flag` | 0.134 | 0.0003 |
-| `conflicting_evidence` | 0.104 | 0.0003 |
-| `demographic_shift` | 0.075 | 0.026 |
-| `missing_evidence` | 0.069 | 0.016 |
-| `salient_distractor` (control) | **0.015** | **0.86** |
-| `demographic_control` (control) | **0.019** | **0.82** |
+| `buried_red_flag` | 0.134 [0.115, 0.161] | 0.0003 |
+| `conflicting_evidence` | 0.104 [0.089, 0.134] | 0.0003 |
+| `demographic_shift` | 0.075 [0.062, 0.121] | 0.023 |
+| `missing_evidence` | 0.069 [0.061, 0.107] | 0.016 |
+| `alternative_evidence` | 0.039 [0.033, 0.092] | 0.73 |
+| `salient_distractor` (control) | **0.015** [0.015, 0.036] | 0.87 |
+| `demographic_control` (control) | **0.019** [0.020, 0.045] | 0.80 |
 
-Four perturbation families separate the systems and neither negative control does. A benchmark that separated them on both halves would be separating them on something other than evidence sensitivity.
+Four perturbation families show heterogeneity the permutation rejects; the controls' upper limits are 0.036 and 0.045, below the four families that carry results and overlapping the one that does not. A large p-value on a control is not evidence of no difference, which is why the interval is given: it separates the controls from the four families rather than showing them flat. Note also what this statistic is: the spread in *how much the edit moves each system*, not in how well they answer.
 
 **The physicians' rubric fails on the same edit, and the controls say that is not the judge talking.** Each of 13,448 criteria was judged once against its twin; the verdict depends on the pair, not on any reply ([`docs/APPLICABILITY.md`](docs/APPLICABILITY.md)):
 
@@ -165,7 +166,7 @@ Thirty times the control rate on the family that removes a decisive fact. `alter
 
 **Re-judged by two more vendors, two of the three hold on the exploratory layer.** Every reply above was scored again by Claude Sonnet and by Gemini Flash under the same frozen prompts ([`docs/JUDGE_PANEL.md`](docs/JUDGE_PANEL.md)). `missing_evidence` and `conflicting_evidence` exclude zero under all three judges separately, and under a panel estimate that removes the model's own vendor from its judging they are **+0.19 [0.09, 0.31]** and **+0.28 [0.18, 0.38]**. `buried_red_flag` keeps its direction under all three (+0.17, +0.10, +0.05) but only the first interval excludes zero, so it is reported as a secondary result whose size depends on the judge. Both negative controls stay on zero under every judge, which is what rules out a judge effect large enough to manufacture the other two. Agreement is Fleiss 0.89 to 0.92 on escalation, 0.62 on forbidden action, and 0.49 on the descriptive stance label.
 
-**What a policy that never reads the evidence could score.** A fixed policy scores exactly zero on a paired difference. The strongest blind policy guesses which side was edited and answers to the family's outcome; at the measured twin-versus-control detectability its paired difference is bounded by 0.60 to 0.97 depending on family, which on its own rules nothing out. What rules it out is that the bound is just as large on the two negative controls, where the measured effect is −0.01 ([`docs/SHORTCUT_AUDIT.md`](docs/SHORTCUT_AUDIT.md)).
+**What a policy that never reads the evidence scores**, measured rather than bounded ([`docs/SHORTCUT_AUDIT.md`](docs/SHORTCUT_AUDIT.md)). Six fixed policies are scored by the same action rules as a real reply. `always_definitive` reaches +0.87 to +1.00 on the perturbation families: it commits to the same action on both sides, and the edit is what moves that action onto the forbidden list, so this sets the top of the scale rather than exposing a hole. The measured systems sit at +0.079 to +0.284. **On both negative controls every fixed policy scores exactly 0.000**, because the edit leaves the evidence state and therefore both sides' annotation identical. That is what rules a blind policy out: no policy that ignores the conversation can produce an effect on the perturbation families together with zero on the controls.
 
 **Asked the identical request again**, the forbidden-action verdict flips on 9 to 13 percent of cells, which matches the 8.7 percent an external re-sampling study reports. That instability does not manufacture an effect: the paired contrast built from two runs of the same request is -0.033 [-0.071, +0.004] and +0.016 [-0.056, +0.087] on the two headline families, against measured effects of +0.225 and +0.238 ([`docs/INSTABILITY_FLOOR.md`](docs/INSTABILITY_FLOOR.md)).
 

@@ -1,4 +1,4 @@
-"""Does the benchmark separate systems, and does it separate them only where it should.
+"""How much systems differ in how much the edit moves them, and whether they differ at all on the controls.
 
 A benchmark earns its place by telling systems apart. A benchmark that tells them apart everywhere, including
 on items where every correct answer is the same, is measuring something other than what it claims.
@@ -44,6 +44,24 @@ def load(runs: str, prefix: str) -> dict:
             sid = r.get("source_id") or r["id"]
             per[r["family"]][sid][model] = float(bool(p.get("forbidden"))) - float(bool(q.get("forbidden")))
     return per
+
+
+def sd_ci(rows: list, seed: int = 0, level: float = 0.90) -> tuple[float, float]:
+    """Bootstrap interval for the between-system sd, resampling sources. A large p-value says the data do not
+    reject exchangeability; only this interval says how small the difference could be."""
+    srcs = [s for s, _ in rows]
+    by = {s: d for s, d in rows}
+    rng = random.Random(seed); n = len(srcs); out = []
+    for _ in range(600):
+        pick = [srcs[rng.randrange(n)] for _ in range(n)]
+        acc = defaultdict(list)
+        for s in pick:
+            for m, v in by[s].items():
+                acc[m].append(v)
+        means = [statistics.fmean(v) for v in acc.values() if len(v) >= MIN_CELL]
+        out.append(statistics.pstdev(means) if len(means) > 1 else 0.0)
+    out.sort()
+    return out[int((1 - level) / 2 * len(out))], out[min(len(out) - 1, int((1 + level) / 2 * len(out)))]
 
 
 def spread_and_p(rows: list, seed: int = 0) -> tuple[float, float, dict, float]:
@@ -104,35 +122,50 @@ def main():
          "evidence is a capability. On a negative control, where the correct answer is to leave the reply alone, "
          "they should not.", "",
          f"Split: {split}. Permutations: {PERM}.", "",
-         "| family | kind | sources | systems | sd between systems | range | permutation p |", "|---|---|---|---|---|---|---|"]
+         "| family | kind | sources | systems | sd between systems (90% CI) | range | permutation p |",
+         "|---|---|---|---|---|---|---|"]
     rows_out = []
     for fam in PERTURBATION + CONTROLS:
         rows = [(s, d) for s, d in (per.get(fam) or {}).items() if len(d) >= 2]
         if len(rows) < 20:
             continue
         obs, p, means, rng = spread_and_p(rows, seed=abs(hash(fam)) % 1000)
+        lo, hi = sd_ci(rows, seed=abs(hash(fam)) % 997)
         kind = "perturbation" if fam in PERTURBATION else "**negative control**"
-        rows_out.append((fam, kind, len(rows), len(means), obs, p, rng))
-        L.append(f"| `{fam}` | {kind} | {len(rows)} | {len(means)} | {obs:.3f} | {rng:.3f} | {p:.4f} |")
+        rows_out.append((fam, kind, len(rows), len(means), obs, p, rng, lo, hi))
+        L.append(f"| `{fam}` | {kind} | {len(rows)} | {len(means)} | {obs:.3f} [{lo:.3f}, {hi:.3f}] | {rng:.3f} | {p:.4f} |")
     L.append("")
     pert = [r for r in rows_out if r[1] == "perturbation"]
     ctrl = [r for r in rows_out if r[1] != "perturbation"]
     if pert and ctrl:
         L += ["## Reading", "",
-              "Every perturbation family separates the systems: spreads of " +
-              ", ".join(f"{r[4]:.2f}" for r in pert) + " at p " +
-              ", ".join(f"{r[5]:.4f}" for r in pert) + ". Neither negative control does: spreads of " +
-              " and ".join(f"{r[4]:.3f}" for r in ctrl) + " at p " +
-              " and ".join(f"{r[5]:.2f}" for r in ctrl) + ".", "",
-              "The two halves use the same items per source, the same judge, the same outcome and the same test. "
-              "What differs is whether the edit changes what a careful clinician would do. Where it does, the "
-              "systems come apart; where it does not, they stay together. A benchmark that separated systems on "
-              "both halves would be separating them on something other than evidence sensitivity, and a benchmark "
-              "that separated them on neither would not be worth running.", "",
-              "This is also what the per-family spread means for a leaderboard. On `buried_red_flag` the systems "
-              "run from +0.007 to +0.486 on the same items with the same judge. A single number averaged over "
-              "families would hide that, and an ordering built from it would be an ordering of one weighted "
-              "average among many.", ""]
+              "**What this statistic is.** It is the spread between systems in *how much the edit moves them*, "
+              "not the spread in how well they answer. Two systems whose forbidden-action rates are 0.05 and 0.35 "
+              "but who both rise by 0.10 under the edit contribute nothing to it. Read it as the heterogeneity of "
+              "the perturbation effect, and read absolute levels from the per-system table in "
+              "[`CONFIRMATORY.md`](CONFIRMATORY.md).", "",
+              "Every perturbation family shows heterogeneity: sd " +
+              ", ".join(f"{r[4]:.3f}" for r in pert) + " at permutation p " +
+              ", ".join(f"{r[5]:.4f}" for r in pert) + ". On the two negative controls the point estimates are " +
+              " and ".join(f"{r[4]:.3f}" for r in ctrl) + " with 90 percent upper limits of " +
+              " and ".join(f"{r[8]:.3f}" for r in ctrl) + ".", "",
+              "**The large p-values on the controls are not evidence of no difference, and the intervals say how far "
+              "this can be pushed.** The controls' 90 percent upper limits are 0.036 and 0.045, which overlaps the "
+              "point estimate of the weakest perturbation family (`alternative_evidence`, 0.039) and sits below the "
+              "other four (0.069 to 0.134). So the honest statement is a separation between the controls and the "
+              "four families that carry results, not a demonstration that the controls are flat. With eleven "
+              "systems this is the resolution available; a flatness claim would need a preregistered equivalence "
+              "margin and more systems, and we make neither.", "",
+              "**What the permutation null assumes.** Labels are permuted within each source, which holds source "
+              "difficulty fixed and destroys only which system answered it. That is an exchangeability null, "
+              "stronger than equality of means: it also fails if systems differ in variance or in which sources "
+              "they miss. Rejecting it therefore licenses \"these systems are not interchangeable on this family\", "
+              "not the narrower \"their means differ\". The paired difference is permuted as one unit, the system "
+              "panel is fixed across families, and 4,000 permutations put the smallest reportable p at 1/4001, so "
+              "the two families at 0.0003 are at that floor and their evidence should not be ranked against each "
+              "other.", "",
+              "On `buried_red_flag` the systems run from +0.007 to +0.486 on the same items with the same judge. "
+              "A single number averaged over families would hide that.", ""]
     text = "\n".join(L) + "\n"
     print(text)
     if a.out:
