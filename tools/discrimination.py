@@ -46,16 +46,28 @@ def load(runs: str, prefix: str) -> dict:
     return per
 
 
-def spread_and_p(rows: list, seed: int = 0) -> tuple[float, float, dict]:
-    """rows: [(source, {model: diff})]. Observed between-system range, and a within-source permutation p."""
+def spread_and_p(rows: list, seed: int = 0) -> tuple[float, float, dict, float]:
+    """rows: [(source, {model: diff})].
+
+    The statistic is the standard deviation of the systems' mean paired differences, not their range: a range
+    uses two systems and grows with how many are evaluated, while an sd uses all of them. The null permutes
+    system labels within each source, so the source's difficulty is held and only the identity of the system
+    answering it is destroyed. Returns (sd, p, per-system means, range)."""
     def spread(assign):
         by = defaultdict(list)
         for s, d in rows:
             for m, v in d.items():
                 by[assign.get((s, m), m)].append(v)
         means = [statistics.fmean(v) for v in by.values() if len(v) >= MIN_CELL]
+        return statistics.pstdev(means) if len(means) > 1 else 0.0
+    def rng_(assign):
+        by = defaultdict(list)
+        for s, d in rows:
+            for m, v in d.items():
+                by[assign.get((s, m), m)].append(v)
+        means = [statistics.fmean(v) for v in by.values() if len(v) >= MIN_CELL]
         return (max(means) - min(means)) if len(means) > 1 else 0.0
-    obs = spread({})
+    obs = spread({}); obs_range = rng_({})
     per_model = defaultdict(list)
     for s, d in rows:
         for m, v in d.items():
@@ -69,7 +81,7 @@ def spread_and_p(rows: list, seed: int = 0) -> tuple[float, float, dict]:
                 assign[(s, a)] = b
         if spread(assign) >= obs:
             hits += 1
-    return obs, max(1.0 / PERM, hits / PERM), {m: statistics.fmean(v) for m, v in per_model.items()}
+    return obs, max(1.0 / PERM, hits / PERM), {m: statistics.fmean(v) for m, v in per_model.items()}, obs_range
 
 
 def main():
@@ -83,24 +95,25 @@ def main():
     L = ["# Discrimination, and where it stops", "",
          "A benchmark earns its place by telling systems apart. One that tells them apart everywhere, including on "
          "items whose correct answer is the same for everyone, is measuring something other than what it claims.", "",
-         "Both halves are tested the same way. The observed spread is the range of the systems' mean paired "
-         "differences on that family. The null permutes the system labels **within each source**, which keeps the "
-         "difficulty of the source and destroys only the identity of the system answering it; the p-value is the "
-         "share of permutations whose spread reaches the observed one.", "",
+         "Both halves are tested the same way. The statistic is the standard deviation of the systems' mean paired "
+         "differences on that family, which uses every system rather than the two extremes. The null permutes the "
+         "system labels **within each source**, keeping the difficulty of the source and destroying only the "
+         "identity of the system answering it; the p-value is the share of permutations reaching the observed "
+         "spread. The range is given beside it for reading, not for testing.", "",
          "The prediction is asymmetric. On a perturbation family, systems should differ: reacting to changed "
          "evidence is a capability. On a negative control, where the correct answer is to leave the reply alone, "
          "they should not.", "",
          f"Split: {split}. Permutations: {PERM}.", "",
-         "| family | kind | sources | systems | spread between systems | permutation p |", "|---|---|---|---|---|---|"]
+         "| family | kind | sources | systems | sd between systems | range | permutation p |", "|---|---|---|---|---|---|---|"]
     rows_out = []
     for fam in PERTURBATION + CONTROLS:
         rows = [(s, d) for s, d in (per.get(fam) or {}).items() if len(d) >= 2]
         if len(rows) < 20:
             continue
-        obs, p, means = spread_and_p(rows, seed=abs(hash(fam)) % 1000)
+        obs, p, means, rng = spread_and_p(rows, seed=abs(hash(fam)) % 1000)
         kind = "perturbation" if fam in PERTURBATION else "**negative control**"
-        rows_out.append((fam, kind, len(rows), len(means), obs, p))
-        L.append(f"| `{fam}` | {kind} | {len(rows)} | {len(means)} | {obs:.3f} | {p:.4f} |")
+        rows_out.append((fam, kind, len(rows), len(means), obs, p, rng))
+        L.append(f"| `{fam}` | {kind} | {len(rows)} | {len(means)} | {obs:.3f} | {rng:.3f} | {p:.4f} |")
     L.append("")
     pert = [r for r in rows_out if r[1] == "perturbation"]
     ctrl = [r for r in rows_out if r[1] != "perturbation"]
