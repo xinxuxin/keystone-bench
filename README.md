@@ -16,7 +16,7 @@ A clinical decision–evidence benchmark for chat assistants, and for the rubric
 
 [Project page](https://xinxuxin.github.io/keystone-bench/) (English · 中文 · Español · 日本語) · [Data card](docs/DATA_CARD.md) · [Schema](docs/SCHEMA.md) · [Protocol](docs/PROTOCOL.md) · [Results](docs/RESULTS.md) · [Grader check](docs/JUDGE_CHECK.md) · [Shortcut audit](docs/SHORTCUT_AUDIT.md) · [Related work](docs/RELATED_WORK.md) · [Contributing](CONTRIBUTING.md)
 
-![tests](https://github.com/xinxuxin/keystone-bench/actions/workflows/ci.yml/badge.svg) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![twins](https://img.shields.io/badge/twins-7%2C318-8a2be2) ![sources](https://img.shields.io/badge/HealthBench%20sources-1%2C236-8a2be2) ![clinicians](https://img.shields.io/badge/clinician%20collaborators-100%2B-0a84ff) [![pypi](https://img.shields.io/pypi/v/keystone-bench?color=8a2be2)](https://pypi.org/project/keystone-bench/)
+![tests](https://github.com/xinxuxin/keystone-bench/actions/workflows/ci.yml/badge.svg) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![twins](https://img.shields.io/badge/twins-7%2C318-8a2be2) ![sources](https://img.shields.io/badge/HealthBench%20sources-1%2C236-8a2be2) ![tier](https://img.shields.io/badge/label%20tier-silver-9aa0a6) [![pypi](https://img.shields.io/pypi/v/keystone-bench?color=8a2be2)](https://pypi.org/project/keystone-bench/)
 
 </div>
 
@@ -124,7 +124,7 @@ Five assistants over the quick set, **eight families**, 303 twins each with its 
 
 Every row is all 40 quick-set items of that family with both sides judged, averaged per item across the five assistants, with a 95 percent bootstrap interval over items; a GEE clustered by item with the assistant as a fixed effect gives the same marginal differences. The two negative-control families sit on zero, where the correct behaviour is to answer unchanged; five perturbation families do not. `alternative_evidence`, whose own outcome is a necessary update rather than a forbidden action, is at +0.00 on this one and is read through its own column in [`docs/RESULTS.md`](docs/RESULTS.md). That contrast is what separates a benchmark that measures evidence-sensitivity from one that measures sensitivity to being edited, and it is now measured rather than argued ([`docs/BEHAVIOUR_ANCHOR.md`](docs/BEHAVIOUR_ANCHOR.md)).
 
-**On the held-out split, with eleven systems, all three preregistered hypotheses hold.** The numbers above are exploratory: the quick set is 40 items per family drawn from `dev`. The confirmatory run is the core layer of the `test` split, 1,027 sources never used for any decision, eleven evaluated systems, judge GPT-4.1 ([`docs/CONFIRMATORY.md`](docs/CONFIRMATORY.md)):
+**On the held-out split, with ten systems, all three preregistered hypotheses hold.** The numbers above are exploratory: the quick set is 40 items per family drawn from `dev`. The confirmatory run is the core layer of the `test` split, 1,027 sources never used for any decision, ten evaluated systems, judge GPT-4.1 ([`docs/CONFIRMATORY.md`](docs/CONFIRMATORY.md)):
 
 | | sources | twin minus control | BH q |
 |---|---|---|---|
@@ -309,7 +309,7 @@ HealthBench is MIT, and its authors ask that items not be posted as plain text o
 
 ## Clinician panel
 
-Every label in Keystone is written by a model and checked by a second model from another vendor. That catches a great deal, and it cannot catch all the raters being wrong in the same direction. The external anchor is a clinician who reads the item and disagrees. **More than 100 clinicians worldwide have joined the panel and are contributing ratings**, and it is still open.
+Every label in Keystone is written by a model and checked by a second model from another vendor. That catches a great deal, and it cannot catch all the raters being wrong in the same direction. The external anchor is a clinician who reads the item and disagrees. **Every row in this release is `tier: silver`; no row has been clinician-confirmed yet.** The rating packet below is built and the panel is open.
 
 | Task | What you see | What you decide | Time |
 |---|---|---|---|
