@@ -1,6 +1,6 @@
 # Confirmatory analysis, held-out split
 
-Core layer, `test` split, 5 evaluated systems (claude-sonnet-5, deepseek-v4-pro, gemini-3.8-flash, gpt-5.6-terra, llama-4-maverick). Every quantity is the mean over sources of the mean over systems of (edited forbidden − paraphrase forbidden), with the source as the unit of resampling. Intervals are 95 percent for C1 and C1b and 90 percent for the equivalence test in C2. Numbers computed on the `quick` layer elsewhere in this repository are exploratory: that layer is drawn from the dev split.
+Core layer, `test` split, 10 evaluated systems (claude-opus-5, claude-sonnet-5, deepseek-v4-pro, gemini-3.8-flash, glm-5.3, gpt-5.6-terra, grok-4.3, kimi-k2.6, llama-4-maverick, qwen3.8-max). Every quantity is the mean over sources of the mean over systems of (edited forbidden − paraphrase forbidden), with the source as the unit of resampling. Intervals are 95 percent for C1 and C1b and 90 percent for the equivalence test in C2. Numbers computed on the `quick` layer elsewhere in this repository are exploratory: that layer is drawn from the dev split.
 
 ## C1 evidence effect
 
@@ -8,11 +8,11 @@ Prediction: Δ_f > 0 on all three. Decision rule: all three intervals exclude ze
 
 | family | sources | risk difference | bootstrap p | BH q | excludes zero |
 |---|---|---|---|---|---|
-| missing_evidence | 85 | +0.060 [-0.002, +0.124] | 0.0611 | 0.0611 | no |
-| conflicting_evidence | 139 | +0.309 [+0.246, +0.372] | 0.0001 | 0.0002 | yes |
-| buried_red_flag | 148 | +0.166 [+0.115, +0.219] | 0.0001 | 0.0002 | yes |
+| missing_evidence | 85 | +0.079 [+0.018, +0.140] | 0.0112 | 0.0112 | yes |
+| conflicting_evidence | 139 | +0.284 [+0.223, +0.344] | 0.0001 | 0.0002 | yes |
+| buried_red_flag | 148 | +0.126 [+0.076, +0.176] | 0.0001 | 0.0002 | yes |
 
-**C1: not supported as specified.**
+**C1: supported.**
 
 ## C1b ceiling-restricted effect
 
@@ -20,11 +20,11 @@ The same three families over the sources whose reply to the *unedited* conversat
 
 | family | sources | excluded | risk difference | excludes zero |
 |---|---|---|---|---|
-| missing_evidence | 85 | 0 | +0.063 [-0.004, +0.130] | no |
-| conflicting_evidence | 139 | 0 | +0.353 [+0.290, +0.416] | yes |
-| buried_red_flag | 148 | 0 | +0.213 [+0.165, +0.265] | yes |
+| missing_evidence | 85 | 0 | +0.089 [+0.022, +0.156] | yes |
+| conflicting_evidence | 139 | 0 | +0.313 [+0.255, +0.369] | yes |
+| buried_red_flag | 148 | 0 | +0.166 [+0.119, +0.213] | yes |
 
-**C1b: not supported as specified.**
+**C1b: supported.**
 
 ## C2 control invariance
 
@@ -32,8 +32,8 @@ Prediction: |Δ_f| ≤ 0.05 on both negative-control families. This is an equiva
 
 | family | sources | risk difference (90%) | inside ±0.05 |
 |---|---|---|---|
-| salient_distractor | 219 | -0.002 [-0.019, +0.016] | yes |
-| demographic_control | 161 | -0.006 [-0.031, +0.019] | yes |
+| salient_distractor | 219 | +0.002 [-0.012, +0.016] | yes |
+| demographic_control | 161 | -0.004 [-0.026, +0.017] | yes |
 
 **C2: supported.**
 
@@ -43,11 +43,16 @@ Each system's own paired difference on the three C1 families, so that a pooled e
 
 | system | missing_evidence | conflicting_evidence | buried_red_flag |
 |---|---|---|---|
+| claude-opus-5 | +0.058 [-0.043, +0.159] | +0.119 [+0.040, +0.198] | +0.097 [+0.030, +0.172] |
 | claude-sonnet-5 | -0.012 [-0.071, +0.048] | +0.108 [+0.022, +0.194] | +0.158 [+0.075, +0.233] |
 | deepseek-v4-pro | +0.164 [+0.082, +0.260] | +0.320 [+0.227, +0.414] | +0.176 [+0.096, +0.257] |
 | gemini-3.8-flash | +0.143 [+0.036, +0.250] | +0.385 [+0.289, +0.474] | +0.007 [-0.062, +0.076] |
+| glm-5.3 | +0.094 [-0.062, +0.250] | +0.343 [+0.143, +0.543] | +0.130 [+0.000, +0.283] |
 | gpt-5.6-terra | +0.035 [-0.059, +0.129] | +0.268 [+0.188, +0.355] | +0.014 [-0.054, +0.081] |
+| grok-4.3 | +0.176 [+0.071, +0.282] | +0.309 [+0.216, +0.403] | +0.007 [-0.081, +0.088] |
+| kimi-k2.6 | +0.102 [-0.017, +0.220] | +0.304 [+0.196, +0.412] | +0.056 [-0.028, +0.140] |
 | llama-4-maverick | +0.000 [-0.118, +0.118] | +0.468 [+0.367, +0.568] | +0.486 [+0.385, +0.581] |
+| qwen3.8-max | -0.019 [-0.132, +0.094] | +0.278 [+0.165, +0.392] | +0.121 [+0.033, +0.220] |
 
 ## Reading
 

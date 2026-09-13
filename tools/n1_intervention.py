@@ -33,7 +33,9 @@ BOOT = int(os.environ.get("KEYSTONE_BOOT", "2000"))
 def load_arm(runs: str, model: str, arm: str) -> dict:
     """{(family, id): record}. The baseline arm prefers a re-judged run (which carries the acknowledgement
     field the reference runs predate) and falls back to the reference quick run."""
-    dirs = [f"n1_{arm}__{model}"] if arm != "baseline" else [f"n1_baseline__{model}", f"quick__{model}"]
+    pre = os.environ.get("KEYSTONE_N1_PREFIX", "n1")
+    base_dirs = {"n1": [f"n1_baseline__{model}", f"quick__{model}"], "n1test": [f"testcore__{model}"]}[pre]
+    dirs = [f"{pre}_{arm}__{model}"] if arm != "baseline" else base_dirs
     pat = next((os.path.join(runs, d, "*", "records.jsonl") for d in dirs if glob.glob(os.path.join(runs, d, "*", "records.jsonl"))), None)
     out = {}
     for f in sorted(glob.glob(pat) if pat else []):

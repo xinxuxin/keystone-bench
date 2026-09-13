@@ -124,7 +124,46 @@ Five assistants over the quick set, **eight families**, 303 twins each with its 
 
 Every row is all 40 quick-set items of that family with both sides judged, averaged per item across the five assistants, with a 95 percent bootstrap interval over items; a GEE clustered by item with the assistant as a fixed effect gives the same marginal differences. The two negative-control families sit on zero, where the correct behaviour is to answer unchanged; five perturbation families do not. `alternative_evidence`, whose own outcome is a necessary update rather than a forbidden action, is at +0.00 on this one and is read through its own column in [`docs/RESULTS.md`](docs/RESULTS.md). That contrast is what separates a benchmark that measures evidence-sensitivity from one that measures sensitivity to being edited, and it is now measured rather than argued ([`docs/BEHAVIOUR_ANCHOR.md`](docs/BEHAVIOUR_ANCHOR.md)).
 
-**Re-judged by two more vendors, two of the three hold.** Every reply above was scored again by Claude Sonnet and by Gemini Flash under the same frozen prompts ([`docs/JUDGE_PANEL.md`](docs/JUDGE_PANEL.md)). `missing_evidence` and `conflicting_evidence` exclude zero under all three judges separately, and under a panel estimate that removes the model's own vendor from its judging they are **+0.19 [0.09, 0.31]** and **+0.28 [0.18, 0.38]**. `buried_red_flag` keeps its direction under all three (+0.17, +0.10, +0.05) but only the first interval excludes zero, so it is reported as a secondary result whose size depends on the judge. Both negative controls stay on zero under every judge, which is what rules out a judge effect large enough to manufacture the other two. Agreement is Fleiss 0.89 to 0.92 on escalation, 0.62 on forbidden action, and 0.49 on the descriptive stance label.
+**On the held-out split, with eleven systems, all three preregistered hypotheses hold.** The numbers above are exploratory: the quick set is 40 items per family drawn from `dev`. The confirmatory run is the core layer of the `test` split, 1,027 sources never used for any decision, eleven evaluated systems, judge GPT-4.1 ([`docs/CONFIRMATORY.md`](docs/CONFIRMATORY.md)):
+
+| | sources | twin minus control | BH q |
+|---|---|---|---|
+| `conflicting_evidence` | 139 | **+0.284** [0.223, 0.344] | 0.0002 |
+| `buried_red_flag` | 148 | **+0.126** [0.076, 0.176] | 0.0002 |
+| `missing_evidence` | 85 | **+0.079** [0.018, 0.140] | 0.0112 |
+| `salient_distractor` (control) | 219 | +0.002 [−0.012, 0.016] | equivalence passed |
+| `demographic_control` (control) | 161 | −0.004 [−0.026, 0.017] | equivalence passed |
+
+C1 holds on all three families after Benjamini-Hochberg. C1b, the same restricted to sources the system handled correctly unedited, holds on all three and is larger. **C2 is an equivalence test, not a null result**: the 90 percent interval on each negative control lies inside ±0.05, so the controls are shown to be flat rather than merely failing to be significant.
+
+**Every one of the ten systems shows the effect on `conflicting_evidence`**, from +0.119 [0.040, 0.198] on claude-opus-5 to +0.468 [0.367, 0.568] on llama-4-maverick. Not one interval touches zero. The other two families are heterogeneous: `buried_red_flag` runs from +0.007 to +0.486.
+
+**The benchmark separates systems, and only where it should.** Same sources, same judge, same outcome, same test on both halves; the statistic is the standard deviation of the systems' mean paired differences and the null permutes system labels within each source ([`docs/DISCRIMINATION.md`](docs/DISCRIMINATION.md)):
+
+| | sd between systems | permutation p |
+|---|---|---|
+| `buried_red_flag` | 0.134 | 0.0003 |
+| `conflicting_evidence` | 0.104 | 0.0003 |
+| `demographic_shift` | 0.075 | 0.026 |
+| `missing_evidence` | 0.069 | 0.016 |
+| `salient_distractor` (control) | **0.015** | **0.86** |
+| `demographic_control` (control) | **0.019** | **0.82** |
+
+Four perturbation families separate the systems and neither negative control does. A benchmark that separated them on both halves would be separating them on something other than evidence sensitivity.
+
+**The physicians' rubric fails on the same edit, and the controls say that is not the judge talking.** Each of 13,448 criteria was judged once against its twin; the verdict depends on the pair, not on any reply ([`docs/APPLICABILITY.md`](docs/APPLICABILITY.md)):
+
+| | share of criteria that no longer apply |
+|---|---|
+| `alternative_evidence` | 0.397 [0.348, 0.449] |
+| `missing_evidence` | 0.316 [0.270, 0.363] |
+| `conflicting_evidence` | 0.151 [0.125, 0.179] |
+| `salient_distractor` (control) | **0.010** [0.006, 0.015] |
+| `demographic_control` (control) | **0.012** [0.006, 0.020] |
+
+Thirty times the control rate on the family that removes a decisive fact. `alternative_evidence` is the exception that completes the argument: it is the one perturbation family that does not separate systems (p = 0.73), and it is also the family whose rubric fails hardest. Where the standard has moved that far, the outcome cannot see what the systems did.
+
+**Re-judged by two more vendors, two of the three hold on the exploratory layer.** Every reply above was scored again by Claude Sonnet and by Gemini Flash under the same frozen prompts ([`docs/JUDGE_PANEL.md`](docs/JUDGE_PANEL.md)). `missing_evidence` and `conflicting_evidence` exclude zero under all three judges separately, and under a panel estimate that removes the model's own vendor from its judging they are **+0.19 [0.09, 0.31]** and **+0.28 [0.18, 0.38]**. `buried_red_flag` keeps its direction under all three (+0.17, +0.10, +0.05) but only the first interval excludes zero, so it is reported as a secondary result whose size depends on the judge. Both negative controls stay on zero under every judge, which is what rules out a judge effect large enough to manufacture the other two. Agreement is Fleiss 0.89 to 0.92 on escalation, 0.62 on forbidden action, and 0.49 on the descriptive stance label.
 
 **What a policy that never reads the evidence could score.** A fixed policy scores exactly zero on a paired difference. The strongest blind policy guesses which side was edited and answers to the family's outcome; at the measured twin-versus-control detectability its paired difference is bounded by 0.60 to 0.97 depending on family, which on its own rules nothing out. What rules it out is that the bound is just as large on the two negative controls, where the measured effect is −0.01 ([`docs/SHORTCUT_AUDIT.md`](docs/SHORTCUT_AUDIT.md)).
 
