@@ -161,11 +161,17 @@ def main():
               "difficulty fixed and destroys only which system answered it. That is an exchangeability null, "
               "stronger than equality of means: it also fails if systems differ in variance or in which sources "
               "they miss. Rejecting it therefore licenses \"these systems are not interchangeable on this family\", "
-              "not the narrower \"their means differ\". The paired difference is permuted as one unit, the system "
-              "panel is fixed across families, and 4,000 permutations put the smallest reportable p at 1/4001, so "
-              "the two families at 0.0003 are at that floor and their evidence should not be ranked against each "
-              "other.", "",
-              "On `buried_red_flag` the systems run from +0.007 to +0.486 on the same items with the same judge. "
+              "not the narrower \"their means differ\". The paired difference is permuted as one unit and the "
+              f"system panel is fixed across families. The reported p is floored at 1/{PERM:,}, or "
+              f"{1 / PERM:.4f}, so a family sitting there has no permutation reaching its observed spread; "
+              + (f"{sum(1 for r in rows_out if abs(r[5] - 1 / PERM) < 1e-12)} of the {len(rows_out)} families "
+                 "are at that floor, and their evidence should not be ranked against each other."
+                 if any(abs(r[5] - 1 / PERM) < 1e-12 for r in rows_out)
+                 else "no family sits at the floor."), "",
+              ]
+    if pert:
+        widest = max(pert, key=lambda r: r[6])
+        L += [f"On `{widest[0]}` the systems span {widest[6]:.3f} on the same items with the same judge. "
               "A single number averaged over families would hide that.", ""]
     text = "\n".join(L) + "\n"
     print(text)
