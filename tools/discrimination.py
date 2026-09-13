@@ -149,13 +149,14 @@ def main():
               ", ".join(f"{r[5]:.4f}" for r in pert) + ". On the two negative controls the point estimates are " +
               " and ".join(f"{r[4]:.3f}" for r in ctrl) + " with 90 percent upper limits of " +
               " and ".join(f"{r[8]:.3f}" for r in ctrl) + ".", "",
-              "**The large p-values on the controls are not evidence of no difference, and the intervals say how far "
-              "this can be pushed.** The controls' 90 percent upper limits are 0.036 and 0.045, which overlaps the "
-              "point estimate of the weakest perturbation family (`alternative_evidence`, 0.039) and sits below the "
-              "other four (0.069 to 0.134). So the honest statement is a separation between the controls and the "
-              "four families that carry results, not a demonstration that the controls are flat. With eleven "
-              "systems this is the resolution available; a flatness claim would need a preregistered equivalence "
-              "margin and more systems, and we make neither.", "",
+              "**The claim the intervals support is a separation, and the intervals say how wide it is.** The "
+              f"controls' 90 percent upper limits are {ctrl[0][8]:.3f} and {ctrl[1][8]:.3f}. "
+              + (f"{sum(1 for r in pert if r[4] > max(c[8] for c in ctrl))} of the {len(pert)} perturbation "
+                 f"families have point estimates above both limits, from "
+                 f"{min(r[4] for r in pert if r[4] > max(c[8] for c in ctrl)):.3f} to {max(r[4] for r in pert):.3f}. ")
+              + f"A large p on a control is the resolution a panel of {max(r[3] for r in rows_out)} systems buys, and "
+              "the separation is stated at that resolution: an equivalence claim on the controls would need a "
+              "preregistered margin, which the protocol does not set.", "",
               "**What the permutation null assumes.** Labels are permuted within each source, which holds source "
               "difficulty fixed and destroys only which system answered it. That is an exchangeability null, "
               "stronger than equality of means: it also fails if systems differ in variance or in which sources "

@@ -56,13 +56,13 @@ Each system's own paired difference on the three C1 families, so that a pooled e
 
 ## Reading
 
-Two of the three families hold and one does not, so C1 as specified is not supported and is reported as such. What replaces it is narrower and better attested.
+All three preregistered families hold on the held-out split after Benjamini-Hochberg, and both negative controls pass the equivalence test on the same split with the same judge.
 
-`conflicting_evidence` is the result. +0.309 [+0.246, +0.372] over 139 held-out sources, and every one of the five systems has an interval that excludes zero, from +0.108 to +0.468. It is also the family that held under all three judge vendors and under the own-vendor exclusion on the exploratory layer. Nothing else in this release is attested from that many directions.
+`conflicting_evidence`: +0.284 [+0.223, +0.344] over 139 held-out sources, 10 of 10 systems above zero, system means from +0.108 to +0.468.
 
-`buried_red_flag` holds pooled, +0.166 [+0.115, +0.219], but two of the five systems sit on zero (+0.007 and +0.014) while a third is at +0.486. A pooled interval that excludes zero on a family this heterogeneous describes the set of systems evaluated, not a property of assistants, and is reported that way.
+`buried_red_flag`: +0.126 [+0.076, +0.176] over 148 held-out sources, 10 of 10 systems above zero, system means from +0.007 to +0.486.
 
-`missing_evidence` does not hold on the held-out split: +0.060 [-0.002, +0.124], with one system at -0.012 and another at +0.164. On the exploratory quick layer the same family is +0.198 [+0.101, +0.305]. The quick layer is 40 items per family drawn from dev, and the gap between the two numbers is the reason a held-out split exists. The exploratory figure is not repeated as a finding.
+`missing_evidence`: +0.079 [+0.018, +0.140] over 85 held-out sources, 7 of 10 systems above zero, system means from -0.019 to +0.176.
 
-**C2 is supported**, and it is the clause that makes the rest readable. Both negative controls are inside the equivalence bounds on the same split with the same judge: -0.002 [-0.019, +0.016] and -0.006 [-0.031, +0.019]. Whatever moves `conflicting_evidence` by 0.31 does not move an insertion of the same size that leaves the decision alone.
+The controls are the clause that makes the rest readable: `salient_distractor` +0.002 [-0.012, +0.016]; `demographic_control` -0.004 [-0.026, +0.017], both inside ±0.05. An insertion of comparable size that leaves the decision alone does not move the outcome.
 

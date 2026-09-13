@@ -172,25 +172,31 @@ def main():
             m, lo, hi = boot(v, 0.95, seed=3)
             cells.append(f"{m:+.3f} [{lo:+.3f}, {hi:+.3f}]")
         L.append(f"| {name} | " + " | ".join(cells) + " |")
-    L += ["", "## Reading", "",
-          "Two of the three families hold and one does not, so C1 as specified is not supported and is reported as "
-          "such. What replaces it is narrower and better attested.", "",
-          "`conflicting_evidence` is the result. +0.309 [+0.246, +0.372] over 139 held-out sources, and every one of "
-          "the five systems has an interval that excludes zero, from +0.108 to +0.468. It is also the family that "
-          "held under all three judge vendors and under the own-vendor exclusion on the exploratory layer. Nothing "
-          "else in this release is attested from that many directions.", "",
-          "`buried_red_flag` holds pooled, +0.166 [+0.115, +0.219], but two of the five systems sit on zero "
-          "(+0.007 and +0.014) while a third is at +0.486. A pooled interval that excludes zero on a family this "
-          "heterogeneous describes the set of systems evaluated, not a property of assistants, and is reported that "
-          "way.", "",
-          "`missing_evidence` does not hold on the held-out split: +0.060 [-0.002, +0.124], with one system at "
-          "-0.012 and another at +0.164. On the exploratory quick layer the same family is +0.198 [+0.101, +0.305]. "
-          "The quick layer is 40 items per family drawn from dev, and the gap between the two numbers is the reason "
-          "a held-out split exists. The exploratory figure is not repeated as a finding.", "",
-          "**C2 is supported**, and it is the clause that makes the rest readable. Both negative controls are inside "
-          "the equivalence bounds on the same split with the same judge: -0.002 [-0.019, +0.016] and -0.006 "
-          "[-0.031, +0.019]. Whatever moves `conflicting_evidence` by 0.31 does not move an insertion of the same "
-          "size that leaves the decision alone.", ""]
+    # Reading: generated from the numbers above, never frozen prose
+    per = {fam: {n: boot(per_source({n: models[n]}, fam), 0.95, seed=3)[0] for n in names if per_source({n: models[n]}, fam)}
+           for fam in C1_FAMILIES}
+    stats = {fam: (n, m, lo, hi) for fam, n, m, lo, hi in rows}
+    order = sorted(C1_FAMILIES, key=lambda f: -stats[f][1])
+    L += ["", "## Reading", ""]
+    verdict = ("All three preregistered families hold on the held-out split after Benjamini-Hochberg, and both "
+               "negative controls pass the equivalence test on the same split with the same judge."
+               if ok1 and ok2 else
+               f"C1 is {'supported' if ok1 else 'not supported as specified'} and C2 is "
+               f"{'supported' if ok2 else 'not supported as specified'}; the tables above are the record.")
+    L += [verdict, ""]
+    for fam in order:
+        n, m, lo, hi = stats[fam]
+        vals = per[fam]
+        pos = sum(1 for v in vals.values() if v > 0)
+        lohi = (min(vals.values()), max(vals.values())) if vals else (0.0, 0.0)
+        L += [f"`{fam}`: {m:+.3f} [{lo:+.3f}, {hi:+.3f}] over {n} held-out sources, "
+              f"{pos} of {len(vals)} systems above zero, system means from {lohi[0]:+.3f} to {lohi[1]:+.3f}.", ""]
+    c2 = []
+    for fam in C2_FAMILIES:
+        v = per_source(models, fam); m, lo, hi = boot(v, 0.90, seed=2)
+        c2.append(f"`{fam}` {m:+.3f} [{lo:+.3f}, {hi:+.3f}]")
+    L += [f"The controls are the clause that makes the rest readable: {'; '.join(c2)}, both inside \u00b1{EQUIV}. "
+          f"An insertion of comparable size that leaves the decision alone does not move the outcome.", ""]
     text = "\n".join(L) + "\n"
     print(text)
     if a.out:

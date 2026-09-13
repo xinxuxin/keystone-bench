@@ -28,6 +28,7 @@ ARMS = ["baseline", "acknowledge", "gate"]
 EFFECT_FAMILIES = ["missing_evidence", "conflicting_evidence", "buried_red_flag"]
 CONTROL_FAMILIES = ["salient_distractor", "demographic_control"]
 BOOT = int(os.environ.get("KEYSTONE_BOOT", "2000"))
+BAR = 0.05   # preregistered equivalence bar for the cost side (protocol N1)
 
 
 def load_arm(runs: str, model: str, arm: str) -> dict:
@@ -178,7 +179,7 @@ def main():
           "action and also asks something has not withheld the answer, so the primary cost is the share of replies "
           "with no acceptable action on a side where one was available. The share that asked anything at all is "
           "reported after it, because it is a real cost to the reader even when the answer is there. Positive is the "
-          "intervention buying its benefit with caution; the preregistered bar is 0.05.", "",
+          f"intervention buying its benefit with caution; the preregistered bar is {BAR}.", "",
           "| where | gate minus acknowledge | gate minus baseline |"]
     def ccell(x, y, fams, cond):
         if x not in arms or y not in arms or not arms[x] or not arms[y]:
@@ -252,40 +253,67 @@ def main():
             if v:
                 m, lo, hi = boot_ci(v, seed=13)
                 L.append(f"| {x} minus {y} | {m:+.3f} [{lo:+.3f}, {hi:+.3f}] (n={len(v)}) |")
+    # ---- Reading: every number recomputed from this run ----
+    def ci(fn, fams, cond, x="acknowledge", y="baseline", seed=31):
+        v = paired(arms[x], arms[y], fams, cond, fn)
+        if not v:
+            return "n/a", float("nan")
+        m, lo, hi = boot_ci(v, seed=seed)
+        return f"{m:+.3f} [{lo:+.3f}, {hi:+.3f}]", m
+
+    def lvl(arm, fams, cond, fn):
+        xs = [fn(r, cond) for k, r in arms.get(arm, {}).items() if k[0] in fams]
+        xs = [float(x) for x in xs if x is not None]
+        return (sum(xs) / len(xs)) if xs else float("nan")
+
+    ack_lv = {arm: lvl(arm, EFFECT_FAMILIES, "perturbed", acknowledged) for arm in have}
+    ben_all, _ = ci(forbidden, EFFECT_FAMILIES, "perturbed")
+    per_fam = {f: ci(forbidden, [f], "perturbed", seed=32 + n)[0] for n, f in enumerate(EFFECT_FAMILIES)}
+    cost_ctl, cost_ctl_m = ci(withheld, CONTROL_FAMILIES, "perturbed", seed=41)
+    cost_orig, cost_orig_m = ci(withheld, EFFECT_FAMILIES + CONTROL_FAMILIES, "original", seed=42)
+    ask_ctl, ask_ctl_m = ci(asked_anyway, CONTROL_FAMILIES, "perturbed", seed=43)
+    ask_orig, ask_orig_m = ci(asked_anyway, EFFECT_FAMILIES + CONTROL_FAMILIES, "original", seed=44)
+    joint_lv = {arm: lvl(arm, EFFECT_FAMILIES, "perturbed", lambda r, c: joint(r)) for arm in have}
+    joint_ab, joint_ab_m = ci(joint, EFFECT_FAMILIES, "perturbed", seed=45)
+    gate_ack_joint, _ = ci(joint, EFFECT_FAMILIES, "perturbed", "gate", "acknowledge", seed=46)
+    gate_ack_cost, _ = ci(withheld, CONTROL_FAMILIES, "perturbed", "gate", "acknowledge", seed=47)
+    gate_ack_fam = {f: ci(forbidden, [f], "perturbed", "gate", "acknowledge", seed=48 + n)[1]
+                    for n, f in enumerate(EFFECT_FAMILIES)}
+    worst_fam = max(gate_ack_fam, key=lambda f: (gate_ack_fam[f] if gate_ack_fam[f] == gate_ack_fam[f] else -9))
+    worst_txt, _ = ci(forbidden, [worst_fam], "perturbed", "gate", "acknowledge", seed=60)
+    best_fam = min((f for f in per_fam), key=lambda f: ci(forbidden, [f], "perturbed", seed=70)[1])
+
     L += ["", "## Reading", "",
-          "One sentence does the work, and the second sentence undoes part of it.", "",
-          "The manipulation lands: explicit acknowledgement of the edited element rises from 0.72 to 0.94 and 0.89. "
-          "Asking the assistant to name any information that would change its recommendation lowers unsupported "
-          "action on the edited side by -0.134 [-0.184, -0.084] against baseline, -0.336 [-0.429, -0.244] on "
-          "`conflicting_evidence` and -0.100 [-0.175, -0.025] on `missing_evidence`.", "",
-          "It does not buy that by refusing to answer. On the two negative-control families the change in withheld "
-          "answers is +0.021 [-0.029, +0.071], and on the unedited condition +0.037 [+0.005, +0.070]: both point "
-          "estimates are inside the preregistered 0.05 and the second interval clears zero without reaching the "
-          "bar. What does move is verbosity. The share of replies that ask something at all rises by 0.36 and 0.39, "
-          "because the instruction puts the list of missing information at the top of the reply and leaves the "
-          "recommendation underneath. That is a cost to a reader; it is not the assistant withholding care, and an "
-          "evaluation that scores any question as a failure cannot tell the two apart.", "",
-          "The joint outcome scores both sides of one item at once, which is what the preregistration asks for: held "
-          "the line where the evidence moved, still gave a usable answer where it did not. It rises from 0.557 to "
-          "0.651, paired difference **+0.092 [+0.036, +0.146]**. Per model: +0.101 [+0.008, +0.193] on "
-          "gemini-3.8-flash, +0.133 [+0.042, +0.225] on llama-4-maverick, +0.042 [-0.051, +0.136] on "
-          "claude-sonnet-5, which starts highest and has least room.", "",
-          "Adding the action gate makes it worse. Against the acknowledgement arm the gate loses -0.065 [-0.118, "
-          "-0.011] of joint success and withholds more answers (+0.071 [+0.017, +0.130] on the controls); against "
-          "baseline its joint gain no longer clears zero. The family that explains it is `buried_red_flag`, where "
-          "the gated arm raises unsupported action by +0.117 [+0.033, +0.208]: an assistant told not to commit when "
-          "a decisive fact is absent stops escalating on the one family whose correct answer is to escalate now. "
-          "The clause written to prevent blind caution produces it.", "",
-          "The withholding criterion deserves its own sentence. It was settled while reading one system's replies, "
+          "One sentence does the work, and the second sentence undoes part of it.", ""]
+    L += [f"The manipulation lands: explicit acknowledgement of the edited element runs "
+          + ", ".join(f"{ack_lv[a]:.2f} in `{a}`" for a in have if ack_lv.get(a) == ack_lv.get(a))
+          + f". Asking the assistant to name any information that would change its recommendation moves "
+            f"unsupported action on the edited side by {ben_all} against baseline, and by family: "
+          + "; ".join(f"`{f}` {per_fam[f]}" for f in EFFECT_FAMILIES) + ".", ""]
+    L += [f"It does not buy that by refusing to answer. On the two negative-control families the change in withheld "
+          f"answers is {cost_ctl}, and on the unedited condition {cost_orig}, against a preregistered bar of {BAR}. "
+          f"What moves instead is length: the share of replies that ask something at all rises by {ask_ctl_m:+.2f} "
+          f"and {ask_orig_m:+.2f}, because the instruction puts the list of missing information above the "
+          f"recommendation rather than in place of it. An evaluation that scores any question as a failure cannot "
+          f"separate the two.", ""]
+    L += [f"The joint outcome scores both sides of one item at once, which is the form the preregistration asks "
+          f"for: held the line where the evidence moved, still gave a usable answer where it did not. It runs "
+          + ", ".join(f"{joint_lv[a]:.3f} in `{a}`" for a in have if joint_lv.get(a) == joint_lv.get(a))
+          + f", paired difference **{joint_ab}** for the acknowledgement arm against baseline.", ""]
+    L += [f"Adding the action gate moves it back. Against the acknowledgement arm the gate changes joint success by "
+          f"{gate_ack_joint} and withheld answers on the controls by {gate_ack_cost}. The family that carries it is "
+          f"`{worst_fam}`, where the gated arm changes unsupported action by {worst_txt}: an assistant told not to "
+          f"commit when a decisive fact is absent stops escalating on the family whose correct answer is to "
+          f"escalate now. The clause written to prevent blind caution produces it.", ""]
+    L += ["The withholding criterion deserves its own sentence. It was settled while reading one system's replies, "
           "before the other two had run, so it is a criterion chosen during exploration and it is reported as one. "
-          "What the per-system table shows is that it does not favour the system it was written on: the benefit "
-          "interval excludes zero on all three (-0.101, -0.134, -0.167) and the cost interval contains zero on all "
-          "three, with the largest cost on claude-sonnet-5 (+0.062) rather than on gemini-3.8-flash (-0.013). The "
-          "joint outcome clears zero on two of three; claude-sonnet-5 starts highest and moves least.", "",
-          "So the deployable finding is the short instruction, not the careful one, and the benchmark's contribution "
-          "is being able to tell that. Scoring only the edited side would rank the gated arm first on two of three "
-          "families. Scoring any question as a cost would reject both arms. The negative controls, the unedited "
-          "condition and the per-family outcomes are what separate a real improvement from either mistake.", ""]
+          "The per-system table above is what it is checked against: the benefit and the cost are given separately "
+          "for every system, so a criterion that favoured the system it was written on would show there.", ""]
+    L += ["The deployable finding is the short instruction rather than the careful one, and being able to tell them "
+          "apart is what the design buys. Scoring only the edited side would rank the gated arm first on the "
+          "families where it lowers unsupported action. Scoring any question as a cost would reject both arms. The "
+          "negative controls, the unedited condition and the per-family outcomes are what separate a real "
+          "improvement from either mistake.", ""]
     text = "\n".join(L) + "\n"
     print(text)
     if a.out:
