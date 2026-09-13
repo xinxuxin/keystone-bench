@@ -34,11 +34,13 @@ Six fixed policies, scored by the same action rules as a real reply, each side j
 
 Bold marks an interval excluding zero.
 
-**On the perturbation families a blind policy scores high, and that is what the outcome is for.** `always_definitive` reaches +0.87 to +1.00: it commits to the same course of action on both sides, and on a perturbation family the edit is precisely what moves that action onto the forbidden list. A system that adapted perfectly would score 0 here and one that never adapted would score what this policy scores, so the policy sets the top of the scale rather than exposing a hole. The measured systems sit between: +0.079 to +0.284 on the same families.
+**On the perturbation families a blind policy scores high, and that is what the outcome is for.** `always_definitive` reaches +0.87 to +1.00: it commits to the same course of action on both sides, and on a perturbation family the edit is precisely what moves that action onto the forbidden list. A system that adapted perfectly would score 0 here and one that never adapted would score what this policy scores, so the policy sets the top of the scale rather than exposing a hole. Evaluated systems score well below this ceiling on the same families; see the per-family risk difference in [`CONFIRMATORY.md`](CONFIRMATORY.md).
 
-**On the negative controls every fixed policy scores exactly 0.000.** The edit leaves the evidence state unchanged, so both sides carry identical acceptable and forbidden lists and any reply, blind or not, is scored the same way twice. This is what rules a blind policy out: the result this benchmark reports is an effect on the perturbation families *together with* zero on the controls, and no policy that ignores the conversation can produce that pair.
+**On the negative controls every fixed policy scores exactly +0.000.** The edit leaves the evidence state unchanged, so both sides carry identical acceptable and forbidden lists and any reply, blind or not, is scored the same way twice. This is what rules a blind policy out: the result this benchmark reports is an effect on the perturbation families *together with* zero on the controls, and no policy that ignores the conversation can produce that pair.
 
-Detectability is reported above for the same reason but does not bound this. A measured detector's accuracy is at most the Bayes accuracy, so a value computed from it is achievable by some blind policy rather than a ceiling on all of them; the controls, not a bound, are what carry the argument.
+Detectability is reported above for the same reason but does not bound this. A measured detector's 
+**The adaptation rate rules a blind policy out by construction, not by measurement.** The decomposition in [`CROSS_SCORING.md`](CROSS_SCORING.md) writes the paired outcome as a standard shift plus a reply adaptation, and the second term is the difference between two judgements of the *same text* whenever the policy's reply does not depend on the edit. Every fixed policy in the table above therefore has an adaptation rate of exactly zero, whatever its level on either side. That is an algebraic property of the estimator rather than a number this audit had to go and measure.
+accuracy is at most the Bayes accuracy, so a value computed from it is achievable by some blind policy rather than a ceiling on all of them; the controls, not a bound, are what carry the argument.
 
 
 ## What the edits repeat
@@ -62,13 +64,23 @@ The detector's margin on an item is how obviously that item was edited. If assis
 
 On the 74 `missing_evidence` items with reference replies, the correlation between the detector's margin and the share of assistants that dropped their commitment is Spearman rho **-0.238** (permutation p 0.04).
 
+The same reference pilot, per model: the share of originally-definitive replies that no longer commit once the evidence is edited, against the same share when only the wording changes.
+
+| model | dropped commitment, evidence removed | dropped commitment, paraphrase only |
+|---|---|---|
+| `claude-sonnet-5` | 0.34 | 0.04 |
+| `deepseek-v4-pro-0813` | 0.25 | 0.04 |
+| `gemini-3.8-flash` | 0.32 | 0.03 |
+| `llama-4-maverick` | 0.24 | 0.06 |
+| `gpt-5.6-terra` | 0.39 | 0.03 |
+
 ## Reading
 
 **The most detectable edits are the ones where changing your answer is wrong.** The two negative-control families sit at 0.99 and 1.00, the top of the table, because an insertion always lengthens the message. On exactly those families the correct behaviour is to answer unchanged. A model that keys on "something was edited here" therefore fails the controls while passing the perturbations, and the release reports both, so the shortcut is scored rather than rewarded. This is structural: it holds however good the detector gets.
 
 **Visibility is length, and length carries no direction.** The length-only baseline matches the full detector on every insertion family, so what is detectable is that the message got longer, not what the added sentence means. Knowing the message was edited does not tell an assistant whether to ask a question, change the drug, escalate, or hold its answer, which are the four things the families ask for.
 
-**Editing at all is visible, at 0.84 to 0.85.** The paraphrase control changes wording and no evidence and is detectable at that rate in every family, which is the cost of touching the text. In the reference pilot that control moved the definitive rate by at most 0.07 while removing an element moved it by 0.31 to 0.55.
+**Editing at all is visible, from 0.73 to 0.86.** The paraphrase control changes wording and no evidence and is detectable in that range in every family, which is the cost of touching the text. In the reference pilot that control moved the definitive rate by at most 0.06 across evaluated models, while removing an element moved it by 0.24 to 0.39.
 
 **Visibility does not explain the behaviour, and it runs the wrong way.** The correlation between how obviously an item was edited and how often assistants dropped their commitment on it is -0.238 (permutation p 0.04), negative. The shortcut hypothesis predicts a strong positive correlation. What this says instead is that the surgical edits move models most: taking out one short decisive clause is both the hardest edit to see and the one that changes the answer, while a large removal is obvious and often leaves enough of the message to answer from.
 

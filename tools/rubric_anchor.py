@@ -315,13 +315,15 @@ def main():
                  f"[{fmt(draws[int(0.025 * BOOT)])}, {fmt(draws[int(0.975 * BOOT)])}] |")
     hi = [x["top_excess"] for x in by_top.get(3, [])]
     lo = [x["top_excess"] for x in by_top.get(1, [])]
+    excess_gap = excess_gap_lo = excess_gap_hi = None
     if hi and lo:
         rng = random.Random(77)
-        obs = sum(hi) / len(hi) - sum(lo) / len(lo)
+        excess_gap = sum(hi) / len(hi) - sum(lo) / len(lo)
         draws = sorted(sum(hi[rng.randrange(len(hi))] for _ in hi) / len(hi) - sum(lo[rng.randrange(len(lo))] for _ in lo) / len(lo)
                        for _ in range(BOOT))
-        L += ["", f"Excess at materiality 3 minus materiality 1: {fmt(obs)} [{fmt(draws[int(0.025 * BOOT)])}, "
-                  f"{fmt(draws[int(0.975 * BOOT)])}].", ""]
+        excess_gap_lo, excess_gap_hi = draws[int(0.025 * BOOT)], draws[int(0.975 * BOOT)]
+        L += ["", f"Excess at materiality 3 minus materiality 1: {fmt(excess_gap)} [{fmt(excess_gap_lo)}, "
+                  f"{fmt(excess_gap_hi)}].", ""]
 
     # 2. 在同等范围的分层内比较权重份额
     L += ["### 2. Weight share within strata of equal extent", "",
@@ -347,8 +349,9 @@ def main():
                  f"{fmt(c['delta'])} {ci_str(c)} |")
         pooled.append(c["delta"])
         weights.append(c["n"].get(3, 0) + c["n"].get(1, 0))
+    strat_delta = strat_lo = strat_hi = None
     if pooled:
-        obs = sum(d * w for d, w in zip(pooled, weights)) / sum(weights)
+        strat_delta = sum(d * w for d, w in zip(pooled, weights)) / sum(weights)
         strata = [([r[key] for r in with_lab if stratum(r) == si and r["blind"] == 3 and r[key] is not None],
                    [r[key] for r in with_lab if stratum(r) == si and r["blind"] == 1 and r[key] is not None])
                   for si in range(5) for key in ["abs_share"]]
@@ -368,23 +371,26 @@ def main():
             if den:
                 draws.append(num / den)
         draws.sort()
-        span = f"[{fmt(draws[int(0.025 * len(draws))])}, {fmt(draws[int(0.975 * len(draws))])}]" if draws else ""
-        L += ["", f"Pooled across strata, weighted by twins: Cliff's delta {fmt(obs)} {span}. A positive value here cannot come from "
+        if draws:
+            strat_lo, strat_hi = draws[int(0.025 * len(draws))], draws[int(0.975 * len(draws))]
+        span = f"[{fmt(strat_lo)}, {fmt(strat_hi)}]" if draws else ""
+        L += ["", f"Pooled across strata, weighted by twins: Cliff's delta {fmt(strat_delta)} {span}. A positive value here cannot come from "
                   f"extent, because extent is what the strata hold fixed.", ""]
 
     L += ["### 3. Weight per flagged criterion", "",
           f"Among the {len(lifted)} twins that flag at least one criterion, `lift` is the mean weight of a flagged criterion divided by the "
           f"mean weight of every criterion in that source's rubric.", "",
           "| Blind materiality | Twins | Median lift |", "|---|---|---|"]
+    lift_clear = False
     if c_lift:
         for k in (3, 2, 1):
             if k in c_lift["n"]:
                 L.append(f"| {k} | {c_lift['n'][k]} | {fmt(c_lift['med'][k])} |")
-        clear = c_lift["ci"][0] is not None and c_lift["ci"][0] > 0
+        lift_clear = c_lift["ci"][0] is not None and c_lift["ci"][0] > 0
         L += ["", f"Cliff's delta (3 versus 1) {fmt(c_lift['delta'])} {ci_str(c_lift)}, p {pfmt(c_lift['p'])}. " +
                   ("The interval is clear of zero, so a weight signal exists on top of the extent signal, and it is the smaller of the two: "
                    "material edits reach criteria slightly heavier than their rubric's average, immaterial ones slightly lighter."
-                   if clear else
+                   if lift_clear else
                    "The interval covers zero, so the physicians' point allocation adds nothing beyond their decomposition into criteria: "
                    "the anchor is the rubric's structure and the claim should be stated that way."), ""]
     else:
@@ -395,6 +401,52 @@ def main():
     un = [r["mean_unflagged"] for r in pert if r["mean_unflagged"] is not None]
     d_anchor, ci_anchor = cliffs_delta(fl, un) if fl and un else (None, (None, None))
     ctrl = [r for r in rows if r["family"] in CONTROLS]
+    gap_clause = (f"the gap between them is {fmt(excess_gap)} wide with an interval above zero"
+                  if excess_gap_lo is not None and excess_gap_lo > 0 else
+                  f"the gap between them is {fmt(excess_gap)} wide, though the interval does not clear zero"
+                  if excess_gap is not None else
+                  "the two ends have too few twins to compare")
+
+    # which of the three measures in "Weight on top of extent" actually clear zero, decided here so the
+    # summary below states whatever that turns out to be rather than a count fixed when this was first written
+    measure1_clear = excess_gap_lo is not None and excess_gap_lo > 0
+    measure2_clear = strat_lo is not None and strat_lo > 0
+    measure3_clear = lift_clear
+    measures = [("reaching the single criterion physicians weighted highest beyond what extent predicts", measure1_clear),
+                ("the stratified comparison that holds extent fixed", measure2_clear),
+                ("the weight of a flagged criterion relative to its rubric's average", measure3_clear)]
+    clear_labels = [lbl for lbl, ok in measures if ok]
+    unclear_labels = [lbl for lbl, ok in measures if not ok]
+
+    def join_and(items):
+        if len(items) <= 1:
+            return items[0] if items else ""
+        if len(items) == 2:
+            return " and ".join(items)
+        return ", ".join(items[:-1]) + f", and {items[-1]}"
+
+    count_word = {0: "None", 1: "One", 2: "Two", 3: "All three"}[len(clear_labels)]
+    clear_verb = "is" if len(clear_labels) == 1 else "are"
+    if clear_labels and unclear_labels:
+        closing = (f"So the supported claim rests on {join_and(clear_labels)}, which "
+                   f"{'clears' if len(clear_labels) == 1 else 'clear'} zero; {join_and(unclear_labels)} still "
+                   f"{'keeps' if len(unclear_labels) == 1 else 'keep'} a positive point estimate without clearing "
+                   f"it at this sample size.")
+    elif clear_labels:
+        closing = f"So the supported claim rests on all three measures, every one of which clears zero: {join_and(clear_labels)}."
+    else:
+        closing = ("So the supported claim is limited to extent itself: none of the three measures of the "
+                   "physicians' point allocation on top of extent clears zero at this sample size.")
+    lift_sentence = ("The criteria a material edit reaches are heavier than their rubric's average while an "
+                      "immaterial edit's are lighter." if measure3_clear else
+                      "The weight of a flagged criterion does not separate materiality levels beyond what extent "
+                      "already predicts.")
+    strat_sentence = ("The third measure, stratifying on extent, also clears zero once extent is held fixed."
+                       if measure2_clear else
+                       "The third measure, stratifying on extent, keeps a positive point estimate but its interval "
+                       "includes zero, because the strata where the edit reaches most of the rubric hold only a "
+                       "handful of immaterial twins.")
+
     L += ["", "## Controls", "",
           f"**Anchoring.** The dependence labeller sees the point values, so flagged criteria could simply be the expensive ones. "
           f"Within a rubric, the mean weight of a flagged criterion is {fmt(med(fl))} against {fmt(med(un))} for an unflagged one "
@@ -407,14 +459,10 @@ def main():
           "What this establishes. A rubric-blind clinical judgement of how much the edit matters, and a separate labeller's reading of "
           "which physician-written criteria the edit reaches, move together on every family and stratum that has both ends to compare. "
           "The quantity they agree on was set by the physicians who wrote the rubric, not by any Keystone rater.", "",
-          "What the physicians' weights add. Most of the effect is extent, how much of the rubric the edit reaches, and three measures show "
-          "that the point allocation carries signal of its own. Two of them are clear of zero. A material edit reaches the single "
-          "criterion the physicians weighted highest more often than its own extent predicts, an immaterial edit does not, and the gap "
-          "between them is 0.06 wide with an interval above zero. The criteria a material edit reaches are heavier than their rubric's "
-          "average while an immaterial edit's are lighter. The third measure, stratifying on extent, keeps a positive point estimate but its "
-          "interval includes zero, because the strata where the edit reaches most of the rubric hold only a handful of immaterial twins. So "
-          "the supported claim is that a material edit covers more of the rubric and reaches the part the physicians paid most for, with the "
-          "stratified version of that second half still underpowered.", "",
+          f"What the physicians' weights add. Most of the effect is extent, how much of the rubric the edit reaches, and three measures "
+          f"ask whether the point allocation carries signal of its own. {count_word} of them {clear_verb} clear of zero. A material "
+          f"edit reaches the single criterion the physicians weighted highest more often than its own extent predicts, an immaterial "
+          f"edit does not, and {gap_clause}. {lift_sentence} {strat_sentence} {closing}", "",
           "What it does not establish. Both sides are still models reading a physician-written artefact, so this is convergent validity "
           "rather than adjudication, which is the distinction the release's `silver` and `gold` tiers carry, and materiality's behavioural "
           "claim is tested separately in [`BEHAVIOUR_ANCHOR.md`](BEHAVIOUR_ANCHOR.md). Read the weakest cells as the work queue, not as "

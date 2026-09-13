@@ -68,6 +68,10 @@ def main():
     ap.add_argument("--families", help="comma-separated subset (default: the three C1 families and both controls)")
     ap.add_argument("--limit-sources", type=int, help="cap the sources per family, for a pilot")
     ap.add_argument("--workers", type=int, default=8)
+    ap.add_argument("--rejudge-all", action="store_true",
+                    help="recompute all three cells with --judge instead of reading the stored two from the run; "
+                         "the cross-vendor replication of the decomposition")
+    ap.add_argument("--tag", default="", help="suffix for the cache file, so a second judge does not collide")
     ap.add_argument("--dry-run", action="store_true", help="count the calls this would make and stop")
     ap.add_argument("--out")
     a = ap.parse_args()
@@ -106,7 +110,15 @@ def main():
                 spec = action_spec(p, "perturbed")
                 if spec is None:
                     continue
-                jobs.append((m, fam, sid, p, rc, spec))
+                jobs.append((m, fam, sid, p, rc, spec, "fe_rc"))
+                if a.rejudge_all:
+                    spec_c = action_spec(p, "paraphrase")
+                    re_ = (r.get("replies") or {}).get("perturbed") or ""
+                    if spec_c is None or not re_.strip():
+                        jobs.pop()
+                        continue
+                    jobs.append((m, fam, sid, p, rc, spec_c, "fc_rc"))
+                    jobs.append((m, fam, sid, p, re_, spec, "fe_re"))
     print(f"{len(jobs)} cross cells over {len(models)} systems and {len(fams)} families")
     if a.dry_run:
         return
@@ -115,26 +127,27 @@ def main():
     cross_dir = runs / f"cross_{a.prefix}"
     cross_dir.mkdir(parents=True, exist_ok=True)
     done = {}
-    cache_f = cross_dir / "cross.jsonl"
+    cache_f = cross_dir / (f"cross{a.tag}.jsonl" if a.tag else "cross.jsonl")
     if cache_f.exists():
         for line in cache_f.read_text().splitlines():
             if line.strip():
                 d = json.loads(line)
-                done[(d["model"], d["family"], d["source_id"])] = d["verdict"]
-    todo = [j for j in jobs if (j[0], j[1], j[2]) not in done]
+                done[(d["model"], d["family"], d["source_id"], d.get("cell", "fe_rc"))] = d["verdict"]
+    todo = [j for j in jobs if (j[0], j[1], j[2], j[6]) not in done]
     print(f"{len(done)} already on disk, {len(todo)} to judge")
 
     def run(job):
-        m, fam, sid, p, rc, spec = job
-        v = judge_json(judge, action_prompt(p.conversation("perturbed"), rc, spec))
-        return {"model": m, "family": fam, "source_id": sid, "verdict": v}
+        m, fam, sid, p, reply, spec, cell = job
+        cond = "paraphrase" if cell == "fc_rc" else "perturbed"
+        v = judge_json(judge, action_prompt(p.conversation(cond), reply, spec))
+        return {"model": m, "family": fam, "source_id": sid, "cell": cell, "verdict": v}
 
     if todo:
         with cache_f.open("a") as fh, ThreadPoolExecutor(max_workers=a.workers) as ex:
             for i, d in enumerate(ex.map(run, todo), 1):
                 fh.write(json.dumps(d, ensure_ascii=False) + "\n")
                 fh.flush()
-                done[(d["model"], d["family"], d["source_id"])] = d["verdict"]
+                done[(d["model"], d["family"], d["source_id"], d["cell"])] = d["verdict"]
                 if i % 100 == 0:
                     u = judge.usage
                     print(f"  {i}/{len(todo)}  judge cost ${u['cost_usd']:.2f}", flush=True)
@@ -174,11 +187,18 @@ def main():
             o, s, ad = [], [], []
             for m in models:
                 r = recs[m].get((fam, sid))
-                v = done.get((m, fam, sid))
+                v = done.get((m, fam, sid, "fe_rc"))
                 if not r or v is None:
                     continue
                 fe_rc = 1.0 if v.get("forbidden") else 0.0
-                fe_re, fc_rc = cell(r, "perturbed"), cell(r, "paraphrase")
+                if a.rejudge_all:
+                    vc, ve = done.get((m, fam, sid, "fc_rc")), done.get((m, fam, sid, "fe_re"))
+                    if vc is None or ve is None:
+                        continue
+                    fc_rc = 1.0 if vc.get("forbidden") else 0.0
+                    fe_re = 1.0 if ve.get("forbidden") else 0.0
+                else:
+                    fe_re, fc_rc = cell(r, "perturbed"), cell(r, "paraphrase")
                 o.append(fe_re - fc_rc); s.append(fe_rc - fc_rc); ad.append(fe_re - fe_rc)
             if o:
                 out_v.append(sum(o) / len(o)); shift_v.append(sum(s) / len(s)); adapt_v.append(sum(ad) / len(ad))
@@ -208,11 +228,19 @@ def main():
             for fam in c1_here:
                 s_v, a_v = [], []
                 for sid in keep[fam]:
-                    r = recs[m].get((fam, sid)); v = done.get((m, fam, sid))
+                    r = recs[m].get((fam, sid)); v = done.get((m, fam, sid, "fe_rc"))
                     if not r or v is None:
                         continue
                     fe_rc = 1.0 if v.get("forbidden") else 0.0
-                    s_v.append(fe_rc - cell(r, "paraphrase")); a_v.append(cell(r, "perturbed") - fe_rc)
+                    if a.rejudge_all:
+                        vc, ve = done.get((m, fam, sid, "fc_rc")), done.get((m, fam, sid, "fe_re"))
+                        if vc is None or ve is None:
+                            continue
+                        c0 = 1.0 if vc.get("forbidden") else 0.0
+                        c1 = 1.0 if ve.get("forbidden") else 0.0
+                    else:
+                        c0, c1 = cell(r, "paraphrase"), cell(r, "perturbed")
+                    s_v.append(fe_rc - c0); a_v.append(c1 - fe_rc)
                 if not s_v or abs(sum(s_v) / len(s_v)) < 1e-9:
                     cells.append("n/a"); continue
                 cells.append(f"{-(sum(a_v) / len(a_v)) / (sum(s_v) / len(s_v)):.2f}")

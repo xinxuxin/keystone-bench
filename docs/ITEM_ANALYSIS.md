@@ -1,6 +1,6 @@
 # Item analysis
 
-Layer `quick`, 319 items over 8 families, evaluated on 5 models (claude-sonnet-5, deepseek-v4-pro, gemini-3.8-flash, gpt-5.6-terra, llama-4-maverick). Every number here is a property of the items, not of a model.
+Layer `quick`, 303 items over 8 families, evaluated on 5 models (claude-sonnet-5, deepseek-v4-pro, gemini-3.8-flash, gpt-5.6-terra, llama-4-maverick). Every number here is a property of the items, not of a model.
 
 ## Discrimination
 
@@ -9,13 +9,13 @@ An item whose primary outcome is the same for every evaluated model separates no
 | family | items | primary outcome | constant | mean item-total r |
 |---|---|---|---|---|
 | missing_evidence | 40 | decisive question or conditional answer | 0.42 | 0.61 |
-| conflicting_evidence | 40 | decisive question or conditional answer | 0.30 | 0.47 |
-| buried_red_flag | 40 | escalated when warranted | 0.38 | 0.56 |
-| demographic_shift | 40 | necessary update | 0.60 | 0.55 |
+| conflicting_evidence | 40 | decisive question or conditional answer | 0.30 | 0.49 |
+| buried_red_flag | 40 | escalated when warranted | 0.33 | 0.50 |
+| demographic_shift | 40 | necessary update | 0.55 | 0.52 |
 | alternative_evidence | 40 | necessary update | 0.55 | 0.34 |
-| missing_evidence_early | 39 | decisive question or conditional answer | 0.49 | 0.64 |
-| salient_distractor | 40 | stable on control | 0.57 | 0.22 |
-| demographic_control | 40 | stable on control | 0.65 | 0.46 |
+| missing_evidence_early | 23 | decisive question or conditional answer | 0.48 | 0.68 |
+| salient_distractor | 40 | stable on control | 0.68 | 0.33 |
+| demographic_control | 40 | stable on control | 0.72 | 0.53 |
 
 ## Ceiling
 
@@ -23,14 +23,14 @@ An item whose unedited version already draws a forbidden action has no room to s
 
 | family | items | original forbidden | effect, all items | effect, original correct |
 |---|---|---|---|---|
-| missing_evidence | 40 | 0.07 | +0.198 [+0.101, +0.305] | +0.227 [+0.121, +0.338] (n=39) |
-| conflicting_evidence | 40 | 0.10 | +0.311 [+0.211, +0.417] | +0.359 [+0.262, +0.459] (n=38) |
-| buried_red_flag | 40 | 0.12 | +0.190 [+0.060, +0.316] | +0.255 [+0.144, +0.369] (n=39) |
-| demographic_shift | 40 | 0.06 | +0.100 [+0.040, +0.175] | +0.126 [+0.055, +0.208] (n=40) |
+| missing_evidence | 40 | 0.08 | +0.185 [+0.091, +0.289] | +0.221 [+0.117, +0.332] (n=39) |
+| conflicting_evidence | 40 | 0.11 | +0.331 [+0.230, +0.435] | +0.380 [+0.284, +0.482] (n=38) |
+| buried_red_flag | 40 | 0.13 | +0.166 [+0.048, +0.283] | +0.213 [+0.112, +0.325] (n=39) |
+| demographic_shift | 40 | 0.11 | +0.049 [-0.010, +0.113] | +0.100 [+0.040, +0.176] (n=40) |
 | alternative_evidence | 40 | 0.12 | +0.003 [-0.079, +0.087] | +0.026 [-0.055, +0.115] (n=40) |
-| missing_evidence_early | 39 | 0.12 | +0.110 [+0.041, +0.185] | +0.115 [+0.045, +0.187] (n=39) |
-| salient_distractor | 40 | 0.10 | +0.009 [-0.033, +0.050] | +0.004 [-0.040, +0.046] (n=40) |
-| demographic_control | 40 | 0.08 | -0.001 [-0.043, +0.044] | +0.006 [-0.043, +0.064] (n=40) |
+| missing_evidence_early | 23 | 0.09 | +0.026 [-0.043, +0.096] | +0.030 [-0.046, +0.108] (n=23) |
+| salient_distractor | 40 | 0.10 | -0.006 [-0.046, +0.030] | +0.002 [-0.034, +0.039] (n=40) |
+| demographic_control | 40 | 0.08 | -0.011 [-0.058, +0.035] | +0.007 [-0.034, +0.061] (n=40) |
 
 ## Items a run needs
 
@@ -38,16 +38,16 @@ Paired items for 80 percent power at two-sided 0.05, from the observed between-i
 
 | family | items now | observed effect | sd | n for own effect | n for 0.10 |
 |---|---|---|---|---|---|
-| missing_evidence | 40 | +0.198 | 0.324 | 22 | 83 |
-| conflicting_evidence | 40 | +0.311 | 0.334 | 10 | 88 |
-| buried_red_flag | 40 | +0.190 | 0.415 | 38 | 136 |
-| demographic_shift | 40 | +0.100 | 0.225 | 40 | 40 |
+| missing_evidence | 40 | +0.185 | 0.332 | 26 | 87 |
+| conflicting_evidence | 40 | +0.331 | 0.324 | 8 | 83 |
+| buried_red_flag | 40 | +0.166 | 0.380 | 42 | 114 |
+| demographic_shift | 40 | +0.049 | 0.194 | 125 | 30 |
 | alternative_evidence | 40 | +0.003 | 0.259 | 47253 | 53 |
-| missing_evidence_early | 39 | +0.110 | 0.225 | 33 | 40 |
-| salient_distractor | 40 | +0.009 | 0.128 | 1691 | 13 |
-| demographic_control | 40 | -0.001 | 0.136 | 93237 | 15 |
+| missing_evidence_early | 23 | +0.026 | 0.180 | 374 | 26 |
+| salient_distractor | 40 | -0.006 | 0.125 | 3120 | 13 |
+| demographic_control | 40 | -0.011 | 0.143 | 1268 | 17 |
 
-The core layer has between 86 and 1,232 items per family, so the families whose row above asks for more items than the quick layer holds are answerable at full scale; the number is what sets the size of a confirmatory run rather than a reason to read the quick layer differently.
+The core layer has between 86 and 1,213 items per family, so the families whose row above asks for more items than the quick layer holds are answerable at full scale; the number is what sets the size of a confirmatory run rather than a reason to read the quick layer differently.
 
 
 ## Is the effect a function of how much text changed
@@ -56,16 +56,16 @@ Per family, over items: the relative edit distance between the unedited and edit
 
 | family | items | edit size vs effect (Spearman) | edit size vs materiality | median edit size |
 |---|---|---|---|---|
-| missing_evidence | 40 | +0.20 | n/a | 0.10 |
-| conflicting_evidence | 40 | -0.21 | n/a | 0.19 |
-| buried_red_flag | 40 | -0.43 | n/a | 0.25 |
-| demographic_shift | 40 | -0.04 | +0.02 | 0.08 |
+| missing_evidence | 39 | +0.18 | n/a | 0.09 |
+| conflicting_evidence | 39 | -0.24 | +0.27 | 0.19 |
+| buried_red_flag | 40 | -0.41 | n/a | 0.22 |
+| demographic_shift | 40 | -0.01 | n/a | 0.08 |
 | alternative_evidence | 40 | +0.17 | n/a | 0.11 |
-| missing_evidence_early | 39 | -0.31 | n/a | 0.15 |
-| salient_distractor | 40 | +0.16 | n/a | 0.12 |
-| demographic_control | 40 | -0.01 | n/a | 0.15 |
+| missing_evidence_early | 23 | -0.34 | n/a | 0.18 |
+| salient_distractor | 40 | -0.00 | n/a | 0.12 |
+| demographic_control | 40 | +0.08 | n/a | 0.15 |
 
-The materiality column is `n/a` on the quick layer by construction: it holds only items whose three raters put the edit at the top of the scale, so the label has no variance to correlate with. The effect column is the informative one, and it runs from -0.43 to +0.19 with no family strongly positive.
+The materiality column is `n/a` where the quick layer holds only items whose three raters put the edit at the top of the scale, so the label has no variance to correlate with; where a family's items do vary, the correlation is `conflicting_evidence` at +0.27. The effect column is the informative one, and it runs from -0.41 to +0.18 with no family strongly positive.
 
-The paraphrase control is the same check at the level of the design rather than the item: it changes more text than the removal families do (median relative edit distance 0.39 against 0.10) and moves behaviour least, so the ordering of the two controls already runs against an edit-size account.
+The paraphrase control is the same check at the level of the design rather than the item: it changes more text than the removal families do (median relative edit distance 0.48 against 0.11) and moves behaviour least, so the ordering of the two controls already runs against an edit-size account.
 

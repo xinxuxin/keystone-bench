@@ -62,7 +62,7 @@ could not, which is a statement about rubric-based clinical evaluation rather th
 **The control structure.** A perturbation benchmark without controls cannot separate "the model reacted to the
 evidence" from "the model reacted to being edited". Keystone ships both halves: two families whose correct behaviour
 is to answer unchanged, and a paraphrase-only twin that changes the wording and nothing else. In the reference pilot
-the paraphrase moved the definitive rate by at most 0.07 while removing an element moved it by 0.31 to 0.55.
+the paraphrase moved the definitive rate by at most 0.06 while removing an element moved it by 0.24 to 0.39.
 
 **Scale on HealthBench messages with a physician standard attached.** The paired counterfactual designs above are clinician-
 authored and small, 217 pairs and 224 cases. Keystone is 7,318 twins over 1,236 HealthBench conversations (largely synthetic by construction, each with its physician-written rubric), each

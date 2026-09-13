@@ -37,6 +37,7 @@ Fleiss' kappa over items scored by all judges:
 | forbidden | 4343 | 0.62 |
 | acceptable | 4343 | 0.641 |
 | decisive_hit | 4343 | 0.594 |
+| escalates | 4343 | 0.907 |
 | stance | 4443 | 0.491 |
 
 ## Twin-minus-paraphrase forbidden action under each judge
@@ -76,14 +77,14 @@ For every model, the judging is averaged over the panel judges whose vendor diff
 
 | family | judging | items | risk difference |
 |---|---|---|---|
-| missing_evidence | panel minus own vendor | 40 | +0.193 [+0.087, +0.310] |
-| conflicting_evidence | panel minus own vendor | 40 | +0.281 [+0.174, +0.386] |
-| buried_red_flag | panel minus own vendor | 40 | +0.106 [-0.014, +0.235] |
-| demographic_shift | panel minus own vendor | 40 | -0.024 [-0.087, +0.033] |
-| alternative_evidence | panel minus own vendor | 40 | -0.019 [-0.106, +0.065] |
-| missing_evidence_early | panel minus own vendor | 23 | +0.104 [+0.013, +0.204] |
-| salient_distractor | panel minus own vendor | 40 | +0.009 [-0.034, +0.051] |
-| demographic_control | panel minus own vendor | 40 | -0.011 [-0.053, +0.026] |
+| missing_evidence | panel minus own vendor | 40 | +0.193 [+0.077, +0.310] |
+| conflicting_evidence | panel minus own vendor | 40 | +0.281 [+0.175, +0.386] |
+| buried_red_flag | panel minus own vendor | 40 | +0.106 [-0.026, +0.226] |
+| demographic_shift | panel minus own vendor | 40 | -0.024 [-0.085, +0.033] |
+| alternative_evidence | panel minus own vendor | 40 | -0.019 [-0.108, +0.066] |
+| missing_evidence_early | panel minus own vendor | 23 | +0.104 [+0.004, +0.209] |
+| salient_distractor | panel minus own vendor | 40 | +0.009 [-0.033, +0.051] |
+| demographic_control | panel minus own vendor | 40 | -0.011 [-0.054, +0.029] |
 
 ## Family primary outcomes on the edited condition, per judge
 
@@ -93,15 +94,16 @@ For every model, the judging is averaged over the panel judges whose vendor diff
 | conflicting_evidence | 0.42 (n=198) | 0.36 (n=180) | 0.26 (n=195) |
 | buried_red_flag | 0.72 (n=198) | 0.62 (n=192) | 0.60 (n=194) |
 | missing_evidence_early | 0.54 (n=115) | 0.54 (n=107) | 0.36 (n=115) |
+
 ## What survives the panel
 
-Two families hold under every judge and under the own-vendor exclusion: `missing_evidence` and `conflicting_evidence`. Their intervals exclude zero for all three judges separately, and the panel estimate with the model's own vendor removed from the judging is +0.193 [+0.087, +0.310] and +0.281 [+0.177, +0.383].
+Two families hold under every judge and under the own-vendor exclusion: `missing_evidence` and `conflicting_evidence`. Their intervals exclude zero for all three judges separately, and the panel estimate with the model's own vendor removed from the judging is +0.193 [+0.077, +0.310] and +0.281 [+0.175, +0.386].
 
-`buried_red_flag` does not. The three judges agree on the direction (+0.166, +0.100, +0.054) but only the first interval excludes zero, and the own-vendor-excluded estimate is +0.106 [-0.016, +0.233]. It is reported as a secondary result whose size depends on the judge, not as a headline.
+`buried_red_flag` does not. The three judges agree on the direction (+0.166, +0.100, +0.054) but only the first interval excludes zero, and the own-vendor-excluded estimate is +0.106 [-0.026, +0.226]. It is reported as a secondary result whose size depends on the judge, not as a headline.
 
 `demographic_shift` moves across zero between judges (+0.049, -0.056, -0.092, the last excluding zero on the negative side). Whatever this family measures on the forbidden-action outcome is not stable enough to carry a claim; its own primary outcome is a necessary update rather than a forbidden action, and that is how it is reported.
 
-The two negative controls hold under every judge: every interval contains zero and every point estimate is within 0.025 of it. A judge effect large enough to manufacture the two headline families would have moved the controls as well.
+The two negative controls hold under every judge: every interval contains zero and every point estimate is within 0.024 of it. A judge effect large enough to manufacture the two headline families would have moved the controls as well.
 
-Agreement is highest exactly where the annotation is most explicit. Escalation, which the frame answers with a boolean, reaches Fleiss 0.89 to 0.92. The forbidden-action and acceptable-action outcomes, which require matching a reply's course of action against a list, reach 0.62 and 0.64. Behavioural stance, a five-way label with no annotated ground truth, reaches 0.49 and is used for description only. For reference, LLM-jury against clinicians is ICC 0.47 in MedHELM (arXiv:2505.23802) where clinician against clinician is 0.43, and the best judge in MedQADE reaches kappa 0.694 against a clinician ceiling of 0.709 (arXiv:2607.01103).
+Agreement is highest exactly where the annotation is most explicit. Escalation, which the frame answers with a boolean, reaches Fleiss 0.907. The forbidden-action and acceptable-action outcomes, which require matching a reply's course of action against a list, reach 0.62 and 0.641. Behavioural stance, a five-way label with no annotated ground truth, reaches 0.491 and is used for description only. For reference, LLM-jury against clinicians is ICC 0.47 in MedHELM (arXiv:2505.23802) where clinician against clinician is 0.43, and the best judge in MedQADE reaches kappa 0.694 against a clinician ceiling of 0.709 (arXiv:2607.01103).
 

@@ -22,6 +22,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 FAMILIES = ["missing_evidence", "conflicting_evidence", "buried_red_flag", "salient_distractor", "demographic_control"]
 CONDS = ("original", "perturbed", "paraphrase")
 BOOT = int(os.environ.get("KEYSTONE_BOOT", "2000"))
+HEADLINE_FAMILIES = ("missing_evidence", "conflicting_evidence")  # the two families the Reading section calls out by name
+EXTERNAL_FLIP_RATE = 8.7  # percent; arXiv:2609.03221, mean per-action flip rate on re-sampled identical clinical cases
 
 
 def load(runs: str, prefix: str) -> dict:
@@ -70,6 +72,7 @@ def main():
           "the scale of the wobble rather than a bias.", "",
           "| family | model | cells | flip rate | spurious effect | noise size | measured effect |", "|---|---|---|---|---|---|---|"]
     summary = defaultdict(list)
+    all_rows = []
     for model in models:
         base = load(a.runs, f"quick__{model}")
         reps = [load(a.runs, f"floor_r{i}__{model}") for i in (1, 2)]
@@ -111,30 +114,70 @@ def main():
             sm, slo, shi = boot_ci(spurious, seed=3)
             m, lo, hi = boot_ci(eff)
             summary[fam].append((fr, pf, m, sm))
+            all_rows.append((fam, model, fr, sm, slo, shi, m, lo, hi))
             L.append(f"| {fam} | {model} | {len(flips)} | {fr:.3f} | {sm:+.3f} [{slo:+.3f}, {shi:+.3f}] | {pf:.3f} | {m:+.3f} [{lo:+.3f}, {hi:+.3f}] |")
     L += ["", "## What it means for each family", "",
           "| family | mean flip rate | mean spurious effect | mean noise size | mean measured effect |", "|---|---|---|---|---|"]
+    fam_point = {}
     for fam in FAMILIES:
         rows = summary.get(fam) or []
         if not rows:
             continue
         fr = sum(r[0] for r in rows) / len(rows); pf = sum(r[1] for r in rows) / len(rows)
         m = sum(r[2] for r in rows) / len(rows); sm = sum(r[3] for r in rows) / len(rows)
+        fam_point[fam] = (fr, pf, m, sm)
         L.append(f"| {fam} | {fr:.3f} | {sm:+.3f} | {pf:.3f} | {m:+.3f} |")
-    L += ["## Reading", "",
-          "The instability is real and it is the size other people report. Re-asking the identical request flips "
-          "the forbidden-action verdict on 6.5 to 12.3 percent of cells, against the 8.7 percent an external "
-          "re-sampling study measures on unedited clinical cases ([arXiv:2609.03221](https://arxiv.org/abs/2609.03221)). "
-          "A single unpaired comparison at this scale would be reporting noise.", "",
-          "It does not survive pairing. The contrast a re-run produces on its own, built by taking the twin from one "
-          "run and the control from another, is within 0.042 of zero on every family and its interval contains zero "
-          "on every family. Noise at temperature 0 is two-sided: it moves the twin side and the control side alike, "
-          "and the paired difference cancels it. The measured effects on the same items are +0.21 and +0.48 on the "
-          "two headline families, five to twenty times the largest spurious contrast.", "",
-          "The one to watch is `salient_distractor` at -0.042 [-0.089, +0.004]. It is the largest spurious contrast "
-          "in the table and it is negative, which would if anything understate a real positive effect on that family. "
-          "The measured effect there is +0.077 [-0.051, +0.205], so the family is reported as containing zero either "
-          "way.", ""]
+
+    if not all_rows:
+        L += ["", "## Reading", "", "No family has data from more than one run; the floor cannot be estimated yet.", ""]
+    else:
+        # every number below is read back off the two tables above, never typed in as a literal
+        flip_lo, flip_hi = min(r[2] for r in all_rows) * 100, max(r[2] for r in all_rows) * 100
+        watch = max(all_rows, key=lambda r: abs(r[3]))
+        w_fam, _, _, sm_w, slo_w, shi_w, m_w, lo_w, hi_w = watch
+        all_ci_zero = all(slo <= 0 <= shi for (_, _, _, _, slo, shi, _, _, _) in all_rows)
+        ci_zero_clause = ("and its interval contains zero on every family" if all_ci_zero else
+                           "though not every family's interval clears zero")
+        watch_spurious_zero = slo_w <= 0 <= shi_w
+        watch_eff_zero = lo_w <= 0 <= hi_w
+        spurious_zero_phrase = ("and its own interval still contains zero" if watch_spurious_zero else
+                                 "and unlike most rows its own interval excludes zero")
+        if watch_spurious_zero and watch_eff_zero:
+            watch_tail = "so the family is reported as containing zero either way."
+        elif watch_eff_zero:
+            watch_tail = ("which does contain zero, so the measured effect for this family is not distinguishable "
+                           "from no effect even though this particular noise estimate is.")
+        elif watch_spurious_zero:
+            watch_tail = "which excludes zero, the one row whose measured effect clears its own noise floor."
+        else:
+            watch_tail = "which also excludes zero, so the measured effect and the noise floor move together here."
+        sign_word = "negative" if sm_w < 0 else "positive"
+        skew_word = "understate a real positive effect" if sm_w < 0 else "overstate a real effect"
+        headline = [f for f in HEADLINE_FAMILIES if f in fam_point]
+        if len(headline) == len(HEADLINE_FAMILIES) and sm_w:
+            ratios = sorted(fam_point[f][2] / abs(sm_w) for f in headline)
+            headline_sentence = (
+                f"The measured effects on the same items are {fam_point[headline[0]][2]:+.2f} and "
+                f"{fam_point[headline[1]][2]:+.2f} on the two headline families (`{headline[0]}`, `{headline[1]}`), "
+                f"{ratios[0]:.0f} to {ratios[-1]:.0f} times the largest spurious contrast.")
+        else:
+            headline_sentence = ("The measured effects on the headline families are far larger than the largest "
+                                  "spurious contrast.")
+
+        L += ["", "## Reading", "",
+              f"The instability is real and it is the size other people report. Re-asking the identical request "
+              f"flips the forbidden-action verdict on {flip_lo:.1f} to {flip_hi:.1f} percent of cells, against the "
+              f"{EXTERNAL_FLIP_RATE} percent an external re-sampling study measures on unedited clinical cases "
+              f"([arXiv:2609.03221](https://arxiv.org/abs/2609.03221)). A single unpaired comparison at this scale "
+              f"would be reporting noise.", "",
+              f"It does not survive pairing. The contrast a re-run produces on its own, built by taking the twin "
+              f"from one run and the control from another, is within {abs(sm_w):.3f} of zero on every family "
+              f"{ci_zero_clause}. Noise at temperature 0 is two-sided: it moves the twin side and the control side "
+              f"alike, and the paired difference cancels it. {headline_sentence}", "",
+              f"The one to watch is `{w_fam}` at {sm_w:+.3f} [{slo_w:+.3f}, {shi_w:+.3f}]. It is the largest "
+              f"spurious contrast in the table, it is {sign_word}, {spurious_zero_phrase}; a bias of this sign would "
+              f"if anything {skew_word} on that family. The measured effect there is {m_w:+.3f} [{lo_w:+.3f}, "
+              f"{hi_w:+.3f}], {watch_tail}", ""]
     text = "\n".join(L) + "\n"
     print(text)
     if a.out:

@@ -135,7 +135,7 @@ At least one of the following, or the construct, the perturbations, the judge or
 | subgroup heterogeneity | any subgroup differing from the overall paired difference by ≥ 0.15 |
 | rubric gap | median `context_awareness` share ≤ 15% and models almost never ask on enough-context originals |
 
-The pilot met the first two: paired definitive-rate drops of 0.31 to 0.55 with McNemar p ≤ 0.021 on every model, and 29% of criteria judged inapplicable overall, 35 to 40% on median-materiality-3 twins.
+The pilot met the first two. Recomputed on the current reference records, the paired definitive-rate drop runs 0.24 to 0.39 across the five reference models against 0.03 to 0.06 for the paraphrase control, and 29% of criteria are judged inapplicable overall, 35 to 40% on median-materiality-3 twins. The figures in the 0.4.0 text of this section were computed on the pilot's own build and are superseded by these; [`SHORTCUT_AUDIT.md`](SHORTCUT_AUDIT.md) carries the per-model table.
 
 ## 8. Quality gates on the data
 

@@ -19,7 +19,7 @@ it to show how much of the signal is simply that a removal makes the message sho
 detectability, not a ceiling: a frontier model reading the message can do better, which is exactly why the
 last section matters more than the first three.
 
-**The decisive section is the last one.** For the 80 `missing_evidence` twins with reference replies, it asks
+**The decisive section is the last one.** For the `missing_evidence` twins with reference replies, it asks
 whether the items whose edit is easiest to detect are the items where assistants changed their answer. If
 detectability drove the effect, that correlation would be strong and positive. Regenerate with
 `python tools/shortcut_audit.py`.
@@ -42,6 +42,7 @@ EPOCHS = int(os.environ.get("KEYSTONE_EPOCHS", 60))
 PERM = int(os.environ.get("KEYSTONE_PERM", 20000))
 L2 = 1e-4
 MIN_DF = 3
+CHANCE = 0.50   # two-alternative forced choice: fixed by the design, not measured from any run
 STOP = set("""a an and the my his her their our your i i'm i've it its is are was were be been being do does did have has had
 also as at by for from in into of on or so that this these those to too with within without you we they he she him them us
 not no but if then than when where which who whom how what why can could should would may might must will shall about after
@@ -164,27 +165,27 @@ RUN_PREFIX = "quick"
 
 
 def blind_baseline(cross_acc: dict) -> list[str]:
-    """What a policy that never reads the evidence scores, measured rather than bounded.
+    """What a fixed policy that never reads the evidence actually scores, per family.
 
     An earlier version of this page claimed that a fixed policy scores zero on a paired difference and that
     2a-1 at the detector's accuracy bounds the strongest blind policy. Both were wrong, and the second was
     wrong in the direction that flattered the benchmark: a measured detector's accuracy `a` is at most the
     Bayes accuracy `a*`, so `2a-1` is a value some blind policy achieves, not a bound on all of them.
 
-    The honest version is measured. Six fixed policies are scored by the same action rules as a real reply,
-    using each side's own annotation. `always_definitive` commits to the original course of action every time;
-    on a perturbation family the edit is what moves that action onto the forbidden list, so the policy scores
-    a paired difference near 1 without reading anything. That is not a hole in the design, it is what the
-    outcome is defined to measure, and it sets the scale: a real system that adapted perfectly would score 0
-    and one that never adapted would score what this policy scores.
+    What is reported here instead is measured, not derived. Six fixed policies are scored by the same action
+    rules as a real reply, using each side's own annotation. `always_definitive` commits to the original
+    course of action every time; on a perturbation family the edit is what moves that action onto the
+    forbidden list, so the policy scores a paired difference near 1 without reading anything. That is not a
+    hole in the design, it is what the outcome is defined to measure, and it sets the scale: a real system
+    that adapted perfectly would score 0 and one that never adapted would score what this policy scores.
 
-    The controls are where the argument lives. On the two negative-control families every fixed policy scores
-    exactly 0.000, because the edit leaves the evidence state and therefore both sides' annotation identical.
-    A blind policy therefore cannot produce the contrast this benchmark reports, which is an effect on the
-    perturbation families *next to* zero on the controls.
+    The controls are where the argument lives. On the two negative-control families the edit leaves the
+    evidence state unchanged, so both sides carry identical acceptable and forbidden lists, which makes every
+    fixed policy's paired difference come out exactly zero on every run. A blind policy therefore cannot
+    produce the contrast this benchmark reports, which is an effect on the perturbation families *next to*
+    zero on the controls.
     """
-    import glob, random, statistics
-    from collections import defaultdict as dd
+    import random
     import sys as _sys
     _sys.path.insert(0, str(ROOT / "tools"))
     from trivial_baselines import judged
@@ -195,7 +196,9 @@ def blind_baseline(cross_acc: dict) -> list[str]:
            ("always_conditional", "hedges every answer on the unknown"),
            ("always_escalate", "sends everyone to urgent evaluation"),
            ("always_refuse", "refers out, gives nothing")]
-    FAM = ["missing_evidence", "conflicting_evidence", "buried_red_flag", "salient_distractor", "demographic_control"]
+    PERT_FAM = ["missing_evidence", "conflicting_evidence", "buried_red_flag"]
+    CTRL_FAM = ["salient_distractor", "demographic_control"]
+    FAM = PERT_FAM + CTRL_FAM
 
     def boot(v, seed=0):
         if not v:
@@ -205,12 +208,14 @@ def blind_baseline(cross_acc: dict) -> list[str]:
         return sum(v) / n, ms[50], ms[1949]
 
     pairs = {f: [p for p in load_pairs(f, "core", split="test") if p.has_state and p.paraphrase is not None] for f in FAM}
+    results = {}
     L = ["", "## What a policy that never reads the evidence scores", "",
          "Six fixed policies, scored by the same action rules as a real reply, each side judged against its own "
          "annotation. None of them reads the conversation. Held-out split.", "",
          "| policy | " + " | ".join(f"`{f}`" for f in FAM) + " |", "|---|" + "---|" * len(FAM)]
     for pol, desc in POL:
         cells = []
+        results[pol] = {}
         for fam in FAM:
             ds = []
             for p in pairs[fam]:
@@ -218,23 +223,34 @@ def blind_baseline(cross_acc: dict) -> list[str]:
                 c = judged(pol, p.evidence_state, "paraphrase")
                 ds.append(float(bool(e.get("forbidden"))) - float(bool(c.get("forbidden"))))
             if len(ds) < 20:
-                cells.append("n/a"); continue
+                cells.append("n/a"); results[pol][fam] = None; continue
             m, lo, hi = boot(ds, seed=abs(hash(pol + fam)) % 997)
+            results[pol][fam] = (m, lo, hi)
             cells.append(f"**{m:+.3f}**" if (lo > 0 or hi < 0) else f"{m:+.3f}")
         L.append(f"| `{pol}` <br><span style='font-weight:400'>{desc}</span> | " + " | ".join(cells) + " |")
+
+    # the two narrative numbers below, read back from the table just built rather than written into the string
+    def_vals = [results["always_definitive"][f][0] for f in PERT_FAM if results["always_definitive"].get(f)]
+    def_lo, def_hi = (min(def_vals), max(def_vals)) if def_vals else (float("nan"), float("nan"))
+    ctrl_vals = [results[pol][fam][0] for pol, _ in POL for fam in CTRL_FAM if results[pol].get(fam)]
+    ctrl_lo, ctrl_hi = (min(ctrl_vals), max(ctrl_vals)) if ctrl_vals else (float("nan"), float("nan"))
+    ctrl_desc = f"exactly {ctrl_lo:+.3f}" if ctrl_lo == ctrl_hi else f"between {ctrl_lo:+.3f} and {ctrl_hi:+.3f}"
+
     L += ["", "Bold marks an interval excluding zero.", "",
           "**On the perturbation families a blind policy scores high, and that is what the outcome is for.** "
-          "`always_definitive` reaches +0.87 to +1.00: it commits to the same course of action on both sides, and "
-          "on a perturbation family the edit is precisely what moves that action onto the forbidden list. A system "
-          "that adapted perfectly would score 0 here and one that never adapted would score what this policy "
-          "scores, so the policy sets the top of the scale rather than exposing a hole. The measured systems sit "
-          "between: +0.079 to +0.284 on the same families.", "",
-          "**On the negative controls every fixed policy scores exactly 0.000.** The edit leaves the evidence "
+          f"`always_definitive` reaches {def_lo:+.2f} to {def_hi:+.2f}: it commits to the same course of action on "
+          "both sides, and on a perturbation family the edit is precisely what moves that action onto the "
+          "forbidden list. A system that adapted perfectly would score 0 here and one that never adapted would "
+          "score what this policy scores, so the policy sets the top of the scale rather than exposing a hole. "
+          "Evaluated systems score well below this ceiling on the same families; see the per-family risk "
+          "difference in [`CONFIRMATORY.md`](CONFIRMATORY.md).", "",
+          f"**On the negative controls every fixed policy scores {ctrl_desc}.** The edit leaves the evidence "
           "state unchanged, so both sides carry identical acceptable and forbidden lists and any reply, blind or "
           "not, is scored the same way twice. This is what rules a blind policy out: the result this benchmark "
           "reports is an effect on the perturbation families *together with* zero on the controls, and no policy "
           "that ignores the conversation can produce that pair.", "",
           "Detectability is reported above for the same reason but does not bound this. A measured detector's "
+          "", "**The adaptation rate rules a blind policy out by construction, not by measurement.** The decomposition in [`CROSS_SCORING.md`](CROSS_SCORING.md) writes the paired outcome as a standard shift plus a reply adaptation, and the second term is the difference between two judgements of the *same text* whenever the policy's reply does not depend on the edit. Every fixed policy in the table above therefore has an adaptation rate of exactly zero, whatever its level on either side. That is an algebraic property of the estimator rather than a number this audit had to go and measure.",
           "accuracy is at most the Bayes accuracy, so a value computed from it is achievable by some blind policy "
           "rather than a ceiling on all of them; the controls, not a bound, are what carry the argument.", ""]
     return L
@@ -259,15 +275,15 @@ def main():
          "assistant reacting to \"this text was tampered with\" scores as though it reacted to the evidence. The paraphrase "
          "control answers the behavioural half. This page answers the measurement half, by asking how visible each edit is, "
          "whether visibility explains what models did, and what the edits have in common that an authoring pass should remove.", "",
-         "The detector is a bag-of-words logistic regression trained on other sources and scored as a two-alternative forced "
-         "choice: it sees both versions of a held-out source and picks the edited one, so chance is 0.50. It is a floor on "
+         f"The detector is a bag-of-words logistic regression trained on other sources and scored as a two-alternative forced "
+         f"choice: it sees both versions of a held-out source and picks the edited one, so chance is {CHANCE:.2f}. It is a floor on "
          "detectability rather than a ceiling, which is why the sections after the first matter more than the first.", "",
          "## How visible is each edit", "",
-         "Two-alternative forced choice on held-out sources, chance 0.50. `Length only` picks by which version "
+         f"Two-alternative forced choice on held-out sources, chance {CHANCE:.2f}. `Length only` picks by which version "
          "is longer, so it is the part of detectability that needs no vocabulary at all.", "",
          "| Family | Sources | original vs twin | length only | original vs control | twin vs control | Heaviest tokens in the twin |",
          "|---|---|---|---|---|---|---|"]
-    margins, cross_acc = {}, {}
+    margins, cross_acc, accs, accp = {}, {}, {}, {}
     for fam in sorted(by_fam):
         ts = by_fam[fam]
         pert = [(t["prompt_id"], t["original_prompt"], t["perturbed_prompt"]) for t in ts]
@@ -280,6 +296,8 @@ def main():
         acc_c, _, _, _ = two_afc(cross, seed=3)
         margins[fam] = marg
         cross_acc[fam] = acc_c
+        accs[fam] = acc
+        accp[fam] = acc_p
         L.append(f"| `{fam}` | {len(ts)} | **{fmt(acc)}** | {fmt(base)} | {fmt(acc_p)} | {fmt(acc_c)} | "
                  f"{', '.join(f'`{t}`' for _, t in top[:4])} |")
 
@@ -311,14 +329,34 @@ def main():
     # the decisive test: do the most detectable edits move models the most
     recs = [r for r in rows(Path(a.records)) if r["family"] == "missing_evidence"]
     per_item = defaultdict(list)
+    per_model_drop = defaultdict(lambda: defaultdict(list))   # {condition: {model: [dropped commitment, 0/1]}}
     for r in recs:
         o = (r["behavior"].get("original") or {}).get("stance")
-        p = (r["behavior"].get("perturbed") or {}).get("stance")
-        if o == "definitive" and p is not None:
-            per_item[r["source_id"]].append(float(p != "definitive"))
+        if o != "definitive":
+            continue
+        for cond in ("perturbed", "paraphrase"):
+            s = (r["behavior"].get(cond) or {}).get("stance")
+            if s is None:
+                continue
+            dropped = float(s != "definitive")
+            per_model_drop[cond][r["model"]].append(dropped)
+            if cond == "perturbed":
+                per_item[r["source_id"]].append(dropped)
     marg = margins.get("missing_evidence", {})
     paired = [(marg[sid], sum(v) / len(v)) for sid, v in per_item.items() if sid in marg and v]
     rho, p = spearman_perm(paired)
+
+    # same reference pilot, broken down by model instead of pooled: how much each condition alone moves the
+    # definitive rate, for the "editing at all" reading below
+    pert_drop = {m: sum(v) / len(v) for m, v in per_model_drop["perturbed"].items() if v}
+    para_drop = {m: sum(v) / len(v) for m, v in per_model_drop["paraphrase"].items() if v}
+    pert_drop_lo, pert_drop_hi = (min(pert_drop.values()), max(pert_drop.values())) if pert_drop else (float("nan"),) * 2
+    para_drop_hi = max(para_drop.values()) if para_drop else float("nan")
+
+    # numbers for the Reading section below, read back from the tables above rather than written into the strings
+    ctrl_acc = sorted(v for v in (accs.get(f) for f in ("salient_distractor", "demographic_control")) if v is not None)
+    para_acc = [v for v in accp.values() if v is not None]
+    ap_lo, ap_hi = (min(para_acc), max(para_acc)) if para_acc else (float("nan"), float("nan"))
     L += ["", "## Does the fingerprint explain the behaviour", "",
           "The detector's margin on an item is how obviously that item was edited. If assistants were "
           "answering the fingerprint, the items with the largest margin would be the items where they "
@@ -326,19 +364,27 @@ def main():
           f"On the {len(paired)} `missing_evidence` items with reference replies, the correlation between the "
           f"detector's margin and the share of assistants that dropped their commitment is Spearman rho "
           f"**{fmt(rho, 3)}** (permutation p {fmt(p, 2) if p is not None else 'n/a'}).", "",
+          "The same reference pilot, per model: the share of originally-definitive replies that no longer "
+          "commit once the evidence is edited, against the same share when only the wording changes.", "",
+          "| model | dropped commitment, evidence removed | dropped commitment, paraphrase only |",
+          "|---|---|---|"]
+    for m in sorted(set(pert_drop) | set(para_drop)):
+        L.append(f"| `{m.split('/')[-1]}` | {fmt(pert_drop.get(m))} | {fmt(para_drop.get(m))} |")
+    L += ["",
           "## Reading", "",
           "**The most detectable edits are the ones where changing your answer is wrong.** The two negative-control families "
-          "sit at 0.99 and 1.00, the top of the table, because an insertion always lengthens the message. On exactly those "
-          "families the correct behaviour is to answer unchanged. A model that keys on \"something was edited here\" therefore "
-          "fails the controls while passing the perturbations, and the release reports both, so the shortcut is scored rather "
-          "than rewarded. This is structural: it holds however good the detector gets.", "",
+          f"sit at {' and '.join(fmt(v) for v in ctrl_acc)}, the top of the table, because an insertion always lengthens the "
+          "message. On exactly those families the correct behaviour is to answer unchanged. A model that keys on \"something "
+          "was edited here\" therefore fails the controls while passing the perturbations, and the release reports both, so "
+          "the shortcut is scored rather than rewarded. This is structural: it holds however good the detector gets.", "",
           "**Visibility is length, and length carries no direction.** The length-only baseline matches the full detector on "
           "every insertion family, so what is detectable is that the message got longer, not what the added sentence means. "
           "Knowing the message was edited does not tell an assistant whether to ask a question, change the drug, escalate, or "
           "hold its answer, which are the four things the families ask for.", "",
-          "**Editing at all is visible, at 0.84 to 0.85.** The paraphrase control changes wording and no evidence and is "
-          "detectable at that rate in every family, which is the cost of touching the text. In the reference pilot that "
-          "control moved the definitive rate by at most 0.07 while removing an element moved it by 0.31 to 0.55.", "",
+          f"**Editing at all is visible, from {fmt(ap_lo)} to {fmt(ap_hi)}.** The paraphrase control changes wording and no "
+          "evidence and is detectable in that range in every family, which is the cost of touching the text. In the reference "
+          f"pilot that control moved the definitive rate by at most {fmt(para_drop_hi)} across evaluated models, while removing "
+          f"an element moved it by {fmt(pert_drop_lo)} to {fmt(pert_drop_hi)}.", "",
           f"**Visibility does not explain the behaviour, and it runs the wrong way.** The correlation between how obviously an "
           f"item was edited and how often assistants dropped their commitment on it is {fmt(rho, 3)} "
           f"(permutation p {fmt(p, 2) if p is not None else 'n/a'}), negative. The shortcut hypothesis predicts a strong "

@@ -21,6 +21,11 @@ import json, re, difflib
 from collections import Counter, defaultdict
 from pathlib import Path
 
+
+# screening thresholds, fixed by the protocol and not read off any run
+EDIT_TOO_LARGE = 0.60      # relative edit distance above which a twin is flagged as an oversized edit
+EDIT_TOO_LARGE_CHARS = 220 # ...and the character count it must also exceed
+NEAR_DUPLICATE = 0.02      # relative distance below which two families wrote nearly the same twin
 ROOT = Path(__file__).resolve().parent.parent
 
 META = re.compile(r"\b(as an AI|note that|the removed|perturbed|rubric|benchmark|hypothetical scenario)\b", re.I)
@@ -65,7 +70,7 @@ def main():
         for i in range(len(ts)):
             for j in range(i + 1, len(ts)):
                 a, b = norm(ts[i]["perturbed_prompt"]).strip(), norm(ts[j]["perturbed_prompt"]).strip()
-                if a and b and ratio(a, b) < 0.02:
+                if a and b and ratio(a, b) < NEAR_DUPLICATE:
                     near_dup.add((pid, ts[i]["family"])); near_dup.add((pid, ts[j]["family"]))
     # C9R needs a first pass: how much of each family's inserted vocabulary is shared across its sources
     inserted = {}
@@ -104,7 +109,7 @@ def main():
         # One added sentence blows past a relative threshold on a short source, so gate on
         # absolute characters changed as well as relative distance.
         changed = abs(len(pp) - len(op)) + sum(1 for x in difflib.ndiff(op, pp) if x[0] == "-")
-        if d > 0.60 and changed > 220:
+        if d > EDIT_TOO_LARGE and changed > EDIT_TOO_LARGE_CHARS:
             f.append("C3_edit_too_large")
         # missing_evidence may neutralise (replace a specific term with a vaguer one), so only
         # flag it when the text grew appreciably.
@@ -146,14 +151,14 @@ def main():
     desc = {"C1_original_not_last_user_turn": "recorded original differs from the source's last user message",
             "C3_missing_grew_a_lot": "removal family grew by more than 40 characters (neutralising is fine, growing is not)",
             "C2_empty": "perturbed text is empty", "C2_identical": "perturbed text equals the original",
-            "C3_edit_too_large": "relative edit distance > 0.60 and > 220 characters changed (edits should be minimal)",
+            "C3_edit_too_large": f"relative edit distance > {EDIT_TOO_LARGE} and > {EDIT_TOO_LARGE_CHARS} characters changed (edits should be minimal)",
             "C3_added_but_shorter": "insertion family, yet the text got shorter",
             "C4_distractor_not_materiality1": "negative control not rated materiality 1",
             "C5_paraphrase_numbers_changed": "paraphrase changed a number (defect)",
             "C5R_paraphrase_negation_count_differs": "paraphrase has a different negation count (**screen, not a defect**: English negates many ways; sent to a model for review)",
             "C9R_templated_insertion": f"the added text reuses vocabulary carrying at least {TEMPLATE_SHARE:.0%} of this family's insertions (**screen, not a defect**: the terms are in `templated_terms`, and a family whose insertions repeat is learnable without reasoning)",
             "C6_meta_language": "perturbed text contains meta-language, leaking the construction",
-            "C7_near_duplicate_across_families": "two families of one source wrote nearly the same twin (relative distance < 0.02)",
+            "C7_near_duplicate_across_families": f"two families of one source wrote nearly the same twin (relative distance < {NEAR_DUPLICATE})",
             "C8_paraphrase_equals_perturbed": "paraphrase control equals the perturbed version"}
     for k, v in cnt.most_common():
         lines.append(f"| `{k}` | {v} | {desc.get(k, '')} |")

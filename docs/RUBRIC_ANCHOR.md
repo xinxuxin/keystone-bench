@@ -6,15 +6,15 @@ Materiality in Keystone is rated by models. The rubric it is rated against is no
 
 ## Primary comparison
 
-Twins where both blind reviewers agree, perturbation families only: **2231** (materiality 3: 1073, 2: 831, 1: 327).
+Twins where both blind reviewers agree, perturbation families only: **2709** (materiality 3: 1518, 2: 859, 1: 332).
 
 | Blind materiality | Twins | Median share of the physicians' rubric weight |
 |---|---|---|
-| 3 | 1073 | 0.439 |
-| 2 | 831 | 0.160 |
-| 1 | 327 | 0.000 |
+| 3 | 1518 | 0.390 |
+| 2 | 859 | 0.163 |
+| 1 | 332 | 0.014 |
 
-Cliff's delta (3 versus 1) **0.798** with a 95 percent bootstrap interval [0.757, 0.837], Mann-Whitney p <1e-12; Spearman rho over the three levels 0.570 (p <1e-12).
+Cliff's delta (3 versus 1) **0.749** with a 95 percent bootstrap interval [0.703, 0.791], Mann-Whitney p <1e-12; Spearman rho over the three levels 0.497 (p <1e-12).
 
 ## By family
 
@@ -23,36 +23,36 @@ Four families carry two blind reviewers, so the primary rule applies. The other 
 | Family | Rating | n (3 / 2 / 1) | Median weight share (3 / 2 / 1) | Cliff's delta [95%] | p |
 |---|---|---|---|---|---|
 | `alternative_evidence` | 2 raters agree | materiality 1 on 2 twins, too few to contrast | | | |
-| `buried_red_flag` | 1 rater | materiality 1 on 3 twins, too few to contrast | | | |
-| `conflicting_evidence` | 2 raters agree | 358 / 159 / 20 | 0.446 / 0.255 / 0.163 | 0.605 [0.333, 0.840] | 5.1e-06 |
-| `demographic_control` | 1 rater | 5 / 38 / 906 | 0.127 / 0.021 / 0.000 | 0.569 [0.162, 0.975] | 1.2e-11 |
-| `demographic_shift` | 2 raters agree | 186 / 354 / 189 | 0.324 / 0.117 / 0.000 | 0.884 [0.835, 0.922] | <1e-12 |
+| `buried_red_flag` | 2 raters agree | materiality 1 on 0 twins, too few to contrast | | | |
+| `conflicting_evidence` | 2 raters agree | 353 / 173 / 25 | 0.446 / 0.264 / 0.179 | 0.533 [0.287, 0.751] | 8.3e-06 |
+| `demographic_control` | 1 rater | materiality 1 on 902 twins, too few to contrast | | | |
+| `demographic_shift` | 2 raters agree | 186 / 353 / 189 | 0.324 / 0.116 / 0.000 | 0.884 [0.835, 0.922] | <1e-12 |
 | `missing_evidence` | 2 raters agree | 268 / 297 / 116 | 0.492 / 0.163 / 0.135 | 0.626 [0.536, 0.718] | <1e-12 |
 | `missing_evidence_early` | 1 rater | 86 / 100 / 32 | 0.218 / 0.095 / 0.103 | 0.380 [0.170, 0.581] | 0.0015 |
-| `salient_distractor` | 2 raters agree | materiality 1 on 1230 twins, too few to contrast | | | |
+| `salient_distractor` | 2 raters agree | materiality 1 on 1178 twins, too few to contrast | | | |
 
 ## By source stratum
 
 | Stratum | n (3 / 1) | Median weight share (3 / 1) | Cliff's delta [95%] | p |
 |---|---|---|---|---|
-| `cond_emergent` | 158 / 26 | 0.573 / 0.000 | 0.810 [0.655, 0.926] | 2.5e-11 |
-| `context_matters` | 186 / 20 | 0.379 / 0.126 | 0.697 [0.497, 0.862] | 3.1e-07 |
-| `data_task` | 151 / 93 | 0.395 / 0.078 | 0.667 [0.555, 0.773] | <1e-12 |
-| `emergent` | 117 / 7 | 0.500 / 0.000 | 0.856 [0.664, 0.974] | 0.00013 |
-| `enough_context` | 195 / 53 | 0.452 / 0.097 | 0.854 [0.783, 0.913] | <1e-12 |
-| `non_emergent` | 100 / 37 | 0.597 / 0.000 | 0.914 [0.842, 0.974] | <1e-12 |
-| `reducible_uncertainty` | 166 / 91 | 0.309 / 0.000 | 0.835 [0.753, 0.909] | <1e-12 |
+| `cond_emergent` | 234 / 26 | 0.562 / 0.000 | 0.824 [0.681, 0.944] | 3.2e-12 |
+| `context_matters` | 241 / 20 | 0.305 / 0.126 | 0.582 [0.377, 0.753] | 1.5e-05 |
+| `data_task` | 226 / 94 | 0.328 / 0.079 | 0.586 [0.459, 0.700] | <1e-12 |
+| `emergent` | 117 / 10 | 0.500 / 0.000 | 0.707 [0.339, 0.962] | 0.00019 |
+| `enough_context` | 280 / 53 | 0.379 / 0.097 | 0.732 [0.636, 0.816] | <1e-12 |
+| `non_emergent` | 154 / 38 | 0.609 / 0.000 | 0.928 [0.871, 0.973] | <1e-12 |
+| `reducible_uncertainty` | 266 / 91 | 0.255 / 0.000 | 0.778 [0.678, 0.865] | <1e-12 |
 
 ## Robustness
 
 | Specification | Cliff's delta [95%] | p |
 |---|---|---|
-| positive points only | 0.770 [0.727, 0.811] | <1e-12 |
-| unweighted: share of criteria flagged | 0.797 [0.756, 0.834] | <1e-12 |
-| twins with no mechanical defect | 0.795 [0.748, 0.837] | <1e-12 |
-| single-turn sources only | 0.802 [0.750, 0.851] | <1e-12 |
-| single blind rater, every perturbation family (3312 twins) | 0.713 [0.667, 0.755] | <1e-12 |
-| second dependence labeller (Claude, 1065 twins) | 0.542 [0.442, 0.637] | <1e-12 |
+| positive points only | 0.719 [0.671, 0.763] | <1e-12 |
+| unweighted: share of criteria flagged | 0.752 [0.706, 0.793] | <1e-12 |
+| twins with no mechanical defect | 0.625 [0.549, 0.698] | <1e-12 |
+| single-turn sources only | 0.769 [0.710, 0.822] | <1e-12 |
+| single blind rater, every perturbation family (3229 twins) | 0.712 [0.666, 0.753] | <1e-12 |
+| second dependence labeller (Claude, 1059 twins) | 0.539 [0.440, 0.630] | <1e-12 |
 
 ## Weight on top of extent
 
@@ -64,11 +64,11 @@ Per source there is one criterion with the largest absolute points. An edit that
 
 | Blind materiality | Twins | Reaches the heaviest criterion | Expected from extent alone | Excess [95%] |
 |---|---|---|---|---|
-| 3 | 1073 | 0.514 | 0.461 | 0.052 [0.027, 0.077] |
-| 2 | 831 | 0.230 | 0.230 | 0.000 [-0.025, 0.024] |
-| 1 | 327 | 0.098 | 0.104 | -0.006 [-0.033, 0.021] |
+| 3 | 1518 | 0.455 | 0.429 | 0.027 [0.005, 0.046] |
+| 2 | 859 | 0.231 | 0.235 | -0.004 [-0.028, 0.019] |
+| 1 | 332 | 0.105 | 0.108 | -0.003 [-0.029, 0.025] |
 
-Excess at materiality 3 minus materiality 1: 0.059 [0.022, 0.095].
+Excess at materiality 3 minus materiality 1: 0.030 [-0.005, 0.062].
 
 ### 2. Weight share within strata of equal extent
 
@@ -76,38 +76,38 @@ Twins are put into five strata by the share of criteria the edit reaches, and th
 
 | Stratum (share of criteria reached) | Twins (3 / 1) | Median weight share (3 / 1) | Cliff's delta [95%] |
 |---|---|---|---|
-| 0 to 0.08 | 46 / 198 | 0.000 / 0.000 | 0.300 [0.143, 0.464] |
-| 0.08 to 0.20 | 128 / 68 | 0.137 / 0.131 | 0.137 [-0.041, 0.307] |
-| 0.20 to 0.33 | 219 / 38 | 0.278 / 0.261 | 0.198 [0.016, 0.376] |
-| 0.33 to 0.53 | 318 / 15 | 0.447 / 0.446 | -0.003 [-0.321, 0.331] |
-| 0.53 to 1 | 362 / 8 | 0.748 / 0.768 | 0.056 [-0.297, 0.395] |
+| 0 to 0.09 | 94 / 210 | 0.052 / 0.000 | 0.484 [0.373, 0.597] |
+| 0.09 to 0.20 | 260 / 57 | 0.137 / 0.143 | 0.012 [-0.164, 0.185] |
+| 0.20 to 0.33 | 318 / 40 | 0.272 / 0.261 | 0.126 [-0.051, 0.298] |
+| 0.33 to 0.53 | 397 / 16 | 0.441 / 0.437 | 0.025 [-0.300, 0.362] |
+| 0.53 to 1 | 449 / 9 | 0.754 / 0.791 | -0.012 [-0.351, 0.304] |
 
-Pooled across strata, weighted by twins: Cliff's delta 0.122 [-0.013, 0.268]. A positive value here cannot come from extent, because extent is what the strata hold fixed.
+Pooled across strata, weighted by twins: Cliff's delta 0.108 [-0.016, 0.231]. A positive value here cannot come from extent, because extent is what the strata hold fixed.
 
 ### 3. Weight per flagged criterion
 
-Among the 4479 twins that flag at least one criterion, `lift` is the mean weight of a flagged criterion divided by the mean weight of every criterion in that source's rubric.
+Among the 4470 twins that flag at least one criterion, `lift` is the mean weight of a flagged criterion divided by the mean weight of every criterion in that source's rubric.
 
 | Blind materiality | Twins | Median lift |
 |---|---|---|
-| 3 | 1048 | 1.013 |
-| 2 | 686 | 0.987 |
-| 1 | 162 | 0.962 |
+| 3 | 1489 | 1.000 |
+| 2 | 713 | 0.984 |
+| 1 | 166 | 0.962 |
 
-Cliff's delta (3 versus 1) 0.243 [0.129, 0.352], p 6.4e-07. The interval is clear of zero, so a weight signal exists on top of the extent signal, and it is the smaller of the two: material edits reach criteria slightly heavier than their rubric's average, immaterial ones slightly lighter.
+Cliff's delta (3 versus 1) 0.160 [0.062, 0.267], p 0.00071. The interval is clear of zero, so a weight signal exists on top of the extent signal, and it is the smaller of the two: material edits reach criteria slightly heavier than their rubric's average, immaterial ones slightly lighter.
 
 
 ## Controls
 
-**Anchoring.** The dependence labeller sees the point values, so flagged criteria could simply be the expensive ones. Within a rubric, the mean weight of a flagged criterion is 6.444 against 6.556 for an unflagged one (Cliff's delta -0.054 [-0.077, -0.031]). A large positive value here would mean part of the primary effect is the labeller preferring heavy criteria rather than the edit reaching them; at this magnitude it does not.
+**Anchoring.** The dependence labeller sees the point values, so flagged criteria could simply be the expensive ones. Within a rubric, the mean weight of a flagged criterion is 6.444 against 6.556 for an unflagged one (Cliff's delta -0.053 [-0.078, -0.028]). A large positive value here would mean part of the primary effect is the labeller preferring heavy criteria rather than the edit reaching them; at this magnitude it does not.
 
-**Negative-control floor.** The two control families carry a median weight share of 0.000 over 2185 twins, against 0.242 over 5132 perturbation twins.
+**Negative-control floor.** The two control families carry a median weight share of 0.000 over 2182 twins, against 0.242 over 5123 perturbation twins.
 
 ## Reading
 
 What this establishes. A rubric-blind clinical judgement of how much the edit matters, and a separate labeller's reading of which physician-written criteria the edit reaches, move together on every family and stratum that has both ends to compare. The quantity they agree on was set by the physicians who wrote the rubric, not by any Keystone rater.
 
-What the physicians' weights add. Most of the effect is extent, how much of the rubric the edit reaches, and three measures show that the point allocation carries signal of its own. Two of them are clear of zero. A material edit reaches the single criterion the physicians weighted highest more often than its own extent predicts, an immaterial edit does not, and the gap between them is 0.06 wide with an interval above zero. The criteria a material edit reaches are heavier than their rubric's average while an immaterial edit's are lighter. The third measure, stratifying on extent, keeps a positive point estimate but its interval includes zero, because the strata where the edit reaches most of the rubric hold only a handful of immaterial twins. So the supported claim is that a material edit covers more of the rubric and reaches the part the physicians paid most for, with the stratified version of that second half still underpowered.
+What the physicians' weights add. Most of the effect is extent, how much of the rubric the edit reaches, and three measures ask whether the point allocation carries signal of its own. One of them is clear of zero. A material edit reaches the single criterion the physicians weighted highest more often than its own extent predicts, an immaterial edit does not, and the gap between them is 0.030 wide, though the interval does not clear zero. The criteria a material edit reaches are heavier than their rubric's average while an immaterial edit's are lighter. The third measure, stratifying on extent, keeps a positive point estimate but its interval includes zero, because the strata where the edit reaches most of the rubric hold only a handful of immaterial twins. So the supported claim rests on the weight of a flagged criterion relative to its rubric's average, which clears zero; reaching the single criterion physicians weighted highest beyond what extent predicts and the stratified comparison that holds extent fixed still keep a positive point estimate without clearing it at this sample size.
 
 What it does not establish. Both sides are still models reading a physician-written artefact, so this is convergent validity rather than adjudication, which is the distinction the release's `silver` and `gold` tiers carry, and materiality's behavioural claim is tested separately in [`BEHAVIOUR_ANCHOR.md`](BEHAVIOUR_ANCHOR.md). Read the weakest cells as the work queue, not as noise: the families and strata with the narrowest advantage are where a clinician's first hour is worth most.
 

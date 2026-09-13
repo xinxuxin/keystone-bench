@@ -136,6 +136,18 @@ Every row is all 40 quick-set items of that family with both sides judged, avera
 
 C1 holds on all three families after Benjamini-Hochberg. C1b, the same restricted to sources the system handled correctly unedited, holds on all three and is larger. **C2 is an equivalence test, not a null result**: the 90 percent interval on each negative control lies inside ±0.05, so the controls are shown to be flat rather than merely failing to be significant.
 
+**The paired difference is the part left over after adaptation, and the part before it is larger.** The outcome above moves the reply and the standard it is held to at once. Judging the frozen control reply under the edited standard fills the cell a paired design leaves empty and splits it exactly ([`docs/CROSS_SCORING.md`](docs/CROSS_SCORING.md)):
+
+| | leaving the reply unchanged | recovered by adapting | left over |
+|---|---|---|---|
+| `conflicting_evidence` | **+0.619** [0.559, 0.679] | 54% | +0.284 |
+| `buried_red_flag` | **+0.786** [0.742, 0.828] | 84% | +0.126 |
+| `missing_evidence` | **+0.487** [0.399, 0.572] | 84% | +0.079 |
+| `salient_distractor` (control) | +0.002 [−0.007, 0.010] | no shift to recover | +0.002 |
+| `demographic_control` (control) | −0.006 [−0.016, 0.003] | no shift to recover | −0.004 |
+
+The recovered share is an **adaptation rate**, and it is zero by construction for any policy whose reply does not depend on the edit, because the numerator is a difference between two judgements of the same text. It separates the systems more sharply than the residual does: on `conflicting_evidence` from 0.25 on llama-4-maverick to 0.82 on claude-sonnet-5. The two control families reuse the source's own decision frame on both sides, so their first column measures how far the judge moves when only wording changes, which is the floor every perturbation family clears by a factor of fifty or more.
+
 **Every one of the ten systems shows the effect on `conflicting_evidence`**, from +0.119 [0.040, 0.198] on claude-opus-5 to +0.468 [0.367, 0.568] on llama-4-maverick. Not one interval touches zero. The other two families are heterogeneous: `buried_red_flag` runs from +0.007 to +0.486.
 
 **The benchmark separates systems, and only where it should.** Same sources, same judge, same outcome, same test on both halves; the statistic is the standard deviation of the systems' mean paired differences and the null permutes system labels within each source ([`docs/DISCRIMINATION.md`](docs/DISCRIMINATION.md)):
@@ -217,7 +229,7 @@ Kept because it carries the paired definitive-rate test and the rubric grades th
 
 The same records also give the unconditional outcomes, which put every item in the denominator: on **unsupported action** gemini-3.8-flash and gpt-5.6-terra lead at 0.42, claude-sonnet-5 is at 0.50 and llama-4-maverick at 0.69, so the model with the lowest conditional adaptation failure is not the model that commits to the fewest unsupported actions; see [`docs/RESULTS.md`](docs/RESULTS.md).
 
-Three things the reference run shows. Every paraphrase control stays at or below 0.07 while removing one element lowers the definitive rate by 0.31 to 0.55, so the effect is the evidence, not the edit. Every assistant adapts partly and none reliably: 0.23 to 0.57 of originally definitive replies stay definitive on the twin without naming the gap, and the model with the lowest adaptation failure has the highest unsafe-action rate, so the two numbers rank models differently. On the rubric-graded items, 29 percent of the physician rubric criteria overall, and 35 to 40 percent on median-materiality-3 twins, no longer apply to the perturbed message; a leaderboard scoring the twin's reply against the stale rubric cannot see whether the reply handled the gap at all.
+Three things the reference run shows. Every paraphrase control stays at or below 0.06 while removing one element lowers the definitive rate by 0.24 to 0.39, so the effect is the evidence, not the edit. Every assistant adapts partly and none reliably: 0.23 to 0.57 of originally definitive replies stay definitive on the twin without naming the gap, and the model with the lowest adaptation failure has the highest unsafe-action rate, so the two numbers rank models differently. On the rubric-graded items, 29 percent of the physician rubric criteria overall, and 35 to 40 percent on median-materiality-3 twins, no longer apply to the perturbed message; a leaderboard scoring the twin's reply against the stale rubric cannot see whether the reply handled the gap at all.
 
 ## The design in one page
 

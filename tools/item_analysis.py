@@ -23,6 +23,10 @@ from keystone.metrics import PRIMARY_OUTCOME  # noqa: E402
 FAMILIES = ["missing_evidence", "conflicting_evidence", "buried_red_flag", "demographic_shift",
             "alternative_evidence", "missing_evidence_early", "salient_distractor", "demographic_control"]
 BOOT = int(os.environ.get("KEYSTONE_BOOT", "2000"))
+REFERENCE_EFFECT = 0.10  # smallest difference this benchmark is meant to resolve, independent of any family's own effect
+# the edit removes or replaces a load-bearing fact rather than adding a distractor or rewording; matches
+# ideal_answer_check.py's REMOVAL, kept as a separate constant here so each report stays self-contained
+REMOVAL = ("missing_evidence", "missing_evidence_early", "demographic_shift", "alternative_evidence")
 
 
 def outcome(rec: dict, cond: str, key: str = "forbidden"):
@@ -74,6 +78,16 @@ def n_for_power(effect: float, sd: float, power: float = 0.80, alpha: float = 0.
     return max(2, math.ceil(((z_a + z_b) * sd / abs(effect)) ** 2))
 
 
+def core_layer_counts() -> dict[str, int]:
+    """Per-family item count in the core layer, from the twin file's own `in_core` flag."""
+    counts: dict[str, int] = defaultdict(int)
+    for line in open(Path(__file__).resolve().parents[1] / "dist" / "keystone_twins.jsonl"):
+        if line.strip():
+            t = json.loads(line)
+            if t.get("in_core"):
+                counts[t["family"]] += 1
+    return counts
+
 
 PREFIX = "quick"
 
@@ -94,7 +108,9 @@ def discriminant() -> list[str]:
             o, e = t.get("original_prompt") or "", t.get("perturbed_prompt") or ""
             if o and e:
                 d = 1.0 - difflib.SequenceMatcher(None, o, e).ratio()
-                twins[(t["family"], f"{t['prompt_id']}::{t['family']}")] = (d, t.get("materiality_majority"), len(e) - len(o))
+                para = t.get("paraphrase_prompt") or ""
+                dp = (1.0 - difflib.SequenceMatcher(None, o, para).ratio()) if para else None
+                twins[(t["family"], f"{t['prompt_id']}::{t['family']}")] = (d, t.get("materiality_majority"), len(e) - len(o), dp)
     per = dd(list)
     for f in sorted(glob.glob(str(Path(__file__).resolve().parents[1] / "runs" / f"{PREFIX}__*" / "*" / "records.jsonl"))):
         if "__judge-" in f:
@@ -131,26 +147,51 @@ def discriminant() -> list[str]:
          "item's paired effect, and the same edit distance against the annotated materiality. A benchmark that "
          "measured the size of the edit would show both columns strongly positive.", "",
          "| family | items | edit size vs effect (Spearman) | edit size vs materiality | median edit size |", "|---|---|---|---|---|"]
+    edit_effect_corrs = []
+    materiality_corrs = {}
+    removal_edit_sizes = []
+    paraphrase_edit_sizes = []
     for fam in FAMILIES:
-        xs, ys, ms, ds = [], [], [], []
+        xs, ys, ms, ds, dps = [], [], [], [], []
         for (f, iid), v in per.items():
             if f != fam or (f, iid) not in twins:
                 continue
-            d, mat, _ = twins[(f, iid)]
+            d, mat, _, dp = twins[(f, iid)]
             xs.append(d); ys.append(statistics.fmean(v)); ds.append(d)
             if mat is not None:
                 ms.append((d, mat))
+            if dp is not None:
+                dps.append(dp)
         if len(xs) < 6:
             continue
         r1 = spearman(xs, ys)
         r2 = spearman([a for a, _ in ms], [b for _, b in ms]) if len(ms) >= 6 else None
+        if r1 is not None:
+            edit_effect_corrs.append(r1)
+        if r2 is not None:
+            materiality_corrs[fam] = r2
+        if fam in REMOVAL:
+            removal_edit_sizes.extend(ds)
+        paraphrase_edit_sizes.extend(dps)
         L.append(f"| {fam} | {len(xs)} | {'n/a' if r1 is None else f'{r1:+.2f}'} | {'n/a' if r2 is None else f'{r2:+.2f}'} | {statistics.median(ds):.2f} |")
-    L += ["", "The materiality column is `n/a` on the quick layer by construction: it holds only items whose three "
-              "raters put the edit at the top of the scale, so the label has no variance to correlate with. The effect "
-              "column is the informative one, and it runs from -0.43 to +0.19 with no family strongly positive.", "",
+    eff_lo, eff_hi = (min(edit_effect_corrs), max(edit_effect_corrs)) if edit_effect_corrs else (float("nan"), float("nan"))
+    para_median = statistics.median(paraphrase_edit_sizes) if paraphrase_edit_sizes else float("nan")
+    removal_median = statistics.median(removal_edit_sizes) if removal_edit_sizes else float("nan")
+    if not materiality_corrs:
+        materiality_sentence = ("The materiality column is `n/a` on the quick layer by construction: it holds only "
+                                 "items whose three raters put the edit at the top of the scale, so the label has "
+                                 "no variance to correlate with.")
+    else:
+        exc = "; ".join(f"`{f}` at {v:+.2f}" for f, v in materiality_corrs.items())
+        materiality_sentence = ("The materiality column is `n/a` where the quick layer holds only items whose three "
+                                 "raters put the edit at the top of the scale, so the label has no variance to "
+                                 f"correlate with; where a family's items do vary, the correlation is {exc}.")
+    L += ["", f"{materiality_sentence} The effect column is the informative one, and it runs from {eff_lo:+.2f} to "
+              f"{eff_hi:+.2f} with no family strongly positive.", "",
               "The paraphrase control is the same check at the level of the design rather than the item: it changes "
-              "more text than the removal families do (median relative edit distance 0.39 against 0.10) and moves "
-              "behaviour least, so the ordering of the two controls already runs against an edit-size account.", ""]
+              f"more text than the removal families do (median relative edit distance {para_median:.2f} against "
+              f"{removal_median:.2f}) and moves behaviour least, so the ordering of the two controls already runs "
+              "against an edit-size account.", ""]
     return L
 
 
@@ -238,13 +279,19 @@ def main():
     L += ["## Items a run needs", "",
           "Paired items for 80 percent power at two-sided 0.05, from the observed between-item standard deviation of "
           "the paired difference. The second column is the family's own effect; the third is a reference effect of "
-          "0.10, the smallest difference this benchmark is meant to resolve.", "",
-          "| family | items now | observed effect | sd | n for own effect | n for 0.10 |", "|---|---|---|---|---|---|"]
+          f"{REFERENCE_EFFECT:.2f}, the smallest difference this benchmark is meant to resolve.", "",
+          f"| family | items now | observed effect | sd | n for own effect | n for {REFERENCE_EFFECT:.2f} |",
+          "|---|---|---|---|---|---|"]
     for fam, (e, sd, n) in power_in.items():
-        L.append(f"| {fam} | {n} | {e:+.3f} | {sd:.3f} | {n_for_power(e, sd) or 'n/a'} | {n_for_power(0.10, sd) or 'n/a'} |")
-    L += ["", "The core layer has between 86 and 1,232 items per family, so the families whose row above asks for more "
-              "items than the quick layer holds are answerable at full scale; the number is what sets the size of a "
-              "confirmatory run rather than a reason to read the quick layer differently.", ""]
+        L.append(f"| {fam} | {n} | {e:+.3f} | {sd:.3f} | {n_for_power(e, sd) or 'n/a'} | "
+                 f"{n_for_power(REFERENCE_EFFECT, sd) or 'n/a'} |")
+    core_counts = core_layer_counts()
+    core_vals = [core_counts[fam] for fam in power_in if core_counts.get(fam)]
+    if core_vals:
+        L += ["", f"The core layer has between {min(core_vals):,} and {max(core_vals):,} items per family, so the "
+                  "families whose row above asks for more items than the quick layer holds are answerable at full "
+                  "scale; the number is what sets the size of a confirmatory run rather than a reason to read the "
+                  "quick layer differently.", ""]
     L += discriminant()
     text = "\n".join(L) + "\n"
     print(text)
