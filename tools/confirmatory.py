@@ -172,7 +172,25 @@ def main():
             m, lo, hi = boot(v, 0.95, seed=3)
             cells.append(f"{m:+.3f} [{lo:+.3f}, {hi:+.3f}]")
         L.append(f"| {name} | " + " | ".join(cells) + " |")
-    L.append("")
+    L += ["", "## Reading", "",
+          "Two of the three families hold and one does not, so C1 as specified is not supported and is reported as "
+          "such. What replaces it is narrower and better attested.", "",
+          "`conflicting_evidence` is the result. +0.309 [+0.246, +0.372] over 139 held-out sources, and every one of "
+          "the five systems has an interval that excludes zero, from +0.108 to +0.468. It is also the family that "
+          "held under all three judge vendors and under the own-vendor exclusion on the exploratory layer. Nothing "
+          "else in this release is attested from that many directions.", "",
+          "`buried_red_flag` holds pooled, +0.166 [+0.115, +0.219], but two of the five systems sit on zero "
+          "(+0.007 and +0.014) while a third is at +0.486. A pooled interval that excludes zero on a family this "
+          "heterogeneous describes the set of systems evaluated, not a property of assistants, and is reported that "
+          "way.", "",
+          "`missing_evidence` does not hold on the held-out split: +0.060 [-0.002, +0.124], with one system at "
+          "-0.012 and another at +0.164. On the exploratory quick layer the same family is +0.198 [+0.101, +0.305]. "
+          "The quick layer is 40 items per family drawn from dev, and the gap between the two numbers is the reason "
+          "a held-out split exists. The exploratory figure is not repeated as a finding.", "",
+          "**C2 is supported**, and it is the clause that makes the rest readable. Both negative controls are inside "
+          "the equivalence bounds on the same split with the same judge: -0.002 [-0.019, +0.016] and -0.006 "
+          "[-0.031, +0.019]. Whatever moves `conflicting_evidence` by 0.31 does not move an insertion of the same "
+          "size that leaves the decision alone.", ""]
     text = "\n".join(L) + "\n"
     print(text)
     if a.out:
