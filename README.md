@@ -155,13 +155,16 @@ Every step is fed a failing table in the test suite, so a check that stopped bit
 
 | | leaving the reply unchanged | recovered by adapting | left over |
 |---|---|---|---|
-| `conflicting_evidence` | **+0.619** [0.559, 0.679] | 54% | +0.284 |
 | `buried_red_flag` | **+0.786** [0.742, 0.828] | 84% | +0.126 |
+| `alternative_evidence` | **+0.670** [0.575, 0.760] | 101% | −0.006 |
+| `conflicting_evidence` | **+0.619** [0.559, 0.679] | 54% | +0.284 |
+| `demographic_shift` | **+0.488** [0.391, 0.587] | 89% | +0.055 |
 | `missing_evidence` | **+0.487** [0.399, 0.572] | 84% | +0.079 |
+| `missing_evidence_early` | **+0.392** [0.163, 0.635] | 46% | +0.212 |
 | `salient_distractor` (control) | +0.002 [−0.007, 0.010] | no shift to recover | +0.002 |
 | `demographic_control` (control) | −0.006 [−0.016, 0.003] | no shift to recover | −0.004 |
 
-**A second vendor's judge places the standard shift in the same place.** Recomputing all three cells with Gemini 3.8 Flash on the same three systems and the same 50 sources per family gives +0.447 against +0.337 on `missing_evidence`, +0.607 against +0.597 on `conflicting_evidence`, +0.783 against +0.760 on `buried_red_flag`, and −0.010 against +0.013 on the control. The cell that carries the replication is the one a paired design never computes ([`docs/CROSS_SCORING_VENDORS.md`](docs/CROSS_SCORING_VENDORS.md)).
+**A paired difference near zero is not a family that asks nothing.** `alternative_evidence` and `demographic_shift` both have an outcome interval containing zero, which on the difference alone reads as no effect. They are the families that shift the standard most and whose systems recover nearly all of it. The difference cannot tell a family that makes no demand from one whose demand is met; the terms can.
 
 The recovered share is an **adaptation rate**, and it is zero by construction for any policy whose reply does not depend on the edit, because the numerator is a difference between two judgements of the same text. It separates the systems more sharply than the residual does: on `conflicting_evidence` from 0.25 on llama-4-maverick to 0.82 on claude-sonnet-5. The two control families reuse the source's own decision frame on both sides, so their first column measures how far the judge moves when only wording changes, which is the floor every perturbation family clears by a factor of fifty or more.
 
