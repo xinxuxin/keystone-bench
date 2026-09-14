@@ -277,7 +277,18 @@ def main():
             L.append(f"| {m} | " + " | ".join(cells) + " |")
 
     L += ["", "## Reading", ""]
-    for fam in [f for f in c1_here if f in per_family]:
+    pert_here = [f for f in fams if f not in C2 and f in per_family]
+    near_zero = [f for f in pert_here if per_family[f]["outcome"][1] <= 0 <= per_family[f]["outcome"][2]
+                 and per_family[f]["shift"][1] > 0.2]
+    if near_zero:
+        L += ["**A paired difference near zero is not the same as a family that asks nothing.** On "
+              + ", ".join(f"`{f}`" for f in near_zero) +
+              " the outcome interval contains zero, and the standard still shifts by "
+              + " and ".join(f"{per_family[f]['shift'][0]:+.3f}" for f in near_zero) +
+              ". Those are families where an unchanged reply would be out of bounds most of the time and the "
+              "systems change it, which the difference of the two cannot distinguish from a family that makes "
+              "no demand at all. Separating the terms is what tells them apart.", ""]
+    for fam in [f for f in pert_here]:
         d = per_family[fam]
         L.append(f"`{fam}`: leaving the reply unchanged would cost {d['shift'][0]:+.3f} "
                  f"[{d['shift'][1]:+.3f}, {d['shift'][2]:+.3f}]; the replies systems actually produce recover "
