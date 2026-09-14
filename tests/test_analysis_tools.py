@@ -124,3 +124,26 @@ def test_audit_step_skips_when_the_table_is_absent():
         ok, detail = fn("no tables here, just prose")
         assert ok is None, f"{name} returned {ok} on empty input"
         assert detail
+
+
+EXPIRY_HOLDS = """
+| family | sources | criteria dropped | stale | adapted | level shift | ranking flip rate |
+|---|---|---|---|---|---|---|
+| `missing_evidence` | 85 | 4.2 | 0.443 | 0.499 | +0.056 [+0.025, +0.089] | 0.047 [0.021, 0.079] |
+| `conflicting_evidence` | 140 | 1.9 | 0.426 | 0.456 | +0.030 [+0.018, +0.043] | 0.035 [0.019, 0.053] |
+| `buried_red_flag` | 148 | 1.1 | 0.396 | 0.419 | +0.024 [+0.013, +0.035] | 0.007 [0.002, 0.013] |
+| `salient_distractor` | 100 | 0.1 | 0.469 | 0.474 | +0.005 [+0.001, +0.011] | 0.000 [0.000, 0.000] |
+| `demographic_control` | 100 | 0.1 | 0.478 | 0.483 | +0.005 [-0.002, +0.015] | 0.005 [0.000, 0.015] |
+"""
+# expiry that changes the level and never the ranking: a level shift, not a defect in the instrument
+EXPIRY_FAILS = (EXPIRY_HOLDS
+                .replace("0.047 [0.021, 0.079]", "0.004 [0.000, 0.010]")
+                .replace("0.035 [0.019, 0.053]", "0.003 [0.000, 0.009]")
+                .replace("| 0.007 [0.002, 0.013] |", "| 0.002 [0.000, 0.006] |"))
+
+
+@pytest.mark.parametrize("md,expected", [(EXPIRY_HOLDS, True), (EXPIRY_FAILS, False)])
+def test_audit_expiry_step(md, expected):
+    from keystone.cli import _step_expiry
+    ok, detail = _step_expiry(md)
+    assert ok is expected, f"got {ok} with {detail!r}"

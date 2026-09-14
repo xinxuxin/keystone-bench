@@ -44,6 +44,31 @@ def boot(vals, conf=0.95, seed=0, n=4000):
     return m, lo, hi
 
 
+def ratio_ci(shift_v, adapt_v, conf=0.95, seed=0, n=4000):
+    """Percentile interval for -mean(adapt)/mean(shift), resampling sources and recomputing the ratio.
+
+    Dividing two separately bootstrapped intervals is wrong here: the two terms share the cell f_e(r_c), which
+    enters the shift with a plus and the adaptation with a minus, so they are negatively correlated by
+    construction and a naive interval would be far too wide. Resampling the source keeps the pair together.
+    Draws whose denominator lands at or below zero are dropped and counted, because the ratio is not defined
+    there; when many are dropped the point estimate should not be read as a rate at all."""
+    if not shift_v or len(shift_v) != len(adapt_v):
+        return float("nan"), float("nan")
+    rng = random.Random(seed)
+    k = len(shift_v)
+    out = []
+    for _ in range(n):
+        idx = [rng.randrange(k) for _ in range(k)]
+        ss = sum(shift_v[i] for i in idx) / k
+        aa = sum(adapt_v[i] for i in idx) / k
+        if ss > 1e-9:
+            out.append(-aa / ss)
+    if len(out) < n // 2:
+        return float("nan"), float("nan")
+    out.sort()
+    return out[int((1 - conf) / 2 * len(out))], out[int((1 + conf) / 2 * len(out)) - 1]
+
+
 def read_records(runs: Path, prefix: str):
     """{model: {(family, source_id): record}} for every run under the prefix."""
     out = defaultdict(dict)
@@ -73,6 +98,9 @@ def main():
                          "the cross-vendor replication of the decomposition")
     ap.add_argument("--tag", default="", help="suffix for the cache file, so a second judge does not collide")
     ap.add_argument("--dry-run", action="store_true", help="count the calls this would make and stop")
+    ap.add_argument("--fourth-cell", action="store_true",
+                    help="also judge the edited reply under the control standard, which makes the decomposition "
+                         "symmetric: both orderings and the interaction between them are then reported")
     ap.add_argument("--compare-to", help="a second run's cache tag (e.g. _gemini) to print beside this one; "
                                          "both must cover the same systems, families and sources")
     ap.add_argument("--out")
@@ -113,6 +141,11 @@ def main():
                 if spec is None:
                     continue
                 jobs.append((m, fam, sid, p, rc, spec, "fe_rc"))
+                if a.fourth_cell:
+                    spec_c0 = action_spec(p, "paraphrase")
+                    re0 = (r.get("replies") or {}).get("perturbed") or ""
+                    if spec_c0 is not None and re0.strip():
+                        jobs.append((m, fam, sid, p, re0, spec_c0, "fc_re"))
                 if a.rejudge_all:
                     spec_c = action_spec(p, "paraphrase")
                     re_ = (r.get("replies") or {}).get("perturbed") or ""
@@ -140,7 +173,7 @@ def main():
 
     def run(job):
         m, fam, sid, p, reply, spec, cell = job
-        cond = "paraphrase" if cell == "fc_rc" else "perturbed"
+        cond = "paraphrase" if cell in ("fc_rc", "fc_re") else "perturbed"
         v = judge_json(judge, action_prompt(p.conversation(cond), reply, spec))
         return {"model": m, "family": fam, "source_id": sid, "cell": cell, "verdict": v}
 
@@ -209,14 +242,16 @@ def main():
         mo, lo_o, hi_o = boot(out_v, seed=11)
         ms, lo_s, hi_s = boot(shift_v, seed=12)
         ma, lo_a, hi_a = boot(adapt_v, seed=13)
-        # a ratio to a shift whose interval contains zero is not reported
+        # a ratio to a shift whose interval contains zero is not reported; where it is reported the interval
+        # comes from resampling sources and recomputing the ratio, not from dividing two intervals
         rate = (-ma / ms) if lo_s > 0 else float("nan")
+        rlo, rhi = ratio_ci(shift_v, adapt_v, seed=14) if lo_s > 0 else (float("nan"), float("nan"))
         own = "yes" if fam not in C2 else "no"
         per_family[fam] = dict(n=len(out_v), outcome=(mo, lo_o, hi_o), shift=(ms, lo_s, hi_s),
-                               adapt=(ma, lo_a, hi_a), rate=rate)
+                               adapt=(ma, lo_a, hi_a), rate=rate, rate_ci=(rlo, rhi))
         L.append(f"| {fam} | {own} | {len(out_v)} | {mo:+.3f} [{lo_o:+.3f}, {hi_o:+.3f}] | "
                  f"{ms:+.3f} [{lo_s:+.3f}, {hi_s:+.3f}] | {ma:+.3f} [{lo_a:+.3f}, {hi_a:+.3f}] | "
-                 f"{'n/a' if rate != rate else f'{rate:.2f}'} |")
+                 f"{'n/a' if rate != rate else f'{rate:.2f} [{rlo:.2f}, {rhi:.2f}]'} |")
 
     # where the adaptation term is spent, item by item, on the perturbation families
     helped = hurt = flat = 0
@@ -292,7 +327,7 @@ def main():
         d = per_family[fam]
         L.append(f"`{fam}`: leaving the reply unchanged would cost {d['shift'][0]:+.3f} "
                  f"[{d['shift'][1]:+.3f}, {d['shift'][2]:+.3f}]; the replies systems actually produce recover "
-                 f"{d['rate']:.0%} of it, leaving {d['outcome'][0]:+.3f} "
+                 f"{d['rate']:.0%} [{d['rate_ci'][0]:.0%}, {d['rate_ci'][1]:.0%}] of it, leaving {d['outcome'][0]:+.3f} "
                  f"[{d['outcome'][1]:+.3f}, {d['outcome'][2]:+.3f}]."
                  + (" A rate above one means the edited reply clears the edited standard more often than the "
                     "control reply cleared its own." if d["rate"] == d["rate"] and d["rate"] > 1 else ""))
@@ -306,6 +341,53 @@ def main():
                  f"judge's own movement rather than a shift: {vals}. The largest limit is {worst:.3f}, and every "
                  f"perturbation family's shift lies above it.")
         L.append("")
+    # the fourth cell makes the decomposition symmetric: both orderings, and what separates them
+    if a.fourth_cell:
+        rows_sym = []
+        for fam in fams:
+            sA, aA, sB, aB, inter = [], [], [], [], []
+            for sid in keep[fam]:
+                vA, vB, vI = [], [], []
+                for m in models:
+                    r = recs[m].get((fam, sid))
+                    v1, v2 = done.get((m, fam, sid, "fe_rc")), done.get((m, fam, sid, "fc_re"))
+                    if not r or v1 is None or v2 is None:
+                        continue
+                    fe_rc = 1.0 if v1.get("forbidden") else 0.0
+                    fc_re = 1.0 if v2.get("forbidden") else 0.0
+                    fe_re, fc_rc = cell(r, "perturbed"), cell(r, "paraphrase")
+                    vA.append((fe_rc - fc_rc, fe_re - fe_rc))          # path A: shift first
+                    vB.append((fc_re - fc_rc, fe_re - fc_re))          # path B: adaptation first
+                    vI.append(fe_re - fe_rc - fc_re + fc_rc)           # interaction
+                if vA:
+                    sA.append(sum(x[0] for x in vA) / len(vA)); aA.append(sum(x[1] for x in vA) / len(vA))
+                    sB.append(sum(x[1] for x in vB) / len(vB)); aB.append(sum(x[0] for x in vB) / len(vB))
+                    inter.append(sum(vI) / len(vI))
+            if not sA:
+                continue
+            rows_sym.append((fam, len(sA), boot(sA, seed=31), boot(sB, seed=32),
+                             boot(aA, seed=33), boot(aB, seed=34), boot(inter, seed=35)))
+        if rows_sym:
+            L += ["", "## Both orderings, and what separates them", "",
+                  "The decomposition is exact in either order. Taking the standard first gives the terms above; "
+                  "taking the reply first gives `f_c(r_e) - f_c(r_c)` and `f_e(r_e) - f_c(r_e)`. The two orders "
+                  "attribute the interaction differently, which is the index-number problem every "
+                  "decomposition of this shape has. The interaction is reported so that the size of the "
+                  "ambiguity is visible rather than absorbed.", "",
+                  "| family | sources | shift, standard first | shift, reply first | adaptation, standard first "
+                  "| adaptation, reply first | interaction |",
+                  "|---|---|---|---|---|---|---|"]
+            for fam, n, s1, s2, a1, a2, it in rows_sym:
+                L.append(f"| `{fam}` | {n} | {s1[0]:+.3f} [{s1[1]:+.3f}, {s1[2]:+.3f}] | "
+                         f"{s2[0]:+.3f} [{s2[1]:+.3f}, {s2[2]:+.3f}] | {a1[0]:+.3f} [{a1[1]:+.3f}, {a1[2]:+.3f}] "
+                         f"| {a2[0]:+.3f} [{a2[1]:+.3f}, {a2[2]:+.3f}] | {it[0]:+.3f} [{it[1]:+.3f}, {it[2]:+.3f}] |")
+            worst = max(rows_sym, key=lambda r: abs(r[6][0]))
+            L += ["", f"The largest interaction is {worst[6][0]:+.3f} [{worst[6][1]:+.3f}, {worst[6][2]:+.3f}] on "
+                      f"`{worst[0]}`. Where it is small the ordering does not matter and the reported terms are "
+                      "the decomposition; where it is large the two orderings are both given and neither is "
+                      "presented as the split. The adaptation rate does not depend on the ordering for a policy "
+                      "whose reply ignores the edit: `r_e = r_c` makes both adaptation terms identically zero.", ""]
+
     # cross-vendor: the same three cells judged again by another vendor, on the same sources
     if a.compare_to:
         other = {}

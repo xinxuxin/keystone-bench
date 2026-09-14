@@ -467,6 +467,23 @@ def _step_usability(md):
     return None, "no policy matrix"
 
 
+def _step_expiry(md, ceiling_col=6):
+    """Rubric expiry reorders systems on the perturbation families and not on the controls."""
+    for tbl in _tables(md):
+        rows = [r for r in tbl if len(r) >= 7 and r[0].startswith("`")]
+        if len(rows) >= 5:
+            ctrl = [r for r in rows if "control" in r[0] or "distractor" in r[0]]
+            pert = [r for r in rows if r not in ctrl]
+            cf = [_iv(r[6])[2] for r in ctrl]
+            pf = [_iv(r[6])[0] for r in pert]
+            if not cf or not pf or any(x is None for x in cf + pf):
+                continue
+            top = max(cf)
+            return max(pf) > top, (f"largest perturbation flip rate {max(pf):.3f} against a control ceiling "
+                                   f"of {top:.3f}")
+    return None, "no rubric-consequence table"
+
+
 def _step_floor(md):
     """The largest spurious contrast a re-run produces is smaller than the measured effects."""
     for tbl in _tables(md):
@@ -495,6 +512,9 @@ AUDIT_STEPS = [
     ("usability", "policy_matrix.py", _step_usability,
      "No evaluated system withholds answers at anything like the inert policies' rate",
      "the adaptation rate alone cannot see a system that answers nothing"),
+    ("expiry", "rubric_consequence.py", _step_expiry,
+     "Rubric expiry reorders systems where criteria expire and not on the controls",
+     "an instrument whose criteria expire without changing the ranking is a level shift, not a defect"),
     ("floor", "instability_floor.py", _step_floor,
      "The measured effects clear the re-run instability floor",
      "at temperature 0 a served model still flips verdicts"),
@@ -521,7 +541,11 @@ def cmd_audit(a):
         if not sp.exists():
             outputs[script] = None
             continue
-        args = ["--runs", a.runs] + ([] if script == "instability_floor.py" else ["--prefix", a.prefix])
+        args = ["--runs", a.runs]
+        if script != "instability_floor.py":
+            args += ["--prefix", a.prefix]
+        if script == "rubric_consequence.py":
+            args += ["--models", a.rubric_models]
         r = subprocess.run([sys.executable, str(sp), *args], capture_output=True, text=True, cwd=root)
         outputs[script] = r.stdout if r.returncode == 0 else None
     print(f"Keystone audit, runs={a.runs}, prefix={a.prefix}\n")
@@ -571,6 +595,8 @@ def main(argv=None):
     s.add_argument("--limit", type=int); s.add_argument("--rubric", action="store_true"); s.add_argument("--max-tokens", type=int, default=1500); s.set_defaults(f=cmd_estimate)
     s = sub.add_parser("audit", help="run the two-sided audit over a directory of runs and print the checklist")
     s.add_argument("--runs", default="runs"); s.add_argument("--prefix", default="testcore")
+    s.add_argument("--rubric-models", default="claude-opus-5,gpt-5.6-terra,llama-4-maverick,gemini-3.8-flash",
+                   help="systems whose cached rubric grades the expiry step reads")
     s.set_defaults(f=cmd_audit)
     s = sub.add_parser("run", help="evaluate a model with a judge")
     s.add_argument("--family", default="missing_evidence", choices=FAMILIES + ("all",)); s.add_argument("--layer", default="core", choices=LAYERS)
