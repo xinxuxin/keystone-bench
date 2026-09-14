@@ -218,6 +218,34 @@ def main():
                  f"{ms:+.3f} [{lo_s:+.3f}, {hi_s:+.3f}] | {ma:+.3f} [{lo_a:+.3f}, {hi_a:+.3f}] | "
                  f"{'n/a' if rate != rate else f'{rate:.2f}'} |")
 
+    # where the adaptation term is spent, item by item, on the perturbation families
+    helped = hurt = flat = 0
+    for fam in [f for f in fams if f not in C2]:
+        for sid in keep[fam]:
+            for m in models:
+                r = recs[m].get((fam, sid)); v = done.get((m, fam, sid, "fe_rc")) or done.get((m, fam, sid))
+                if not r or v is None:
+                    continue
+                pe = (r.get("action") or {}).get("perturbed")
+                if not pe:
+                    continue
+                d = (1.0 if pe.get("forbidden") else 0.0) - (1.0 if v.get("forbidden") else 0.0)
+                helped += d < 0; hurt += d > 0; flat += d == 0
+    tot = helped + hurt + flat
+    if tot:
+        L += ["", "## Where the adaptation term is spent", "",
+              f"Item by item on the perturbation families, over {tot:,} (system, source) cells. `helped` is a cell "
+              "where the reply the system actually produced clears the edited standard and the frozen control "
+              "reply would not have. `hurt` is the reverse: the system changed its reply and the change is what "
+              "put it out of bounds.", "",
+              "| | cells | share |", "|---|---|---|",
+              f"| changing the reply helped | {helped:,} | {helped / tot:.3f} |",
+              f"| changing the reply hurt | {hurt:,} | {hurt / tot:.3f} |",
+              f"| the verdict was the same either way | {flat:,} | {flat / tot:.3f} |", "",
+              f"The pooled term is a net of the first two, {helped:,} against {hurt:,}. A measurement that could "
+              "only move one way would be a definition rather than a finding; this one moves both ways and the "
+              "reported quantity is the balance.", ""]
+
     # per system on the C1 families: which assistants convert the shift into a changed reply
     c1_here = [f for f in fams if f in C1]
     if c1_here:

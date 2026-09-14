@@ -20,6 +20,9 @@ The two negative-control families reuse the source's own decision frame for both
 | buried_red_flag | yes | 148 | +0.126 [+0.076, +0.177] | +0.786 [+0.742, +0.828] | -0.660 [-0.703, -0.613] | 0.84 |
 | salient_distractor | no | 219 | +0.002 [-0.014, +0.019] | +0.002 [-0.007, +0.010] | +0.001 [-0.015, +0.016] | n/a |
 | demographic_control | no | 161 | -0.004 [-0.030, +0.022] | -0.006 [-0.016, +0.003] | +0.002 [-0.023, +0.026] | n/a |
+| demographic_shift | yes | 64 | +0.055 [-0.007, +0.119] | +0.488 [+0.391, +0.587] | -0.433 [-0.530, -0.338] | 0.89 |
+| alternative_evidence | yes | 68 | -0.006 [-0.070, +0.058] | +0.670 [+0.575, +0.760] | -0.677 [-0.754, -0.595] | 1.01 |
+| missing_evidence_early | yes | 11 | +0.212 [+0.051, +0.392] | +0.392 [+0.163, +0.635] | -0.180 [-0.298, -0.060] | 0.46 |
 
 ## Adaptation rate by system
 

@@ -69,6 +69,18 @@ def withheld(r: dict, cond: str):
     return None if not a else (not bool(a.get("acceptable")))
 
 
+
+def no_usable_action(r: dict, cond: str):
+    """Gave neither an acceptable course of action nor a forbidden one: the reply withheld rather than erred.
+
+    `withheld` above is `not acceptable`, which counts a reply that gives *wrong* advice as one that gave no
+    advice. On the unedited side those are different failures with different remedies, and separating them is
+    what this measures. Reported beside `withheld`, never in place of it, because the preregistered clause is
+    the wider one."""
+    a = act(r, cond)
+    return None if not a else (not bool(a.get("acceptable")) and not a.get("forbidden"))
+
+
 def asked_anyway(r: dict, cond: str):
     """Asked for more or refused, whether or not a usable answer was also given. The secondary cost."""
     a, b = act(r, cond), beh(r, cond)
@@ -193,6 +205,25 @@ def main():
     L.append("|---|---|---|---|")
     L.append(f"| negative controls, edited side | {ccell('gate', 'acknowledge', CONTROL_FAMILIES, 'perturbed')} | {ccell('gate', 'baseline', CONTROL_FAMILIES, 'perturbed')} | {ccell('acknowledge', 'baseline', CONTROL_FAMILIES, 'perturbed')} |")
     L.append(f"| every family, unedited side | {ccell('gate', 'acknowledge', EFFECT_FAMILIES + CONTROL_FAMILIES, 'original')} | {ccell('gate', 'baseline', EFFECT_FAMILIES + CONTROL_FAMILIES, 'original')} | {ccell('acknowledge', 'baseline', EFFECT_FAMILIES + CONTROL_FAMILIES, 'original')} |")
+    L += ["", "### Withholding separated from erring", "",
+          "`withheld` above is `not acceptable`, which counts a reply that gives the wrong advice as one that "
+          "gave no advice. Splitting them: the share of replies that took neither an acceptable action nor a "
+          "forbidden one.", "",
+          "| where | gate minus acknowledge | gate minus baseline | acknowledge minus baseline |", "|---|---|---|---|"]
+    def ncell(x, y, fams, cond):
+        v = paired(arms[x], arms[y], fams, cond, no_usable_action)
+        if not v:
+            return "n/a"
+        m, lo, hi = boot_ci(v, seed=29)
+        return f"{m:+.3f} [{lo:+.3f}, {hi:+.3f}] (n={len(v)})"
+    L.append(f"| negative controls, edited side | {ncell('gate', 'acknowledge', CONTROL_FAMILIES, 'perturbed')} | "
+             f"{ncell('gate', 'baseline', CONTROL_FAMILIES, 'perturbed')} | "
+             f"{ncell('acknowledge', 'baseline', CONTROL_FAMILIES, 'perturbed')} |")
+    L.append(f"| every family, unedited side | {ncell('gate', 'acknowledge', EFFECT_FAMILIES + CONTROL_FAMILIES, 'original')} | "
+             f"{ncell('gate', 'baseline', EFFECT_FAMILIES + CONTROL_FAMILIES, 'original')} | "
+             f"{ncell('acknowledge', 'baseline', EFFECT_FAMILIES + CONTROL_FAMILIES, 'original')} |")
+    L.append("")
+
     L += ["", "### Secondary: asked or refused at all", "",
           "| where | gate minus acknowledge | gate minus baseline | acknowledge minus baseline |", "|---|---|---|---|"]
     def acell(x, y, fams, cond):

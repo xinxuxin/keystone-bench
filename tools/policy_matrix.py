@@ -10,7 +10,7 @@ different one of them, and the pair that is blind to none is what the benchmark 
 | unsupported action, edited side | did the reply do something the evidence forbids | a policy that does nothing at all |
 | paired difference | did the edit move it | a policy that is flat because it is inert |
 | adaptation rate | did *changing the reply* recover the standard shift | a policy with no shift to recover |
-| withheld a usable answer | did it answer where the evidence already settled the case | a policy that answers everything |
+| gave no usable action | did it offer any course of action where the evidence already settled the case | a policy that answers everything |
 
 Usage: python tools/policy_matrix.py [--out docs/POLICY_MATRIX.md]   # no key, no model call
 """
@@ -65,7 +65,7 @@ def main():
                 o = judged(pol, p.evidence_state, "original")
                 forb.append(float(bool(e.get("forbidden"))))
                 diff.append(float(bool(e.get("forbidden"))) - float(bool(c.get("forbidden"))))
-                withheld.append(0.0 if o.get("acceptable") else 1.0)
+                withheld.append(0.0 if (o.get("acceptable") or o.get("forbidden")) else 1.0)
         shift = sum(diff) / len(diff)
         # the reply text does not depend on the side, so f_e(r_e) == f_e(r_c) and the adaptation term is zero
         adapt = 0.0
@@ -111,7 +111,7 @@ def main():
                     fe_rc = float(bool(v.get("forbidden")))
                     s_v.append(fe_rc - fc_rc); a_v.append(fe_re - fe_rc)
                 if po:
-                    withheld.append(0.0 if po.get("acceptable") else 1.0)
+                    withheld.append(0.0 if (po.get("acceptable") or po.get("forbidden")) else 1.0)
         if not forb:
             continue
         sh = (sum(s_v) / len(s_v)) if s_v else float("nan")
@@ -129,9 +129,11 @@ def main():
          "`unsupported action` is the share of edited replies taking an action the annotation forbids, lower "
          "looking better. `paired difference` is that share minus the same share on the paraphrase control. "
          "`adaptation rate` is the fraction of the standard shift that changing the reply recovers, and is not "
-         "defined when there is no shift. `withheld` is the share of unedited conversations, where the evidence "
-         "already settles the case, on which the reply offers no acceptable course of action.", "",
-         "| | | unsupported action | paired difference | adaptation rate | withheld |",
+         "defined when there is no shift. `no usable action` is the share of unedited conversations, where the "
+         "evidence already settles the case, on which the reply takes neither an acceptable course of action nor "
+         "a forbidden one: it withheld rather than erred, and a reply that gives the wrong advice is counted in "
+         "the first column instead of this one.", "",
+         "| | | unsupported action | paired difference | adaptation rate | no usable action |",
          "|---|---|---|---|---|---|"]
     for name, desc, f0, d0, r0, w0 in pol_rows:
         L.append(f"| {name} | {desc} | {f0:.3f} | {fmt(d0)} | {rate(r0)} | {w0:.3f} |")
@@ -164,7 +166,7 @@ def main():
     inert_w = max(r[5] for r in inert) if inert else float("nan")
     sys_w = max(r[5] for r in sys_rows) if sys_rows else float("nan")
     L += [f"**No single column is enough, and two are.** A policy that answers everything is caught by the "
-          f"adaptation rate; a policy that answers nothing is caught by the withheld column, where the inert "
+          f"adaptation rate; a policy that answers nothing is caught by the no-usable-action column, where the inert "
           f"policies sit at {inert_w:.3f} against a worst evaluated system of {sys_w:.3f}. Reporting both is "
           "not caution, it is what the table shows to be necessary: a benchmark quoting either one alone has a "
           "top entry that reads nothing.", ""]
