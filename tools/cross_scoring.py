@@ -382,11 +382,28 @@ def main():
                          f"{s2[0]:+.3f} [{s2[1]:+.3f}, {s2[2]:+.3f}] | {a1[0]:+.3f} [{a1[1]:+.3f}, {a1[2]:+.3f}] "
                          f"| {a2[0]:+.3f} [{a2[1]:+.3f}, {a2[2]:+.3f}] | {it[0]:+.3f} [{it[1]:+.3f}, {it[2]:+.3f}] |")
             worst = max(rows_sym, key=lambda r: abs(r[6][0]))
-            L += ["", f"The largest interaction is {worst[6][0]:+.3f} [{worst[6][1]:+.3f}, {worst[6][2]:+.3f}] on "
-                      f"`{worst[0]}`. Where it is small the ordering does not matter and the reported terms are "
-                      "the decomposition; where it is large the two orderings are both given and neither is "
-                      "presented as the split. The adaptation rate does not depend on the ordering for a policy "
-                      "whose reply ignores the edit: `r_e = r_c` makes both adaptation terms identically zero.", ""]
+            ctrl_int = [abs(r[6][0]) for r in rows_sym if r[0] in C2]
+            over = [r for r in rows_sym if r[0] not in C2 and r[5][1] > 0]
+            L += ["", f"The interaction is large on the perturbation families and reaches "
+                      f"{worst[6][0]:+.3f} [{worst[6][1]:+.3f}, {worst[6][2]:+.3f}] on `{worst[0]}`."
+                      + (f" On the negative controls it is at most {max(ctrl_int):.3f}, which is what the "
+                         "machinery produces when both sides carry the same standard." if ctrl_int else ""), "",
+                  "A large interaction is what adaptation looks like rather than a defect in the split. A reply "
+                  "written for the edited message is judged well by the edited standard and badly by the one it "
+                  "was not written for, so the value of changing the reply depends on which standard is asked, "
+                  "and that dependence is the interaction. The two orderings are therefore not two estimates of "
+                  "one quantity. They are two quantities.", ""]
+            if over:
+                L += ["**What the other ordering measures is over-adaptation.** Its adaptation term holds the "
+                      "*control* standard fixed and asks how much worse the edited reply is by it: "
+                      + "; ".join(f"`{r[0]}` {r[5][0]:+.3f} [{r[5][1]:+.3f}, {r[5][2]:+.3f}]" for r in over)
+                      + ". A system that answers a buried red flag by escalating has done the right thing on the "
+                      "edited message and would have done the wrong thing on the unedited one, and this term is "
+                      "the size of that. It is a cost only if the system cannot tell the two apart, which is "
+                      "what the negative-control families test separately.", ""]
+            L += ["The adaptation rate does not depend on the ordering for a policy whose reply ignores the "
+                  "edit: `r_e = r_c` makes both adaptation terms identically zero, so the zero property survives "
+                  "the choice even though the magnitudes do not.", ""]
 
     # cross-vendor: the same three cells judged again by another vendor, on the same sources
     if a.compare_to:
