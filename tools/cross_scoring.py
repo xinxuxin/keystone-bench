@@ -73,6 +73,8 @@ def main():
                          "the cross-vendor replication of the decomposition")
     ap.add_argument("--tag", default="", help="suffix for the cache file, so a second judge does not collide")
     ap.add_argument("--dry-run", action="store_true", help="count the calls this would make and stop")
+    ap.add_argument("--compare-to", help="a second run's cache tag (e.g. _gemini) to print beside this one; "
+                                         "both must cover the same systems, families and sources")
     ap.add_argument("--out")
     a = ap.parse_args()
 
@@ -265,6 +267,66 @@ def main():
                  f"judge's own movement rather than a shift: {vals}. The largest limit is {worst:.3f}, and every "
                  f"perturbation family's shift lies above it.")
         L.append("")
+    # cross-vendor: the same three cells judged again by another vendor, on the same sources
+    if a.compare_to:
+        other = {}
+        of = cross_dir / f"cross{a.compare_to}.jsonl"
+        if of.exists():
+            for line in of.read_text().splitlines():
+                if line.strip():
+                    d = json.loads(line)
+                    other[(d["model"], d["family"], d["source_id"], d.get("cell", "fe_rc"))] = d["verdict"]
+        if other:
+            L += ["", "## The same decomposition under a second judge", "",
+                  f"Every cell recomputed by the judge behind `{a.compare_to.lstrip('_')}` on the same systems, "
+                  "families and sources, so the two columns differ only in who judged. The `fe_rc` cell is the "
+                  "one a paired design does not contain, and it is the one this replication exists to check.", "",
+                  "| family | standard shift, this judge | standard shift, second judge | rate, this | rate, second |",
+                  "|---|---|---|---|---|"]
+            def dec(store, fam, from_records):
+                sv, av = [], []
+                for sid in keep[fam]:
+                    s_i, a_i = [], []
+                    for m in models:
+                        r = recs[m].get((fam, sid))
+                        v = store.get((m, fam, sid, "fe_rc"))
+                        if not r or v is None:
+                            continue
+                        fe_rc = 1.0 if v.get("forbidden") else 0.0
+                        if from_records:
+                            fc, fe = cell(r, "paraphrase"), cell(r, "perturbed")
+                        else:
+                            vc, ve = store.get((m, fam, sid, "fc_rc")), store.get((m, fam, sid, "fe_re"))
+                            if vc is None or ve is None:
+                                continue
+                            fc = 1.0 if vc.get("forbidden") else 0.0
+                            fe = 1.0 if ve.get("forbidden") else 0.0
+                        s_i.append(fe_rc - fc); a_i.append(fe - fe_rc)
+                    if s_i:
+                        sv.append(sum(s_i) / len(s_i)); av.append(sum(a_i) / len(a_i))
+                if not sv:
+                    return None
+                ms, los, his = boot(sv, seed=21)
+                ma, _, _ = boot(av, seed=22)
+                return ms, los, his, ((-ma / ms) if abs(ms) > 1e-9 and los > 0 else float("nan"))
+            gaps = []
+            for fam in fams:
+                x = dec(done, fam, not a.rejudge_all)
+                y = dec(other, fam, False)
+                if not x or not y:
+                    continue
+                gaps.append((fam, abs(x[0] - y[0])))
+                rx = "n/a" if x[3] != x[3] else f"{x[3]:.2f}"
+                ry = "n/a" if y[3] != y[3] else f"{y[3]:.2f}"
+                L.append(f"| `{fam}` | {x[0]:+.3f} [{x[1]:+.3f}, {x[2]:+.3f}] | "
+                         f"{y[0]:+.3f} [{y[1]:+.3f}, {y[2]:+.3f}] | {rx} | {ry} |")
+            if gaps:
+                worst = max(gaps, key=lambda g: g[1])
+                L += ["", f"The two judges place the standard shift within {worst[1]:.3f} of each other on the "
+                          f"family where they differ most (`{worst[0]}`), and closer on the rest. The cell that "
+                          "carries the replication is the one a paired design never computes, so a judge-specific "
+                          "artefact in it would show here as a gap rather than as agreement.", ""]
+
     text = "\n".join(L) + "\n"
     print(text)
     if a.out:

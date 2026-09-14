@@ -14,7 +14,7 @@ A clinical decision–evidence benchmark for chat assistants, and for the rubric
   <img alt="One decision seen in three evidence states: the evidence settles it, the fact is removed so two actions are possible, the fact is replaced so another action is correct" src="assets/three-states.svg" width="820">
 </picture>
 
-[Project page](https://xinxuxin.github.io/keystone-bench/) (English · 中文 · Español · 日本語) · [Data card](docs/DATA_CARD.md) · [Schema](docs/SCHEMA.md) · [Protocol](docs/PROTOCOL.md) · [Hypothesis lineage](docs/HYPOTHESIS_LINEAGE.md) · [Results](docs/RESULTS.md) · [Grader check](docs/JUDGE_CHECK.md) · [Shortcut audit](docs/SHORTCUT_AUDIT.md) · [Policy matrix](docs/POLICY_MATRIX.md) · [Related work](docs/RELATED_WORK.md) · [Contributing](CONTRIBUTING.md)
+[Project page](https://xinxuxin.github.io/keystone-bench/) (English · 中文 · Español · 日本語) · [Data card](docs/DATA_CARD.md) · [Schema](docs/SCHEMA.md) · [Protocol](docs/PROTOCOL.md) · [Hypothesis lineage](docs/HYPOTHESIS_LINEAGE.md) · [Results](docs/RESULTS.md) · [Grader check](docs/JUDGE_CHECK.md) · [Shortcut audit](docs/SHORTCUT_AUDIT.md) · [Policy matrix](docs/POLICY_MATRIX.md) · [Cross-scoring](docs/CROSS_SCORING.md) · [Related work](docs/RELATED_WORK.md) · [Contributing](CONTRIBUTING.md)
 
 ![tests](https://github.com/xinxuxin/keystone-bench/actions/workflows/ci.yml/badge.svg) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![twins](https://img.shields.io/badge/twins-7%2C318-8a2be2) ![sources](https://img.shields.io/badge/HealthBench%20sources-1%2C236-8a2be2) ![tier](https://img.shields.io/badge/label%20tier-silver-9aa0a6) [![pypi](https://img.shields.io/pypi/v/keystone-bench?color=8a2be2)](https://pypi.org/project/keystone-bench/)
 
@@ -160,6 +160,8 @@ Every step is fed a failing table in the test suite, so a check that stopped bit
 | `missing_evidence` | **+0.487** [0.399, 0.572] | 84% | +0.079 |
 | `salient_distractor` (control) | +0.002 [−0.007, 0.010] | no shift to recover | +0.002 |
 | `demographic_control` (control) | −0.006 [−0.016, 0.003] | no shift to recover | −0.004 |
+
+**A second vendor's judge places the standard shift in the same place.** Recomputing all three cells with Gemini 3.8 Flash on the same three systems and the same 50 sources per family gives +0.447 against +0.337 on `missing_evidence`, +0.607 against +0.597 on `conflicting_evidence`, +0.783 against +0.760 on `buried_red_flag`, and −0.010 against +0.013 on the control. The cell that carries the replication is the one a paired design never computes ([`docs/CROSS_SCORING_VENDORS.md`](docs/CROSS_SCORING_VENDORS.md)).
 
 The recovered share is an **adaptation rate**, and it is zero by construction for any policy whose reply does not depend on the edit, because the numerator is a difference between two judgements of the same text. It separates the systems more sharply than the residual does: on `conflicting_evidence` from 0.25 on llama-4-maverick to 0.82 on claude-sonnet-5. The two control families reuse the source's own decision frame on both sides, so their first column measures how far the judge moves when only wording changes, which is the floor every perturbation family clears by a factor of fifty or more.
 
