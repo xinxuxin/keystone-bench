@@ -52,3 +52,75 @@ def test_cross_scoring_imports_without_a_key():
                         "ast.parse(pathlib.Path('tools/rubric_consequence.py').read_text())"],
                        capture_output=True, text=True, cwd=ROOT)
     assert r.returncode == 0, r.stderr
+
+
+# ---------------------------------------------------------------------------
+# The audit steps have to bite. Each one is fed a table where its condition
+# fails, and a table where it holds, so a refactor that makes a step always
+# return pass is caught here rather than by a reader who trusted the output.
+# ---------------------------------------------------------------------------
+
+def _steps():
+    from keystone.cli import (_step_effect, _step_control, _step_separation,
+                              _step_adaptation, _step_usability, _step_floor)
+    return dict(effect=_step_effect, control=_step_control, separation=_step_separation,
+                adaptation=_step_adaptation, usability=_step_usability, floor=_step_floor)
+
+
+C1_HOLDS = """
+| family | sources | risk difference | p | q | excludes zero |
+|---|---|---|---|---|---|
+| missing_evidence | 85 | +0.079 [+0.018, +0.140] | 0.01 | 0.01 | yes |
+| conflicting_evidence | 139 | +0.284 [+0.223, +0.344] | 0.00 | 0.00 | yes |
+| buried_red_flag | 148 | +0.126 [+0.076, +0.176] | 0.00 | 0.00 | yes |
+"""
+C1_FAILS = C1_HOLDS.replace("+0.079 [+0.018, +0.140]", "+0.011 [-0.048, +0.070]")
+
+C2_HOLDS = """
+| family | sources | risk difference (90%) | inside |
+|---|---|---|---|
+| salient_distractor | 219 | +0.002 [-0.012, +0.016] | yes |
+| demographic_control | 161 | -0.004 [-0.026, +0.017] | yes |
+"""
+C2_FAILS = C2_HOLDS.replace("+0.002 [-0.012, +0.016]", "+0.140 [+0.090, +0.190]")
+
+POL_HOLDS = """
+| | | unsupported action | paired difference | adaptation rate | withheld |
+|---|---|---|---|---|---|
+| `always_definitive` | commits every time | 0.968 | +0.968 | 0.00 | 0.000 |
+| `parrot_then_act` | names it, commits | 0.968 | +0.968 | 0.00 | 0.000 |
+| `always_ask` | asks, gives nothing | 0.000 | +0.000 | n/a | 1.000 |
+| `always_conditional` | hedges | 0.000 | +0.000 | n/a | 1.000 |
+| `always_escalate` | escalates | 0.000 | +0.000 | n/a | 1.000 |
+| `always_refuse` | refers out | 0.000 | +0.000 | n/a | 1.000 |
+| `model-a` | evaluated system | 0.158 | +0.097 | 0.86 | 0.096 |
+| `model-b` | evaluated system | 0.626 | +0.368 | 0.40 | 0.220 |
+"""
+# a system that buys its score by answering nothing: the adaptation column still looks fine
+POL_INERT_SYSTEM = POL_HOLDS.replace("| `model-b` | evaluated system | 0.626 | +0.368 | 0.40 | 0.220 |",
+                                     "| `model-b` | evaluated system | 0.010 | +0.005 | 0.95 | 0.910 |")
+# a fixed policy that somehow reports a non-zero adaptation rate: the algebra was broken
+POL_BROKEN = POL_HOLDS.replace("| `always_definitive` | commits every time | 0.968 | +0.968 | 0.00 | 0.000 |",
+                               "| `always_definitive` | commits every time | 0.968 | +0.968 | 0.44 | 0.000 |")
+
+
+@pytest.mark.parametrize("step,md,expected", [
+    ("effect", C1_HOLDS, True),
+    ("effect", C1_FAILS, False),
+    ("control", C2_HOLDS, True),
+    ("control", C2_FAILS, False),
+    ("adaptation", POL_HOLDS, True),
+    ("adaptation", POL_BROKEN, False),
+    ("usability", POL_HOLDS, True),
+    ("usability", POL_INERT_SYSTEM, False),
+])
+def test_audit_step_verdicts(step, md, expected):
+    ok, detail = _steps()[step](md)
+    assert ok is expected, f"{step}: got {ok} with {detail!r}"
+
+
+def test_audit_step_skips_when_the_table_is_absent():
+    for name, fn in _steps().items():
+        ok, detail = fn("no tables here, just prose")
+        assert ok is None, f"{name} returned {ok} on empty input"
+        assert detail

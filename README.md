@@ -136,6 +136,21 @@ Every row is all 40 quick-set items of that family with both sides judged, avera
 
 C1 holds on all three families after Benjamini-Hochberg. C1b, the same restricted to sources the system handled correctly unedited, holds on all three and is larger. **C2 is an equivalence test, not a null result**: the 90 percent interval on each negative control lies inside ±0.05, so the controls are shown to be flat rather than merely failing to be significant.
 
+**One command runs the whole two-sided audit.** Each line names a claim, the measurement behind it, and the condition that would contradict it. No model call, no key; it reads a directory of runs.
+
+```
+$ keystone audit --runs runs --prefix testcore
+  effect      pass   Every perturbation family moves the outcome against its own paraphrase control
+                     missing_evidence +0.079 [+0.018, +0.140]; conflicting_evidence +0.284 [+0.223, +0.344]; buried_red_flag +0.126 [+0.076, +0.176]
+  control     pass   Both negative-control families stay inside the equivalence bound
+  separation  pass   The perturbation families separate the systems and the controls do not
+  adaptation  pass   Every fixed policy scores zero and every evaluated system scores above it
+  usability   pass   No evaluated system withholds answers at anything like the inert policies' rate
+  floor       pass   The measured effects clear the re-run instability floor
+```
+
+Every step is fed a failing table in the test suite, so a check that stopped biting fails CI rather than a reader ([`tests/test_analysis_tools.py`](tests/test_analysis_tools.py)).
+
 **The paired difference is the part left over after adaptation, and the part before it is larger.** The outcome above moves the reply and the standard it is held to at once. Judging the frozen control reply under the edited standard fills the cell a paired design leaves empty and splits it exactly ([`docs/CROSS_SCORING.md`](docs/CROSS_SCORING.md)):
 
 | | leaving the reply unchanged | recovered by adapting | left over |

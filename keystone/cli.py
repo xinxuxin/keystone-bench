@@ -370,6 +370,180 @@ def cmd_run(a):
     print(f"usage: model {respond.usage}; judge {judge.usage}")
 
 
+def _tables(md: str):
+    """Every markdown table in a tool's output, as a list of row-cell lists (header and rule dropped)."""
+    out, cur = [], []
+    for line in md.splitlines():
+        t = line.strip()
+        if t.startswith("|") and t.endswith("|"):
+            cells = [c.strip() for c in t.strip("|").split("|")]
+            if set("".join(cells)) <= set("-: "):
+                continue
+            cur.append(cells)
+        elif cur:
+            out.append(cur); cur = []
+    if cur:
+        out.append(cur)
+    return out
+
+
+def _iv(cell: str):
+    """(point, lo, hi) from a cell like '+0.284 [+0.223, +0.344]'; Nones for anything else."""
+    import re
+    m = re.match(r"\**([-+]?\d*\.?\d+)\**\s*\[\s*([-+]?\d*\.?\d+)\s*,\s*([-+]?\d*\.?\d+)\s*\]", cell)
+    if m:
+        return tuple(float(x) for x in m.groups())
+    m = re.match(r"\**([-+]?\d*\.?\d+)\**$", cell)
+    return (float(m.group(1)), None, None) if m else (None, None, None)
+
+
+def _step_effect(md):
+    """C1: every perturbation family's interval excludes zero."""
+    for tbl in _tables(md):
+        rows = [r for r in tbl if r and r[0] in ("missing_evidence", "conflicting_evidence", "buried_red_flag")]
+        if len(rows) == 3 and len(rows[0]) >= 3:
+            los = [_iv(r[2])[1] for r in rows]
+            if all(l is not None for l in los):
+                return all(l > 0 for l in los), "; ".join(f"{r[0]} {r[2]}" for r in rows)
+    return None, "no C1 table in the confirmatory output"
+
+
+def _step_control(md, bound=0.05):
+    """C2: both controls' intervals lie inside the equivalence bound."""
+    for tbl in _tables(md):
+        rows = [r for r in tbl if r and r[0] in ("salient_distractor", "demographic_control")]
+        if len(rows) == 2 and len(rows[0]) >= 3:
+            iv = [_iv(r[2]) for r in rows]
+            if all(x[1] is not None for x in iv):
+                return all(-bound < lo and hi < bound for _, lo, hi in iv), \
+                       "; ".join(f"{r[0]} {r[2]}" for r in rows)
+    return None, "no C2 table in the confirmatory output"
+
+
+def _step_separation(md, alpha=0.05):
+    """The perturbation families reject the permutation null and the controls do not."""
+    for tbl in _tables(md):
+        rows = [r for r in tbl if len(r) >= 7 and r[0].startswith("`")]
+        if len(rows) >= 5:
+            pert = [r for r in rows if "control" not in r[1]]
+            ctrl = [r for r in rows if "control" in r[1]]
+            if not pert or not ctrl:
+                continue
+            pp = [float(r[6]) for r in pert if r[6].replace(".", "").isdigit()]
+            cp = [float(r[6]) for r in ctrl if r[6].replace(".", "").isdigit()]
+            if pp and cp:
+                return (sum(1 for x in pp if x < alpha) >= len(pp) - 1) and all(x > alpha for x in cp), \
+                       f"{sum(1 for x in pp if x < alpha)}/{len(pp)} perturbation families below {alpha}, " \
+                       f"controls at {', '.join(f'{x:.3f}' for x in cp)}"
+    return None, "no discrimination table"
+
+
+def _step_adaptation(md):
+    """Every fixed policy scores zero or undefined; every evaluated system scores above zero."""
+    for tbl in _tables(md):
+        rows = [r for r in tbl if len(r) >= 6 and r[0].startswith("`")]
+        if len(rows) >= 8:
+            pol = [r for r in rows if r[1] != "evaluated system"]
+            sysr = [r for r in rows if r[1] == "evaluated system"]
+            if not pol or not sysr:
+                continue
+            pol_ok = all(r[4] == "n/a" or abs(float(r[4])) < 1e-9 for r in pol)
+            sys_v = [float(r[4]) for r in sysr if r[4] != "n/a"]
+            return pol_ok and bool(sys_v) and all(v > 0 for v in sys_v), \
+                   f"{len(pol)} fixed policies at zero or undefined, systems {min(sys_v):.2f} to {max(sys_v):.2f}"
+    return None, "no policy matrix"
+
+
+def _step_usability(md):
+    """The inert policies withhold on every item and no evaluated system comes close."""
+    for tbl in _tables(md):
+        rows = [r for r in tbl if len(r) >= 6 and r[0].startswith("`")]
+        if len(rows) >= 8:
+            pol = [float(r[5]) for r in rows if r[1] != "evaluated system"]
+            sysr = [float(r[5]) for r in rows if r[1] == "evaluated system"]
+            if pol and sysr:
+                return max(sysr) < max(pol) / 2, \
+                       f"fixed policies up to {max(pol):.3f}, worst evaluated system {max(sysr):.3f}"
+    return None, "no policy matrix"
+
+
+def _step_floor(md):
+    """The largest spurious contrast a re-run produces is smaller than the measured effects."""
+    for tbl in _tables(md):
+        rows = [r for r in tbl if len(r) >= 7 and r[0] and not r[0].startswith("|")]
+        sp = [(r[0], _iv(r[4])[0], _iv(r[6])[0]) for r in rows if _iv(r[4])[0] is not None and _iv(r[6])[0] is not None]
+        if len(sp) >= 4:
+            worst = max(abs(x[1]) for x in sp)
+            eff = max(abs(x[2]) for x in sp)
+            return eff > 2 * worst, f"largest spurious contrast {worst:.3f}, largest measured effect {eff:.3f}"
+    return None, "no instability-floor table"
+
+
+AUDIT_STEPS = [
+    ("effect", "confirmatory.py", _step_effect,
+     "Every perturbation family moves the outcome against its own paraphrase control",
+     "an effect a reworded control reproduces is an effect of editing, not of evidence"),
+    ("control", "confirmatory.py", _step_control,
+     "Both negative-control families stay inside the equivalence bound",
+     "a run that moves the controls is measuring sensitivity to insertion"),
+    ("separation", "discrimination.py", _step_separation,
+     "The perturbation families separate the systems and the controls do not",
+     "a benchmark that separates systems everywhere separates them on something else"),
+    ("adaptation", "policy_matrix.py", _step_adaptation,
+     "Every fixed policy scores zero and every evaluated system scores above it",
+     "a policy whose reply ignores the edit cannot reach a non-zero rate"),
+    ("usability", "policy_matrix.py", _step_usability,
+     "No evaluated system withholds answers at anything like the inert policies' rate",
+     "the adaptation rate alone cannot see a system that answers nothing"),
+    ("floor", "instability_floor.py", _step_floor,
+     "The measured effects clear the re-run instability floor",
+     "at temperature 0 a served model still flips verdicts"),
+]
+
+
+def cmd_audit(a):
+    """Run the two-sided audit over a directory of runs and print one line per claim with the measurement that
+    would contradict it. Every step reads the run directory; none of them calls a model.
+
+    This is the procedure the release exists to make repeatable. A step whose data is absent prints `skipped`
+    with what is missing, never `pass`."""
+    import subprocess
+    root = Path(__file__).resolve().parent.parent
+    tools = root / "tools"
+    if not tools.exists():
+        print("audit needs the repository checkout: the analysis tools are not shipped in the wheel")
+        return
+    outputs = {}
+    for _, script, _, _, _ in AUDIT_STEPS:
+        if script in outputs:
+            continue
+        sp = tools / script
+        if not sp.exists():
+            outputs[script] = None
+            continue
+        args = ["--runs", a.runs] + ([] if script == "instability_floor.py" else ["--prefix", a.prefix])
+        r = subprocess.run([sys.executable, str(sp), *args], capture_output=True, text=True, cwd=root)
+        outputs[script] = r.stdout if r.returncode == 0 else None
+    print(f"Keystone audit, runs={a.runs}, prefix={a.prefix}\n")
+    w = max(len(k) for k, *_ in AUDIT_STEPS)
+    failed = skipped = 0
+    for key, script, fn, claim, failure in AUDIT_STEPS:
+        md = outputs.get(script)
+        if md is None:
+            ok, detail = None, f"tools/{script} produced no output for these runs"
+        else:
+            ok, detail = fn(md)
+        mark = "pass" if ok else ("SKIP" if ok is None else "FAIL")
+        failed += ok is False
+        skipped += ok is None
+        print(f"  {key:<{w}}  {mark:<5}  {claim}")
+        print(f"  {'':<{w}}  {'':<5}  {detail}")
+        print(f"  {'':<{w}}  {'':<5}  fails when: {failure}\n")
+    print(f"{len(AUDIT_STEPS) - failed - skipped} pass, {failed} fail, {skipped} skipped. "
+          f"Run the named tool for the tables behind each line.")
+    return 1 if failed else 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="keystone", description=f"Keystone {__version__}: paired evidence-perturbation stress tests")
     ap.add_argument("--dist", default=None, help="release directory (default: $KEYSTONE_DIST or the repository's dist/)")
@@ -395,6 +569,9 @@ def main(argv=None):
     s = sub.add_parser("compare-judges", help="agreement between two judges on the same model's replies"); s.add_argument("records_a"); s.add_argument("records_b"); s.set_defaults(f=cmd_compare_judges)
     s = sub.add_parser("estimate", help="calls and tokens a run would take"); s.add_argument("--family", default="missing_evidence", choices=FAMILIES + ("all",)); s.add_argument("--layer", default="core", choices=LAYERS); s.add_argument("--split", default="all", choices=SPLITS)
     s.add_argument("--limit", type=int); s.add_argument("--rubric", action="store_true"); s.add_argument("--max-tokens", type=int, default=1500); s.set_defaults(f=cmd_estimate)
+    s = sub.add_parser("audit", help="run the two-sided audit over a directory of runs and print the checklist")
+    s.add_argument("--runs", default="runs"); s.add_argument("--prefix", default="testcore")
+    s.set_defaults(f=cmd_audit)
     s = sub.add_parser("run", help="evaluate a model with a judge")
     s.add_argument("--family", default="missing_evidence", choices=FAMILIES + ("all",)); s.add_argument("--layer", default="core", choices=LAYERS)
     s.add_argument("--model", required=True, help="e.g. openrouter/openai/gpt-5.6-terra, openai/gpt-4.1, ollama/llama3.1:8b, or a bare id with --base-url")
