@@ -2,7 +2,9 @@
 
 The other two anchors ask whether our labels agree with something physicians wrote. This one asks whether the label predicts what it claims to predict: on a twin whose edit is material, assistants should behave differently, and on the paraphrase-only twin of the same item they should not. The second half is what makes this a test rather than a correlation, because a label that predicts both sides is tracking how much the text was disturbed rather than whether the evidence still supports the answer.
 
-Sources: reference_records.jsonl, alternative_evidence, buried_red_flag, conflicting_evidence, demographic_control, demographic_shift, missing_evidence, missing_evidence_early, salient_distractor, alternative_evidence, buried_red_flag, conflicting_evidence, demographic_control, demographic_shift, missing_evidence, missing_evidence_early, salient_distractor, alternative_evidence, buried_red_flag, conflicting_evidence, demographic_control, demographic_shift, missing_evidence, missing_evidence_early, salient_distractor, alternative_evidence, buried_red_flag, conflicting_evidence, demographic_control, demographic_shift, missing_evidence, missing_evidence_early, salient_distractor, alternative_evidence, buried_red_flag, conflicting_evidence, demographic_control, demographic_shift, missing_evidence, missing_evidence_early, salient_distractor. Assistants: claude-sonnet-5, deepseek-v4-pro-0813, gemini-3.8-flash, llama-4-maverick, gpt-5.6-terra, claude-sonnet-5, deepseek-v4-pro-0813, gemini-3.8-flash, llama-4-maverick, gpt-5.6-terra. Families with at least ten items: `alternative_evidence`, `buried_red_flag`, `conflicting_evidence`, `demographic_control`, `demographic_shift`, `missing_evidence`, `missing_evidence_early`, `salient_distractor`.
+**How this page was produced.** The inputs are not the tool's defaults, and a page whose command is not written down cannot be checked. The exact call is in the Makefile under `anchors`, and the run directories behind it are named below.
+
+Command: `python tools/behaviour_anchor.py --family all --records quick__claude-sonnet-5 quick__deepseek-v4-pro quick__gemini-3.8-flash quick__gpt-5.6-terra quick__llama-4-maverick reference_records.jsonl`. Assistants: claude-sonnet-5, deepseek-v4-pro-0813, gemini-3.8-flash, gpt-5.6-terra, llama-4-maverick. Families with at least ten items: `alternative_evidence`, `buried_red_flag`, `conflicting_evidence`, `demographic_control`, `demographic_shift`, `missing_evidence`, `missing_evidence_early`, `salient_distractor`.
 
 Rates are computed per item across assistants before being averaged, so one item is one observation. Intervals are 95 percent bootstrap over items; empty replies are missing data and enter no denominator.
 
@@ -59,7 +61,7 @@ Share of assistants that stopped committing, among those that committed on the o
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
 | all | 38 | 0.231 [0.129, 0.345] | 0.064 [0.021, 0.118] | 0.167 [0.060, 0.282] |
-| 3 | 38 | 0.231 [0.131, 0.341] | 0.064 [0.021, 0.117] | 0.167 [0.057, 0.287] |
+| 3 | 33 | 0.260 [0.149, 0.381] | 0.062 [0.015, 0.121] | 0.198 [0.078, 0.327] |
 | 2 | 0 | | | |
 | 1 | 0 | | | |
 
@@ -72,7 +74,7 @@ Share of assistants that took an action this twin's own annotation forbids. Defi
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
 | all | 40 | 0.291 [0.209, 0.384] | 0.125 [0.060, 0.205] | 0.166 [0.049, 0.279] |
-| 3 | 40 | 0.291 [0.208, 0.380] | 0.125 [0.060, 0.205] | 0.166 [0.046, 0.279] |
+| 3 | 35 | 0.276 [0.190, 0.374] | 0.137 [0.069, 0.223] | 0.139 [0.011, 0.254] |
 | 2 | 0 | | | |
 | 1 | 0 | | | |
 
@@ -92,7 +94,7 @@ The twin-side rate inside each assistant's own replies, so the result is not one
 
 ### `conflicting_evidence`
 
-40 items, 5 assistants, 200 records.
+39 items, 5 assistants, 200 records.
 
 #### Dropped commitment, by rubric-blind materiality
 
@@ -100,9 +102,9 @@ Share of assistants that stopped committing, among those that committed on the o
 
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
-| all | 39 | 0.368 [0.259, 0.481] | 0.112 [0.049, 0.188] | 0.257 [0.143, 0.379] |
-| 3 | 23 | 0.416 [0.274, 0.558] | 0.104 [0.028, 0.211] | 0.312 [0.158, 0.463] |
-| 2 | 0 | | | |
+| all | 38 | 0.352 [0.249, 0.458] | 0.114 [0.051, 0.200] | 0.237 [0.127, 0.352] |
+| 3 | 22 | 0.389 [0.256, 0.524] | 0.109 [0.030, 0.220] | 0.280 [0.130, 0.422] |
+| 2 | 1 | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
 | 1 | 0 | | | |
 
 This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
@@ -113,9 +115,9 @@ Share of assistants that took an action this twin's own annotation forbids. Defi
 
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
-| all | 40 | 0.450 [0.354, 0.550] | 0.118 [0.062, 0.185] | 0.333 [0.235, 0.436] |
-| 3 | 23 | 0.374 [0.274, 0.480] | 0.083 [0.026, 0.157] | 0.291 [0.189, 0.402] |
-| 2 | 0 | | | |
+| all | 39 | 0.462 [0.367, 0.560] | 0.121 [0.064, 0.185] | 0.341 [0.238, 0.442] |
+| 3 | 23 | 0.383 [0.287, 0.487] | 0.083 [0.026, 0.157] | 0.300 [0.202, 0.409] |
+| 2 | 1 | 1.000 [1.000, 1.000] | 0.200 [0.200, 0.200] | 0.800 [0.800, 0.800] |
 | 1 | 0 | | | |
 
 This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
@@ -145,7 +147,7 @@ Share of assistants that stopped committing, among those that committed on the o
 | all | 37 | 0.431 [0.304, 0.561] | 0.209 [0.109, 0.318] | 0.223 [0.096, 0.346] |
 | 3 | 0 | | | |
 | 2 | 0 | | | |
-| 1 | 37 | 0.431 [0.304, 0.561] | 0.209 [0.107, 0.321] | 0.223 [0.100, 0.349] |
+| 1 | 36 | 0.443 [0.315, 0.575] | 0.214 [0.114, 0.331] | 0.229 [0.101, 0.355] |
 
 This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
 
@@ -158,7 +160,7 @@ Share of assistants that took an action this twin's own annotation forbids. Defi
 | all | 40 | 0.101 [0.045, 0.171] | 0.113 [0.058, 0.181] | -0.011 [-0.056, 0.033] |
 | 3 | 0 | | | |
 | 2 | 0 | | | |
-| 1 | 40 | 0.101 [0.045, 0.171] | 0.113 [0.056, 0.181] | -0.011 [-0.056, 0.034] |
+| 1 | 39 | 0.104 [0.046, 0.177] | 0.115 [0.059, 0.182] | -0.012 [-0.058, 0.035] |
 
 This layer admits a single materiality, so the rows below `all` are empty and no trend is defined. The `all` row is the comparison the design rests on: the same item, edited two ways.
 
@@ -218,7 +220,7 @@ The twin-side rate inside each assistant's own replies, so the result is not one
 
 ### `missing_evidence`
 
-117 items, 10 assistants, 600 records.
+115 items, 10 assistants, 600 records.
 
 #### Dropped commitment, by rubric-blind materiality
 
@@ -226,7 +228,7 @@ Share of assistants that stopped committing, among those that committed on the o
 
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
-| all | 112 | 0.379 [0.319, 0.439] | 0.071 [0.035, 0.112] | 0.308 [0.244, 0.372] |
+| all | 110 | 0.376 [0.312, 0.440] | 0.072 [0.036, 0.114] | 0.304 [0.237, 0.369] |
 | 3 | 33 | 0.520 [0.414, 0.626] | 0.064 [0.012, 0.133] | 0.456 [0.336, 0.574] |
 | 2 | 29 | 0.227 [0.121, 0.341] | 0.034 [0.000, 0.103] | 0.193 [0.101, 0.298] |
 | 1 | 9 | 0.130 [0.000, 0.315] | 0.139 [0.000, 0.361] | -0.009 [-0.306, 0.269] |
@@ -239,7 +241,7 @@ Share of assistants that took an action this twin's own annotation forbids. Defi
 
 | Materiality | Items | On the twin | On the paraphrase (control) | Evidence effect |
 |---|---|---|---|---|
-| all | 40 | 0.256 [0.155, 0.370] | 0.071 [0.030, 0.125] | 0.185 [0.085, 0.291] |
+| all | 39 | 0.263 [0.158, 0.376] | 0.067 [0.026, 0.118] | 0.196 [0.097, 0.303] |
 | 3 | 19 | 0.411 [0.242, 0.589] | 0.074 [0.011, 0.168] | 0.337 [0.179, 0.516] |
 | 2 | 0 | | | |
 | 1 | 0 | | | |

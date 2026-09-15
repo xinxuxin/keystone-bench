@@ -24,7 +24,7 @@ regress:         ## what B fixed and regressed relative to A: make regress A=run
 	keystone regress $(A) $(B)
 
 anchors:         ## validity: behaviour, the physicians' rubric, their ideal answers, the edit fingerprint (no model calls)
-	$(PY) tools/behaviour_anchor.py && $(PY) tools/rubric_anchor.py && $(PY) tools/ideal_answer_check.py && $(PY) tools/shortcut_audit.py
+	$(PY) tools/behaviour_anchor.py --family all --records release/reference_records.jsonl $$(ls runs/quick__*/*/records.jsonl | grep -v __judge-) && $(PY) tools/rubric_anchor.py && $(PY) tools/ideal_answer_check.py && $(PY) tools/shortcut_audit.py
 
 judge-check:     ## does the judge separate the six authored reply types
 	$(PY) tools/judge_check.py --judge $(JUDGE)

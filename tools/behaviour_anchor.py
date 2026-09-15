@@ -308,7 +308,10 @@ def main():
          "differently, and on the paraphrase-only twin of the same item they should not. The second half is what makes "
          "this a test rather than a correlation, because a label that predicts both sides is tracking how much the text "
          "was disturbed rather than whether the evidence still supports the answer.", "",
-         f"Sources: {', '.join(sorted({Path(p).name for p in a.records}))}. "
+         "**How this page was produced.** The inputs are not the tool's defaults, and a page whose command is "
+         "not written down cannot be checked. The exact call is in the Makefile under `anchors`, and the run "
+         "directories behind it are named below.", "",
+         f"Command: `python tools/behaviour_anchor.py --family {a.family} --records {' '.join(sorted({Path(p).parts[1] if len(Path(p).parts) > 1 and Path(p).parts[0] == 'runs' else Path(p).name for p in a.records}))}`. "
          f"Assistants: {', '.join(sorted({m.split('/')[-1] for m in models}))}. Families with at least ten items: "
          f"{', '.join('`' + f + '`' for f in sorted(set(done)))}.", "",
          "Rates are computed per item across assistants before being averaged, so one item is one observation. "
