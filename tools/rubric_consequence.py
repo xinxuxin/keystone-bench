@@ -154,7 +154,7 @@ def main():
          "Each criterion of a source's physician rubric is graded once against that system's reply to the edited "
          "conversation. The **stale** score uses the rubric as the physician wrote it. The **adapted** score drops "
          "the criteria a second judge marked inapplicable to the edited message. Both read off the same grades, so "
-         "the only difference is which criteria count.", "",
+         f"the only difference is which criteria count. {len(done):,} criterion grades in all.", "",
          "| family | sources | criteria dropped | stale score | adapted score | level shift | ranking flip rate |",
          "|---|---|---|---|---|---|---|"]
     rows = {}

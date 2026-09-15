@@ -1,6 +1,6 @@
 # Rubric expiry and the ranking it changes
 
-Layer `core`, `test` split, judge `openrouter/openai/gpt-4.1`, systems `claude-opus-5`, `gpt-5.6-terra`, `llama-4-maverick`, `gemini-3.8-flash`. Each criterion of a source's physician rubric is graded once against that system's reply to the edited conversation. The **stale** score uses the rubric as the physician wrote it. The **adapted** score drops the criteria a second judge marked inapplicable to the edited message. Both read off the same grades, so the only difference is which criteria count.
+Layer `core`, `test` split, judge `openrouter/openai/gpt-4.1`, systems `claude-opus-5`, `gpt-5.6-terra`, `llama-4-maverick`, `gemini-3.8-flash`. Each criterion of a source's physician rubric is graded once against that system's reply to the edited conversation. The **stale** score uses the rubric as the physician wrote it. The **adapted** score drops the criteria a second judge marked inapplicable to the edited message. Both read off the same grades, so the only difference is which criteria count. 29,774 criterion grades in all.
 
 | family | sources | criteria dropped | stale score | adapted score | level shift | ranking flip rate |
 |---|---|---|---|---|---|---|
