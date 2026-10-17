@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.1 (unreleased)
+
+- **An installation from PyPI rebuilds the published release again.** `keystone build` outside a checkout fetched
+  eight label files from the tag and not `deprecated_metadata.jsonl` or `deprecated_edits.jsonl`, so it wrote no
+  `dist/deprecated_twins.jsonl` and `keystone build --check` reported a mismatch on that file. Both are now
+  fetched, a truncated download is retried, and `tests/test_build.py` rebuilds from exactly the fetched files and
+  checks the result against the published hashes. The label files and the hashes are those of 0.6.0
+  (`keystone.build.VERSION`), so the data and every published number are unchanged.
+
 ## 0.6.0 (2026-09-12)
 
 - **Every twin now carries an evidence state.** The three base families were annotated on the strict layer

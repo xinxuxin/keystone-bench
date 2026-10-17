@@ -25,18 +25,23 @@ import hashlib
 import json
 import os
 import sys
+import urllib.error
 import urllib.request
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+# The data release: the labels, the edits and the published hashes. A package release that changes only code keeps
+# this value, so an installed copy fetches the label files of the release its hashes were recorded for.
 VERSION = "0.6.0"
 CACHE = Path(os.environ.get("KEYSTONE_CACHE", Path.home() / ".cache" / "keystone"))
 RAW = "https://raw.githubusercontent.com/xinxuxin/keystone-bench/v{version}/release/{name}"
+# every file in release/ that build() reads; an installed copy has nothing else to rebuild from
 RELEASE_FILES = ("metadata.jsonl", "edits.jsonl", "reference_ids.json", "reference_results.json",
                  "reference_records.jsonl", "decision_frames.jsonl", "contrastive_replies.jsonl",
-                 "MANIFEST.expected.json")
+                 "deprecated_metadata.jsonl", "deprecated_edits.jsonl", "MANIFEST.expected.json")
+FETCH_ATTEMPTS = 3
 EXPECTED = "MANIFEST.expected.json"      # the hashes of the release the published numbers were computed on
 BASE = ("missing_evidence", "conflicting_evidence", "demographic_shift", "salient_distractor")
 STATE_FIELDS = ("evidence_state", "alternative_action", "acceptable_actions", "forbidden_actions", "decisive_questions",
@@ -211,7 +216,15 @@ def release_dir(explicit: str | os.PathLike | None = None, fetch: bool = True) -
             url = RAW.format(version=VERSION, name=name)
             print(f"fetching {name} from {url} ...", flush=True)
             tmp = dest / (name + ".part")
-            urllib.request.urlretrieve(url, tmp)
+            for attempt in range(1, FETCH_ATTEMPTS + 1):
+                try:
+                    urllib.request.urlretrieve(url, tmp)
+                    break
+                except urllib.error.ContentTooShortError:
+                    # a truncated transfer is retried; the .part file is never mistaken for the real one
+                    if attempt == FETCH_ATTEMPTS:
+                        raise
+                    print(f"  incomplete download, retrying ({attempt}/{FETCH_ATTEMPTS - 1})", flush=True)
             tmp.replace(dest / name)
     return dest
 

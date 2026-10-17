@@ -110,14 +110,14 @@ def test_prompts_render():
     assert "<<conversation>>" not in g and "<<rubric_item>>" not in g and "assistant: reply" in g
 
 
-def test_openai_compatible_requires_key_or_url(monkeypatch):
+def test_openai_compatible_requires_key_or_url(monkeypatch, tmp_path):
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     monkeypatch.delenv("OPENAI_BASE_URL", raising=False)
     with pytest.raises(RuntimeError):
         OpenAICompatible("openrouter/openai/gpt-4.1")
     with pytest.raises(RuntimeError):
         OpenAICompatible("some-local-model")
-    c = OpenAICompatible("ollama/llama3.1:8b", cache_dir="/tmp/keystone-test-cache")
+    c = OpenAICompatible("ollama/llama3.1:8b", cache_dir=str(tmp_path / "cache"))
     assert c.model_id == "llama3.1:8b" and c.base_url.startswith("http://localhost:11434")
 
 

@@ -33,6 +33,23 @@ def test_release_files_needed_for_a_rebuild_are_all_present():
         assert (ROOT / "release" / name).exists(), f"{name} is fetched by an installed copy, so it must be in the repository"
 
 
+def test_the_fetched_files_alone_rebuild_the_published_release(tmp_path):
+    """What an installed copy has is `RELEASE_FILES` and HealthBench, nothing else from release/.
+
+    Rebuilt from exactly those, the dist must still match every published hash; a file the build reads but the
+    fetch list omits shows up here as a missing or different output rather than after a PyPI release."""
+    hb = ROOT / ".cache" / "healthbench_oss.jsonl"
+    if not hb.exists():
+        pytest.skip("needs the HealthBench copy that `keystone build` downloads")
+    fetched = tmp_path / "release"
+    fetched.mkdir()
+    for name in build.RELEASE_FILES:
+        (fetched / name).symlink_to(ROOT / "release" / name)
+    dist = tmp_path / "dist"
+    assert build.build(dist, hb, fetched) == 0
+    assert build.check(dist, fetched) == 0
+
+
 def test_cli_exposes_build():
     from keystone import cli
     assert callable(cli.cmd_build)
