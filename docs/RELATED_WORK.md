@@ -20,7 +20,7 @@ as an issue; we would rather fix this table than defend it.
 | [Missing information, same-provider judges](https://arxiv.org/abs/2607.18828) (arXiv, 2026) | HealthBench conversations with the tail of the last user turn deleted | yes, one deletion operation | no | no | no | automatic deletion |
 | [MamaBench](https://arxiv.org/abs/2607.14385) (arXiv, 2026) | 434 maternal and paediatric narratives as 217 counterfactual pairs | **yes, minimal change that shifts the diagnosis** | not stated | not stated | no | **clinicians** |
 | [Causal Sensitivity Score](https://arxiv.org/abs/2605.30590) (arXiv, 2026) | 224 oncology tumour-board cases mutated along five dimensions | **yes, with a pre-registered correct direction** | not stated | not stated | no | not stated |
-| **Keystone** | 1,236 HealthBench conversations, each with its physician rubric, as 7,318 twins in eight families | yes, one element per twin, eight operations | **yes, two families whose correct behaviour is no change** | **yes, a paraphrase-only twin on 1,119 sources** | **yes, per-criterion applicability after the edit** | models, on physician-written sources and rubrics; clinician panel open |
+| **Keystone** | 1,234 HealthBench conversations, each with its physician rubric, as 7,306 twins in eight families | yes, one element per twin, eight operations | **yes, two families whose correct behaviour is no change** | **yes, a paraphrase-only twin on 1,132 sources** | **yes, per-criterion applicability after the edit** | models, on physician-written sources and rubrics; clinician panel open |
 
 ## The two closest neighbours, and what is different here
 
@@ -65,7 +65,7 @@ is to answer unchanged, and a paraphrase-only twin that changes the wording and 
 the paraphrase moved the definitive rate by at most 0.06 while removing an element moved it by 0.24 to 0.39.
 
 **Scale on HealthBench messages with a physician standard attached.** The paired counterfactual designs above are clinician-
-authored and small, 217 pairs and 224 cases. Keystone is 7,318 twins over 1,236 HealthBench conversations (largely synthetic by construction, each with its physician-written rubric), each
+authored and small, 217 pairs and 224 cases. Keystone is 7,306 twins over 1,234 HealthBench conversations (largely synthetic by construction, each with its physician-written rubric), each
 carrying the rubric its own physicians wrote, which is what makes the applicability question askable at all.
 
 ## What is not ours

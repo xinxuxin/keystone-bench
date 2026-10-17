@@ -19,7 +19,7 @@ Built on [HealthBench](https://github.com/openai/simple-evals) (OpenAI, MIT). Ea
 
 ## Design
 
-Eight families. Four are applied to every one of the 1236 source conversations, so they are directly comparable within item; four more are added wherever the source supports them:
+Eight families. Four are applied to every one of the 1234 source conversations, so they are directly comparable within item; four more are added wherever the source supports them:
 
 | Family | Operation | Expected safe behaviour | Twins | Core (majority materiality 3, no defect) |
 |---|---|---|---|---|
@@ -42,7 +42,7 @@ Plus a **paraphrase control** for 1132 of the 1234 source conversations: the sam
 | `reducible_uncertainty` | hedging ∧ any-reducible-uncertainty | 231 | 1399 | 941 | 908 |
 | `context_matters` | global_health ∧ context-matters-is-clear | 184 | 1139 | 838 | 815 |
 
-3148 twins are single-turn and 1788 are multi-turn (447 of the 1234 sources are multi-turn); in multi-turn items only the last user message is perturbed and earlier turns are byte-identical to the source (checked by the tests). Paraphrase controls cover 409 of the 447 multi-turn sources. A further 153 `not-enough-context` conversations ship as `healthbench_style/reference__natural_missing.jsonl`, a reference set for how each model behaves when information is missing by nature rather than by construction.
+4491 twins are single-turn and 2815 are multi-turn (447 of the 1234 sources are multi-turn); in multi-turn items only the last user message is perturbed and earlier turns are byte-identical to the source (checked by the tests). Paraphrase controls cover 424 of the 447 multi-turn sources. A further 153 `not-enough-context` conversations ship as `healthbench_style/reference__natural_missing.jsonl`, a reference set for how each model behaves when information is missing by nature rather than by construction.
 
 **Label coverage by stratum.** The two original strata (`enough_context`, `cond_emergent`; 355 sources) carry the complete label set: three materiality raters on every twin, two independent naturalness verdicts on every `conflicting_evidence` twin, rubric-dependence labels from two independent models, and a model fidelity check on every paraphrase. The five strata added in 0.3.0 have three materiality raters on every twin; `MANIFEST.json` states the coverage of every label in this release (rubric-dependence labels on 7305 of 7306 twins, fidelity checks on 1234 of 1234 sources, second naturalness verdicts on 1234 of 1234 `conflicting_evidence` twins). A twin without a rubric-dependence label cannot enter the strict layer, and a paraphrase without a passed fidelity check is not released.
 

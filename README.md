@@ -16,7 +16,7 @@ A clinical decision–evidence benchmark for chat assistants, and for the rubric
 
 [Project page](https://xinxuxin.github.io/keystone-bench/) (English · 中文 · Español · 日本語) · [Data card](docs/DATA_CARD.md) · [Schema](docs/SCHEMA.md) · [Protocol](docs/PROTOCOL.md) · [Hypothesis lineage](docs/HYPOTHESIS_LINEAGE.md) · [Results](docs/RESULTS.md) · [Grader check](docs/JUDGE_CHECK.md) · [Shortcut audit](docs/SHORTCUT_AUDIT.md) · [Policy matrix](docs/POLICY_MATRIX.md) · [Cross-scoring](docs/CROSS_SCORING.md) · [Rubric consequence](docs/RUBRIC_CONSEQUENCE.md) · [Frame vs physician](docs/FRAME_VS_PHYSICIAN.md) · [Related work](docs/RELATED_WORK.md) · [Contributing](CONTRIBUTING.md)
 
-![tests](https://github.com/xinxuxin/keystone-bench/actions/workflows/ci.yml/badge.svg) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![twins](https://img.shields.io/badge/twins-7%2C318-8a2be2) ![sources](https://img.shields.io/badge/HealthBench%20sources-1%2C236-8a2be2) ![tier](https://img.shields.io/badge/label%20tier-silver-9aa0a6) [![pypi](https://img.shields.io/pypi/v/keystone-bench?color=8a2be2)](https://pypi.org/project/keystone-bench/)
+![tests](https://github.com/xinxuxin/keystone-bench/actions/workflows/ci.yml/badge.svg) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![twins](https://img.shields.io/badge/twins-7%2C306-8a2be2) ![sources](https://img.shields.io/badge/HealthBench%20sources-1%2C234-8a2be2) ![tier](https://img.shields.io/badge/label%20tier-silver-9aa0a6) [![pypi](https://img.shields.io/pypi/v/keystone-bench?color=8a2be2)](https://pypi.org/project/keystone-bench/)
 
 </div>
 
@@ -39,16 +39,16 @@ measured   did the reply stay definitive on the twin without naming the gap, and
 
 | | |
 |---|---|
-| **7,318 twins** | over **1,236** HealthBench conversations from seven physician-agreed strata, four twins per source plus four optional families, **2,815 multi-turn** with byte-identical earlier turns |
+| **7,306 twins** | over **1,234** HealthBench conversations from seven physician-agreed strata, four twins per source plus four optional families, **2,815 multi-turn** with byte-identical earlier turns |
 | **Eight families** | Four on every source: `missing_evidence` (remove one decisive fact), `conflicting_evidence` (add one credible contradiction), `demographic_shift` (change one attribute that should change the advice), `salient_distractor` (add one salient but irrelevant fact: a **negative control**, correct behaviour is no change). Four more where the source allows: `alternative_evidence` (put the same fact back with a value that supports a different action, so one decision is seen in three evidence states), `demographic_control` (add an attribute a clinician would not act on, chosen to tempt an adjustment: the **second negative control**), `buried_red_flag` (mention a red flag in passing, so the correct answer becomes urgent evaluation), `missing_evidence_early` (remove the load-bearing fact from an earlier turn, far from the question) |
 | **Decision–evidence layer** | per source, a decision frame; per twin, one of five evidence states with acceptable actions, forbidden actions, decisive questions and the fact a reply must not assume. Model-drafted and independently reviewed by another vendor (`tier: silver`); clinician-confirmed rows become `gold` |
-| **Paraphrase control** | for 1,119 sources: reworded, nothing added or removed, released only after a model fidelity check passes |
-| **Layers, splits, quick set** | `all` · `core` (three raters' median materiality is what the family requires, no mechanical defect) · `strict` (core, plus the edit is tied to a rubric criterion and not both reviewer models rejected it) · `primary` (strict, plus the annotated evidence state agrees with what the family's edit is designed to do and the second reviewer did not disagree with it: the layer the action outcomes use) · `quick` (303 twins: 40 strict twins with a control per family). Sources split 80/20 into `dev` and `test` by a hash of the source id, so twins and controls of one source never straddle the split |
+| **Paraphrase control** | for 1,132 sources: reworded, nothing added or removed, released only after a model fidelity check passes |
+| **Layers, splits, quick set** | `all` · `core` (three raters' median materiality is what the family requires, no mechanical defect) · `strict` (core, plus the edit is tied to a rubric criterion and not both reviewer models rejected it) · `primary` (strict, plus the annotated evidence state agrees with what the family's edit is designed to do and the second reviewer did not disagree with it: the layer the action outcomes use) · `quick` (319 twins: 40 strict twins with a control per family, 39 on `missing_evidence_early`). Sources split 80/20 into `dev` and `test` by a hash of the source id, so twins and controls of one source never straddle the split |
 | **Per twin** | what changed, why it is load-bearing, the expected safe behaviour, three materiality ratings with rationales, two naturalness verdicts, which rubric criteria depend on the edit, mechanical quality flags |
 | **Reference set** | 153 conversations that naturally lack decisive information, unperturbed |
 | **Reference results** | five assistants, every reply and its classification shipped (`release/reference_records.jsonl`) |
 | **Grader validity** | six authored replies with intended labels per item (166 items); the action judge separates unsupported commitment from correct replies at 0.90 to 0.99 with GPT-4.1 as judge ([`docs/JUDGE_CHECK.md`](docs/JUDGE_CHECK.md)) |
-| **Auditable** | published SHA-256 per file that your own rebuild is checked against, 81 tests that need no key, a degenerate-strategy check that no fixed policy can win, three validity checks against behaviour and physician-written artefacts we did not produce, an audit of whether the edit leaves a fingerprint a model could answer instead of the evidence, and every rater disagreement released |
+| **Auditable** | published SHA-256 per file that your own rebuild is checked against, 110 tests that need no key, a degenerate-strategy check that no fixed policy can win, three validity checks against behaviour and physician-written artefacts we did not produce, an audit of whether the edit leaves a fingerprint a model could answer instead of the evidence, and every rater disagreement released |
 
 ## Quickstart
 
@@ -68,7 +68,7 @@ keystone run --family all --layer quick --model openrouter/openai/gpt-5.6-terra 
 keystone regress runs/v1 runs/v2  # what a new version fixed and regressed, item by item
 ```
 
-**Report per family, not pooled.** The two negative-control families are the largest in every layer, 51 percent of `primary`, because a control's evidence state is derived from the decision frame while a perturbation twin's had to be annotated. On a control the correct behaviour is the opposite of the perturbation families', so a rate pooled over both mostly measures how often the model held an answer it was right to hold. `keystone pairs` prints the split per layer, `summary.json` carries `composition` and `by_family`, and `REPORT.md` prints the per-family table and says so when controls pass 35 percent of a run. The `quick` set is the balanced one: 40 twins per family, 26 percent control.
+**Report per family, not pooled.** The two negative-control families are the largest in every layer, 51 percent of `primary`, because a control's evidence state is derived from the decision frame while a perturbation twin's had to be annotated. On a control the correct behaviour is the opposite of the perturbation families', so a rate pooled over both mostly measures how often the model held an answer it was right to hold. `keystone pairs` prints the split per layer, `summary.json` carries `composition` and `by_family`, and `REPORT.md` prints the per-family table and says so when controls pass 35 percent of a run. The `quick` set is the balanced one: 40 twins per family, 25 percent control.
 
 `run` writes `runs/<family>__<layer>__<model>/{records.jsonl, summary.json, REPORT.md}`; `--family all` runs every family in the release, `--layer quick|primary|strict|core|all` picks the subset, `--split dev|test` the side. Each reply is classified twice: the behaviour classifier (stance and flags) and the action judge, which maps the reply to the twin's evidence state (acceptable, forbidden, decisive question asked, escalated, conditional); `--no-action` skips the second. The judge must come from a different vendor than the model under test; `keystone compare-judges a/records.jsonl b/records.jsonl` reports Cohen's kappa between two judges on the same replies.
 
@@ -101,19 +101,20 @@ More in [`examples/quickstart.py`](examples/quickstart.py).
 
 ## Reference results
 
-Five assistants over the quick set, **eight families**, 303 twins each with its original and its paraphrase-only control, GPT-4.1 as judge, temperature 0, no system prompt, benchmark 0.5.0. Every reply and both judges' verdicts ship in [`results/reference/`](results/reference/), so a different judge can be scored on them without paying to generate anything. Full tables in [`docs/RESULTS.md`](docs/RESULTS.md).
+Five assistants over the quick set, **eight families**, 319 twins each with its original and its paraphrase-only control, GPT-4.1 as judge, temperature 0, no system prompt, benchmark 0.6.0. Every reply and both judges' verdicts ship in [`results/reference/`](results/reference/), so a different judge can be scored on them without paying to generate anything. Full tables in [`docs/RESULTS.md`](docs/RESULTS.md).
 
 **What each family asks for, and how often the assistant did it.**
 
 | Family | The behaviour it asks for | claude-sonnet-5 | deepseek-v4-pro | gemini-3.8-flash | gpt-5.6-terra | llama-4-maverick |
 |---|---|---|---|---|---|---|
-| `missing_evidence` | ask the question that settles it | 0.69 | 0.65 | 0.49 | **0.74** | 0.37 |
-| `conflicting_evidence` | name the contradiction and ask which side is true | **0.61** | 0.42 | 0.42 | 0.47 | 0.26 |
-| `buried_red_flag` | make urgent evaluation the main answer | 0.72 | 0.74 | 0.85 | **0.93** | 0.35 |
+| `missing_evidence` | ask the question that settles it | 0.69 | 0.64 | 0.49 | **0.74** | 0.34 |
+| `missing_evidence_early` | the same, with the fact removed from an earlier turn | 0.54 | 0.41 | 0.43 | **0.59** | 0.30 |
+| `conflicting_evidence` | name the contradiction and ask which side is true | **0.55** | 0.44 | 0.39 | 0.47 | 0.24 |
+| `buried_red_flag` | make urgent evaluation the main answer | 0.78 | 0.71 | 0.82 | **0.88** | 0.38 |
 | `alternative_evidence` | change the action to the one the new value supports | 0.90 | **0.94** | 0.87 | 0.81 | 0.74 |
-| `demographic_shift` | adjust the advice to the changed attribute | 0.94 | 0.90 | **0.97** | 0.94 | 0.68 |
-| `salient_distractor` (control) | answer unchanged | 0.93 | 0.95 | 0.80 | **0.97** | 0.85 |
-| `demographic_control` (control) | answer unchanged | **0.95** | **0.95** | 0.87 | **0.95** | 0.78 |
+| `demographic_shift` | adjust the advice to the changed attribute | **0.96** | 0.88 | 0.85 | **0.96** | 0.81 |
+| `salient_distractor` (control) | answer unchanged | 0.88 | 0.92 | **0.93** | **0.93** | 0.78 |
+| `demographic_control` (control) | answer unchanged | **0.95** | **0.95** | 0.87 | 0.90 | 0.75 |
 
 **The effect is the evidence, measured on eight families.** The same item is edited two ways: the twin changes one fact, the control only rewords. The share of replies taking an action the annotation forbids, twin minus control, per item:
 
@@ -202,7 +203,7 @@ Thirty times the control rate on the family that removes a decisive fact. `alter
 
 **Asked the identical request again**, the forbidden-action verdict flips on 9 to 13 percent of cells, which matches the 8.7 percent an external re-sampling study reports. That instability does not manufacture an effect: the paired contrast built from two runs of the same request is -0.033 [-0.071, +0.004] and +0.016 [-0.056, +0.087] on the two headline families, against measured effects of +0.225 and +0.238 ([`docs/INSTABILITY_FLOOR.md`](docs/INSTABILITY_FLOOR.md)).
 
-**Restricted to items the assistant handled correctly unedited**, where an effect of editing has room to show, every perturbation effect is larger: `conflicting_evidence` +0.38, `missing_evidence` +0.22, `buried_red_flag` +0.21, `demographic_shift` +0.10 [0.04, 0.18], and both controls stay at zero ([`docs/ITEM_ANALYSIS.md`](docs/ITEM_ANALYSIS.md)). The same page gives the item counts a confirmatory run needs: 8, 26 and 42 for the observed effects, 83 to 114 to resolve a reference effect of 0.10.
+**Restricted to items the assistant handled correctly unedited**, where an effect of editing has room to show, every perturbation effect is larger: `conflicting_evidence` +0.36, `buried_red_flag` +0.26, `missing_evidence` +0.23, `demographic_shift` +0.13 [0.06, 0.21], and both controls stay at zero ([`docs/ITEM_ANALYSIS.md`](docs/ITEM_ANALYSIS.md)). The same page gives the item counts a confirmatory run needs: 10, 22 and 38 for the observed effects, 83 to 136 to resolve a reference effect of 0.10. `tools/item_select.py` keeps, on the dev split only, the items whose outcome differs between systems, and carries that rule to the held-out split through the annotations every twin has ([`docs/ITEM_SELECTION.md`](docs/ITEM_SELECTION.md)).
 
 ### One sentence that measurably helps, and one that does not
 
@@ -233,7 +234,7 @@ Scoring only the edited side would rank the gated arm first on two of three fami
 
 Escalation moves between systems, from 0.41 on the weakest to 0.89 on the strongest. Asking does not: it is below both changing and holding on all five, by 0.14 to 0.26 pooled. Naming the question that settles a case is the hardest of the four, and it is the class where the annotation is most specific about what a correct reply contains.
 
-**The hardest family is `conflicting_evidence`.** The best assistant names the contradiction 61 percent of the time and the worst 26 percent, and its forbidden-action rate runs 0.30 to 0.78. An assistant that is told two incompatible things about the same patient usually picks one and proceeds.
+**The hardest family is `conflicting_evidence`.** The best assistant names the contradiction 55 percent of the time and the worst 24 percent, and its forbidden-action rate runs 0.28 to 0.75. An assistant that is told two incompatible things about the same patient usually picks one and proceeds.
 
 ### The earlier single-family pilot
 
@@ -253,19 +254,19 @@ Three things the reference run shows. Every paraphrase control stays at or below
 
 ## The design in one page
 
-**Source pool.** 1,236 HealthBench `oss` conversations from seven physician-agreed strata in which the physicians judged the message complete enough for a definite reply: `context_seeking` ∧ enough-context, `emergency_referrals` ∧ conditionally-emergent / emergent / non-emergent, `health_data_tasks` ∧ enough-info-to-complete-task, `hedging` ∧ any-reducible-uncertainty, `global_health` ∧ context-matters-is-clear. 447 sources are multi-turn; only the last user message is ever modified.
+**Source pool.** 1,234 HealthBench `oss` conversations from seven physician-agreed strata in which the physicians judged the message complete enough for a definite reply: `context_seeking` ∧ enough-context, `emergency_referrals` ∧ conditionally-emergent / emergent / non-emergent, `health_data_tasks` ∧ enough-info-to-complete-task, `hedging` ∧ any-reducible-uncertainty, `global_health` ∧ context-matters-is-clear. 447 sources are multi-turn; only the last user message is ever modified.
 
-**Eight families, comparable within item.** Every source has one twin in each of the four base families; the four optional families are added where the source supports them (an alternative-evidence value, an attribute worth tempting an adjustment with, a red flag that fits, an earlier turn to reach back into). Layers: core 5,489, strict 5,201, primary 4,113.
+**Eight families, comparable within item.** Every source has one twin in each of the four base families; the four optional families are added where the source supports them (an alternative-evidence value, an attribute worth tempting an adjustment with, a red flag that fits, an earlier turn to reach back into). Layers: core 4,931, strict 4,751, primary 4,068.
 
 | Family | Operation | Expected safe behaviour | Core | Strict |
 |---|---|---|---|---|
 | `missing_evidence` | remove or neutralise exactly one element a rubric criterion relies on | ask for it, or answer conditionally on it | 454 | 415 |
 | `alternative_evidence` | put the removed fact back with a value that supports a different action | change the action | 359 | 352 |
-| `conflicting_evidence` | add one short credible statement that contradicts something present | point out the discrepancy and ask which is right | 768 | 751 |
-| `demographic_shift` | change one demographic, comorbidity or care-access attribute | adjust dose, drug choice or referral threshold | 906 | 735 |
-| `salient_distractor` | add one medically salient but irrelevant fact | **answer unchanged** (negative control) | 1,232 | 1,228 |
-| `demographic_control` | add one attribute a clinician would not act on here, chosen to tempt an adjustment | **answer unchanged** (negative control) | 904 | 874 |
-| `buried_red_flag` | mention one red flag in passing, without alarm | urgent evaluation as the main answer, not routine advice and not a question first | 780 | 770 |
+| `conflicting_evidence` | add one short credible statement that contradicts something present | point out the discrepancy and ask which is right | 747 | 730 |
+| `demographic_shift` | change one demographic, comorbidity or care-access attribute | adjust dose, drug choice or referral threshold | 385 | 339 |
+| `salient_distractor` | add one medically salient but irrelevant fact | **answer unchanged** (negative control) | 1,213 | 1,193 |
+| `demographic_control` | add one attribute a clinician would not act on here, chosen to tempt an adjustment | **answer unchanged** (negative control) | 908 | 879 |
+| `buried_red_flag` | mention one red flag in passing, without alarm | urgent evaluation as the main answer, not routine advice and not a question first | 779 | 767 |
 | `missing_evidence_early` | remove the load-bearing fact from an earlier turn of a multi-turn conversation | ask for it, or answer conditionally on it | 86 | 76 |
 
 **Evidence states and action outcomes (0.4.0).** Each twin's evidence state says what the modified message supports and what a safe reply may do:
@@ -334,8 +335,8 @@ HealthBench is MIT, and its authors ask that items not be posted as plain text o
 | `release/` | **What we wrote**: `metadata.jsonl` (labels and ratings per twin), `edits.jsonl` (our text plus span references), `reference_ids.json`, `reference_results.json`, `reference_records.jsonl` |
 | `dist/` | **Built locally**, never committed: `healthbench_style/` (13 JSONL files in HealthBench's schema), `keystone_twins.jsonl`, `keystone_core.jsonl`, `MANIFEST.json`, data card |
 | `keystone/` | The package: `data.py` (pairs), `prompts.py` (the three graders), `metrics.py` (outcomes, Wilson, McNemar, kappa), `runner.py` (any-provider evaluation), `cli.py`, `inspect_task.py` |
-| `tools/` | `build_release.py` (rebuild and verify, same code as `keystone build`), `quality_checks.py` (C1 to C8, no model), `trivial_baselines.py` (the metrics cannot be gamed), `rubric_anchor.py`, `ideal_answer_check.py` and `behaviour_anchor.py` (the three validity anchors), `judge_check.py` and `judge_diagnose.py` (grader validity), `shortcut_audit.py` (is the edit answerable from its fingerprint) |
-| `tests/` | 81 tests, no keys: release structure against the data card and schema, package API on fake models, Inspect task on mock models, the rebuild path a PyPI install takes |
+| `tools/` | `build_release.py` (rebuild and verify, same code as `keystone build`), `quality_checks.py` (C1 to C8, no model), `trivial_baselines.py` (the metrics cannot be gamed), `rubric_anchor.py`, `ideal_answer_check.py` and `behaviour_anchor.py` (the three validity anchors), `judge_check.py` and `judge_diagnose.py` (grader validity), `shortcut_audit.py` (is the edit answerable from its fingerprint), `item_analysis.py` and `item_select.py` (which items separate systems, and a subset selected on dev) |
+| `tests/` | 110 tests, no keys: release structure against the data card and schema, package API on fake models, Inspect task on mock models, the rebuild path a PyPI install takes |
 | `docs/` | Data card, field schema (including the decision–evidence fields), protocol (section 11: the 0.4.0 construct), results table, per-item report, applicability-judge agreement, grader validity, the three anchors, the shortcut audit, related work |
 | `site/` | The project page |
 
@@ -362,7 +363,7 @@ MIT for the twins, controls, code and prompts; source conversations and rubrics 
   title  = {Keystone: a clinical decision--evidence benchmark for chat assistants and their rubrics},
   author = {Xu, Xin},
   year   = {2026},
-  note   = {Version 0.5.0, built on HealthBench (OpenAI, MIT)},
+  note   = {Version 0.6.0, built on HealthBench (OpenAI, MIT)},
   url    = {https://github.com/xinxuxin/keystone-bench}
 }
 ```

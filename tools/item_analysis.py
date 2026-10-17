@@ -11,6 +11,7 @@ A benchmark is only as good as its items. Three things a reader should be able t
      percent power at the family's own effect and at a reference effect of 0.10.
 
 Usage: python tools/item_analysis.py [--runs runs] [--out docs/ITEM_ANALYSIS.md] [--layer quick]
+       python tools/item_analysis.py --runs results/reference --out docs/ITEM_ANALYSIS.md   # the shipped reference runs
 """
 from __future__ import annotations
 import argparse, glob, json, math, os, random, statistics, sys
@@ -18,7 +19,7 @@ from collections import defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from keystone.metrics import PRIMARY_OUTCOME  # noqa: E402
+from keystone.metrics import PRIMARY_OUTCOME, pair_action_outcomes  # noqa: E402
 
 FAMILIES = ["missing_evidence", "conflicting_evidence", "buried_red_flag", "demographic_shift",
             "alternative_evidence", "missing_evidence_early", "salient_distractor", "demographic_control"]
@@ -42,21 +43,35 @@ def outcome(rec: dict, cond: str, key: str = "forbidden"):
     return None
 
 
-def load(runs: str, layer: str, prefix: str | None = None) -> dict:
-    """{(family, item): {model: {cond: {key: value}}}}"""
-    out = defaultdict(dict)
+def record_files(runs: str, layer: str, prefix: str | None = None) -> list[tuple[str, str]]:
+    """(model, records file) for `keystone run` output (`<runs>/<prefix>__<model>/<family>/records.jsonl`) or, when
+    there is none and no prefix was asked for, the shipped reference layout (`<runs>/<model>/<family>__<layer>.jsonl`)."""
+    out = []
     for d in sorted(glob.glob(os.path.join(runs, f"{prefix or layer}__*"))):
         model = Path(d).name.split("__", 1)[1]
         if "__judge-" in model or model.startswith(("n1_", "floor_")):
             continue
-        for f in sorted(glob.glob(os.path.join(d, "*", "records.jsonl"))):
-            for line in open(f):
-                if not line.strip():
-                    continue
-                r = json.loads(line)
-                out[(r["family"], r["id"])][model] = {
-                    c: {k: outcome(r, c, k) for k in ("forbidden", "decisive_hit", "escalates", "acceptable")}
-                    for c in ("original", "perturbed", "paraphrase")}
+        out += [(model, f) for f in sorted(glob.glob(os.path.join(d, "*", "records.jsonl")))]
+    if out or prefix:
+        return out
+    return [(Path(f).parent.name, f) for f in sorted(glob.glob(os.path.join(runs, "*", f"*__{layer}.jsonl")))]
+
+
+def load(runs: str, layer: str, prefix: str | None = None) -> dict:
+    """{(family, item): {model: {cond: {key: value}}}}"""
+    out = defaultdict(dict)
+    for model, f in record_files(runs, layer, prefix):
+        for line in open(f):
+            if not line.strip():
+                continue
+            r = json.loads(line)
+            out[(r["family"], r["id"])][model] = {
+                c: {k: outcome(r, c, k) for k in ("forbidden", "decisive_hit", "escalates", "acceptable")}
+                for c in ("original", "perturbed", "paraphrase")}
+            # the family's primary outcome exactly as the package scores it, undefined where the item's state has none
+            v = pair_action_outcomes(r.get("action") or {}, r["family"], r.get("evidence_state"),
+                                     r.get("escalation_sufficient")).get(PRIMARY_OUTCOME[r["family"]][0])
+            out[(r["family"], r["id"])][model]["primary"] = v
     return out
 
 
@@ -89,17 +104,14 @@ def core_layer_counts() -> dict[str, int]:
     return counts
 
 
-PREFIX = "quick"
-
-
-def discriminant() -> list[str]:
+def discriminant(files: list[tuple[str, str]]) -> list[str]:
     """Is the effect a function of how much text changed, rather than of what changed.
 
     Two correlations per family, over items: the size of the edit against the item's paired effect, and the
     size of the edit against the annotated materiality. If the benchmark were measuring edit size, both would
     be strongly positive; a design that measures the evidence should show neither.
     """
-    import difflib, glob, statistics
+    import difflib, statistics
     from collections import defaultdict as dd
     twins = {}
     for line in open(Path(__file__).resolve().parents[1] / "dist" / "keystone_twins.jsonl"):
@@ -112,9 +124,7 @@ def discriminant() -> list[str]:
                 dp = (1.0 - difflib.SequenceMatcher(None, o, para).ratio()) if para else None
                 twins[(t["family"], f"{t['prompt_id']}::{t['family']}")] = (d, t.get("materiality_majority"), len(e) - len(o), dp)
     per = dd(list)
-    for f in sorted(glob.glob(str(Path(__file__).resolve().parents[1] / "runs" / f"{PREFIX}__*" / "*" / "records.jsonl"))):
-        if "__judge-" in f:
-            continue
+    for _, f in files:
         for line in open(f):
             if not line.strip():
                 continue
@@ -200,8 +210,6 @@ def main():
     ap.add_argument("--runs", default="runs"); ap.add_argument("--layer", default="quick"); ap.add_argument("--out")
     ap.add_argument("--prefix", help="run-directory prefix, when it differs from the layer name (e.g. q060)")
     a = ap.parse_args()
-    global PREFIX
-    PREFIX = a.prefix or a.layer
     data = load(a.runs, a.layer, a.prefix)
     models = sorted({m for v in data.values() for m in v})
     L = ["# Item analysis", "",
@@ -217,10 +225,8 @@ def main():
           "| family | items | primary outcome | constant | mean item-total r |", "|---|---|---|---|---|"]
     disc_rows = {}
     for fam in FAMILIES:
-        key = {"decisive_question_hit": "decisive_hit", "escalated_when_sufficient": "escalates",
-               "necessary_update": "acceptable", "stable_on_control": "acceptable"}[PRIMARY_OUTCOME[fam][0]]
         items = {k[1]: v for k, v in data.items() if k[0] == fam}
-        vals = {i: {m: (v.get(m, {}).get("perturbed") or {}).get(key) for m in models} for i, v in items.items()}
+        vals = {i: {m: v.get(m, {}).get("primary") for m in models} for i, v in items.items()}
         vals = {i: {m: x for m, x in d.items() if x is not None} for i, d in vals.items()}
         vals = {i: d for i, d in vals.items() if len(d) >= 2}
         if not vals:
@@ -292,7 +298,7 @@ def main():
                   "families whose row above asks for more items than the quick layer holds are answerable at full "
                   "scale; the number is what sets the size of a confirmatory run rather than a reason to read the "
                   "quick layer differently.", ""]
-    L += discriminant()
+    L += discriminant(record_files(a.runs, a.layer, a.prefix))
     text = "\n".join(L) + "\n"
     print(text)
     if a.out:
