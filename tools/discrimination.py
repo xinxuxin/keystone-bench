@@ -16,7 +16,7 @@ answer is to leave the reply alone, they should not.
 Usage: python tools/discrimination.py [--prefix testcore] [--out docs/DISCRIMINATION.md]
 """
 from __future__ import annotations
-import argparse, glob, json, os, random, statistics, sys
+import argparse, glob, json, os, random, statistics, sys, zlib
 from collections import defaultdict
 from pathlib import Path
 
@@ -126,11 +126,12 @@ def main():
          "|---|---|---|---|---|---|---|"]
     rows_out = []
     for fam in PERTURBATION + CONTROLS:
-        rows = [(s, d) for s, d in (per.get(fam) or {}).items() if len(d) >= 2]
+        rows = sorted((s, d) for s, d in (per.get(fam) or {}).items() if len(d) >= 2)   # file order must not move the resampling
         if len(rows) < 20:
             continue
-        obs, p, means, rng = spread_and_p(rows, seed=abs(hash(fam)) % 1000)
-        lo, hi = sd_ci(rows, seed=abs(hash(fam)) % 997)
+        # str hash() is salted per process, so seeding from it gave different p and intervals on every run
+        obs, p, means, rng = spread_and_p(rows, seed=zlib.crc32(fam.encode()) % 1000)
+        lo, hi = sd_ci(rows, seed=zlib.crc32(fam.encode()) % 997)
         kind = "perturbation" if fam in PERTURBATION else "**negative control**"
         rows_out.append((fam, kind, len(rows), len(means), obs, p, rng, lo, hi))
         L.append(f"| `{fam}` | {kind} | {len(rows)} | {len(means)} | {obs:.3f} [{lo:.3f}, {hi:.3f}] | {rng:.3f} | {p:.4f} |")
