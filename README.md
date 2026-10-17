@@ -48,7 +48,7 @@ measured   did the reply stay definitive on the twin without naming the gap, and
 | **Reference set** | 153 conversations that naturally lack decisive information, unperturbed |
 | **Reference results** | five assistants, every reply and its classification shipped (`release/reference_records.jsonl`) |
 | **Grader validity** | six authored replies with intended labels per item (166 items); the action judge separates unsupported commitment from correct replies at 0.90 to 0.99 with GPT-4.1 as judge ([`docs/JUDGE_CHECK.md`](docs/JUDGE_CHECK.md)) |
-| **Auditable** | published SHA-256 per file that your own rebuild is checked against, 110 tests that need no key, a degenerate-strategy check that no fixed policy can win, three validity checks against behaviour and physician-written artefacts we did not produce, an audit of whether the edit leaves a fingerprint a model could answer instead of the evidence, and every rater disagreement released |
+| **Auditable** | published SHA-256 per file that your own rebuild is checked against, 111 tests that need no key, a degenerate-strategy check that no fixed policy can win, three validity checks against behaviour and physician-written artefacts we did not produce, an audit of whether the edit leaves a fingerprint a model could answer instead of the evidence, and every rater disagreement released |
 
 ## Quickstart
 
@@ -336,7 +336,7 @@ HealthBench is MIT, and its authors ask that items not be posted as plain text o
 | `dist/` | **Built locally**, never committed: `healthbench_style/` (13 JSONL files in HealthBench's schema), `keystone_twins.jsonl`, `keystone_core.jsonl`, `MANIFEST.json`, data card |
 | `keystone/` | The package: `data.py` (pairs), `prompts.py` (the three graders), `metrics.py` (outcomes, Wilson, McNemar, kappa), `runner.py` (any-provider evaluation), `cli.py`, `inspect_task.py` |
 | `tools/` | `build_release.py` (rebuild and verify, same code as `keystone build`), `quality_checks.py` (C1 to C8, no model), `trivial_baselines.py` (the metrics cannot be gamed), `rubric_anchor.py`, `ideal_answer_check.py` and `behaviour_anchor.py` (the three validity anchors), `judge_check.py` and `judge_diagnose.py` (grader validity), `shortcut_audit.py` (is the edit answerable from its fingerprint), `item_analysis.py` and `item_select.py` (which items separate systems, and a subset selected on dev) |
-| `tests/` | 110 tests, no keys: release structure against the data card and schema, package API on fake models, Inspect task on mock models, the rebuild path a PyPI install takes |
+| `tests/` | 111 tests, no keys: release structure against the data card and schema, package API on fake models, Inspect task on mock models, the rebuild path a PyPI install takes |
 | `docs/` | Data card, field schema (including the decision–evidence fields), protocol (section 11: the 0.4.0 construct), results table, per-item report, applicability-judge agreement, grader validity, the three anchors, the shortcut audit, related work |
 | `site/` | The project page |
 
