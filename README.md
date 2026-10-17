@@ -363,7 +363,7 @@ MIT for the twins, controls, code and prompts; source conversations and rubrics 
   title  = {Keystone: a clinical decision--evidence benchmark for chat assistants and their rubrics},
   author = {Xu, Xin},
   year   = {2026},
-  note   = {Version 0.6.0, built on HealthBench (OpenAI, MIT)},
+  note   = {Version 0.6.1 (data release 0.6.0), built on HealthBench (OpenAI, MIT)},
   url    = {https://github.com/xinxuxin/keystone-bench}
 }
 ```

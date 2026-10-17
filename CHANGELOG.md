@@ -8,6 +8,8 @@
   fetched, a download cut off part way resumes with a range request instead of failing the build, and `tests/test_build.py` rebuilds from exactly the fetched files and
   checks the result against the published hashes. The label files and the hashes are those of 0.6.0
   (`keystone.build.VERSION`), so the data and every published number are unchanged.
+- The package is 0.6.1 and the data release it builds is still 0.6.0: `keystone build` fetches the label files
+  from the `v0.6.0` tag and checks the rebuild against the hashes recorded for it.
 
 ## 0.6.0 (2026-09-12)
 

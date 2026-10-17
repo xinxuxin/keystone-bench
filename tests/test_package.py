@@ -75,7 +75,10 @@ def test_reference_and_manifest():
     ref = load_reference()
     m = load_manifest()
     assert len(ref) == m["counts"]["healthbench_style"]["reference__natural_missing"]
-    assert m["version"] == keystone.__version__
+    # the dist carries the data release it was built from; a code-only package release keeps that number
+    from keystone import build
+    assert m["version"] == build.VERSION
+    assert keystone.__version__.split(".")[:2] == build.VERSION.split(".")[:2], "a new minor version needs its own data release"
 
 
 def test_fake_run_and_report(tmp_path):
