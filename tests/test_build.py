@@ -50,6 +50,46 @@ def test_the_fetched_files_alone_rebuild_the_published_release(tmp_path):
     assert build.check(dist, fetched) == 0
 
 
+def test_a_cut_off_download_resumes_where_it_stopped(tmp_path, monkeypatch):
+    """A proxy that drops the connection part way must cost a range request, not a failed build or a short file."""
+    import http.client
+    import io
+
+    payload = bytes(range(256)) * 400
+    calls = []
+
+    class Reply(io.BytesIO):
+        def __init__(self, body, status, headers, cut=None):
+            super().__init__(body)
+            self.status, self.headers, self.cut = status, headers, cut
+
+        def read(self, n=-1):
+            if self.cut is not None and self.tell() >= self.cut:
+                raise http.client.IncompleteRead(b"")
+            return super().read(n if self.cut is None else min(n, self.cut - self.tell()))
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+    def urlopen(req, timeout=None):
+        rng = req.get_header("Range")
+        calls.append(rng)
+        if not rng:
+            return Reply(payload, 200, {"Content-Length": str(len(payload))}, cut=len(payload) // 3)
+        start = int(rng.split("=")[1].rstrip("-"))
+        return Reply(payload[start:], 206, {"Content-Range": f"bytes {start}-{len(payload) - 1}/{len(payload)}",
+                                            "Content-Length": str(len(payload) - start)})
+
+    monkeypatch.setattr(build.urllib.request, "urlopen", urlopen)
+    out = tmp_path / "f.part"
+    build.download("https://example.invalid/f", out)
+    assert out.read_bytes() == payload
+    assert calls == [None, f"bytes={len(payload) // 3}-"]
+
+
 def test_cli_exposes_build():
     from keystone import cli
     assert callable(cli.cmd_build)

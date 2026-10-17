@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import http.client
 import json
 import os
 import sys
@@ -41,7 +42,7 @@ RAW = "https://raw.githubusercontent.com/xinxuxin/keystone-bench/v{version}/rele
 RELEASE_FILES = ("metadata.jsonl", "edits.jsonl", "reference_ids.json", "reference_results.json",
                  "reference_records.jsonl", "decision_frames.jsonl", "contrastive_replies.jsonl",
                  "deprecated_metadata.jsonl", "deprecated_edits.jsonl", "MANIFEST.expected.json")
-FETCH_ATTEMPTS = 3
+FETCH_ATTEMPTS = 8
 EXPECTED = "MANIFEST.expected.json"      # the hashes of the release the published numbers were computed on
 BASE = ("missing_evidence", "conflicting_evidence", "demographic_shift", "salient_distractor")
 STATE_FIELDS = ("evidence_state", "alternative_action", "acceptable_actions", "forbidden_actions", "decisive_questions",
@@ -216,17 +217,41 @@ def release_dir(explicit: str | os.PathLike | None = None, fetch: bool = True) -
             url = RAW.format(version=VERSION, name=name)
             print(f"fetching {name} from {url} ...", flush=True)
             tmp = dest / (name + ".part")
-            for attempt in range(1, FETCH_ATTEMPTS + 1):
-                try:
-                    urllib.request.urlretrieve(url, tmp)
-                    break
-                except urllib.error.ContentTooShortError:
-                    # a truncated transfer is retried; the .part file is never mistaken for the real one
-                    if attempt == FETCH_ATTEMPTS:
-                        raise
-                    print(f"  incomplete download, retrying ({attempt}/{FETCH_ATTEMPTS - 1})", flush=True)
+            download(url, tmp)
             tmp.replace(dest / name)
     return dest
+
+
+def download(url: str, tmp: Path, attempts: int = FETCH_ATTEMPTS) -> None:
+    """Fetch `url` into `tmp`, resuming a cut-off transfer with a range request rather than starting over. The file
+    is complete only when it reaches the length the server announced; until then it stays a .part file."""
+    tmp.unlink(missing_ok=True)
+    for attempt in range(1, attempts + 1):
+        have = tmp.stat().st_size if tmp.exists() else 0
+        req = urllib.request.Request(url, headers={"Range": f"bytes={have}-"} if have else {})
+        total = None
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                if have and r.status != 206:          # the server ignored the range: start over
+                    have = 0
+                    tmp.unlink(missing_ok=True)
+                cr, cl = r.headers.get("Content-Range"), r.headers.get("Content-Length")
+                total = int(cr.rsplit("/", 1)[1]) if cr and "/" in cr and not cr.endswith("*") else (
+                    have + int(cl) if cl else None)
+                with open(tmp, "ab") as f:
+                    while chunk := r.read(1 << 16):
+                        f.write(chunk)
+        except (urllib.error.URLError, OSError, http.client.HTTPException) as e:
+            if attempt == attempts:
+                raise
+            print(f"  transfer interrupted ({e.__class__.__name__}), resuming ({attempt}/{attempts - 1})", flush=True)
+            continue
+        size = tmp.stat().st_size if tmp.exists() else 0
+        if total is None or size == total:
+            return
+        if attempt == attempts:
+            raise urllib.error.ContentTooShortError(f"retrieval incomplete: got only {size} out of {total} bytes", None)
+        print(f"  incomplete download, {size:,} of {total:,} bytes, resuming ({attempt}/{attempts - 1})", flush=True)
 
 
 def default_dist() -> Path:
