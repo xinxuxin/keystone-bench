@@ -4,9 +4,9 @@ Layer `quick`, 319 items over 8 families, evaluated on 5 models (claude-sonnet-5
 
 ## Discrimination
 
-An item whose primary outcome is the same for every evaluated model separates nothing. `constant` is the share of such items; `item-total r` is the point-biserial correlation between the item's outcome and the model's mean outcome on the rest of the family, averaged over models (higher is better, negative means the item runs against the family).
+An item whose primary outcome is the same for every evaluated model separates nothing. `constant` is the share of such items. `agreement with other systems (r)` is, for each model, the Pearson correlation over the family's items between that model's outcome on an item and the mean outcome of the other models on the same item, averaged over models: high when the items one system gets right are the items the others get right, so that the family ranks its items the same way whichever system answers them.
 
-| family | items | primary outcome | constant | mean item-total r |
+| family | items | primary outcome | constant | agreement with other systems (r) |
 |---|---|---|---|---|
 | missing_evidence | 35 | decisive question or conditional answer | 0.40 | 0.57 |
 | conflicting_evidence | 38 | decisive question or conditional answer | 0.32 | 0.48 |

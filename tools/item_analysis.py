@@ -4,7 +4,8 @@ A benchmark is only as good as its items. Three things a reader should be able t
 
   1. **Discrimination.** An item every model gets right, or every model gets wrong, carries no information about
      models. Reported per family as the share of items whose outcome is constant across the evaluated models, and as
-     the item-total correlation (point-biserial against the model's mean score on the rest of the family).
+     the agreement with other systems: per model, the correlation over the family's items between that model's
+     outcome on an item and the other models' mean outcome on the same item, averaged over models.
   2. **Ceiling.** An item whose *unedited* version already draws a forbidden action cannot show an effect of editing;
      the paired effect is reported both over all items and over the items where the original was handled correctly.
   3. **Size.** Given the observed per-family effect and the between-item variance, the number of items needed for 80
@@ -219,10 +220,11 @@ def main():
     # 1. discrimination
     L += ["## Discrimination", "",
           "An item whose primary outcome is the same for every evaluated model separates nothing. `constant` is the "
-          "share of such items; `item-total r` is the point-biserial correlation between the item's outcome and the "
-          "model's mean outcome on the rest of the family, averaged over models (higher is better, negative means the "
-          "item runs against the family).", "",
-          "| family | items | primary outcome | constant | mean item-total r |", "|---|---|---|---|---|"]
+          "share of such items. `agreement with other systems (r)` is, for each model, the Pearson correlation over the "
+          "family's items between that model's outcome on an item and the mean outcome of the other models on the same "
+          "item, averaged over models: high when the items one system gets right are the items the others get right, "
+          "so that the family ranks its items the same way whichever system answers them.", "",
+          "| family | items | primary outcome | constant | agreement with other systems (r) |", "|---|---|---|---|---|"]
     disc_rows = {}
     for fam in FAMILIES:
         items = {k[1]: v for k, v in data.items() if k[0] == fam}
@@ -237,13 +239,13 @@ def main():
             xs = [(i, d[m]) for i, d in vals.items() if m in d]
             if len(xs) < 4:
                 continue
-            tot = []
+            others = []          # the other models' mean outcome on the same item
             for i, _ in xs:
                 rest = [float(v) for mm, v in vals[i].items() if mm != m]
-                tot.append(statistics.fmean(rest) if rest else 0.0)
+                others.append(statistics.fmean(rest) if rest else 0.0)
             xv = [float(x) for _, x in xs]
-            if len(set(xv)) > 1 and len(set(tot)) > 1:
-                rs.append(statistics.correlation(xv, tot))
+            if len(set(xv)) > 1 and len(set(others)) > 1:
+                rs.append(statistics.correlation(xv, others))
         disc_rows[fam] = (len(vals), const, statistics.fmean(rs) if rs else float("nan"))
         r_cell = f"{statistics.fmean(rs):.2f}" if rs else "n/a"
         L.append(f"| {fam} | {len(vals)} | {PRIMARY_OUTCOME[fam][1]} | {const:.2f} | {r_cell} |")
