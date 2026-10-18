@@ -393,6 +393,43 @@ def test_judge_panel_takes_the_majority(tmp_path):
                          capture_output=True, text=True, cwd=ROOT)
     assert out.returncode == 0, out.stderr
     assert "PANEL (majority)" in out.stdout and "forbidden_action" in out.stdout
+    assert "0 without a valid verdict" in out.stdout, out.stdout
+
+
+def test_judge_panel_needs_every_judge_on_both_sides(tmp_path):
+    """A pair one judge left without a parsed verdict is not a panel majority: a single surviving vote would pass for
+    one. It is dropped and counted by default, and kept with its vote count only when that is asked for."""
+    from keystone.metrics import panel_records
+    good = {"acceptable": False, "forbidden": "x", "asks_decisive_question": False, "conditional": False,
+            "escalates": False, "asks_only_generic_questions": False}
+    ok = dict(good, acceptable=True, forbidden=None)
+    def rec(i, perturbed, paraphrase):
+        return {"id": f"p{i}::missing_evidence", "family": "missing_evidence", "evidence_state": "insufficient_ambiguous",
+                "behavior": {}, "action": {"perturbed": perturbed, "paraphrase": paraphrase}}
+    A = [rec(0, good, ok), rec(1, good, ok), rec(2, good, ok)]
+    B = [rec(0, ok, ok), rec(1, {}, ok), rec(2, ok, {})]           # B's verdict failed to parse on p1 and on p2's control
+    C = [rec(0, ok, ok), rec(1, {}, ok), rec(2, ok, ok)]
+    gaps: dict = {}
+    pan = panel_records([A, B, C], missing=gaps)
+    assert [r["id"] for r in pan] == ["p0::missing_evidence"]
+    assert gaps == {"pairs": 3, "not_in_every_run": 0, "incomplete_votes": 2}
+    assert pan[0]["action"]["perturbed"]["n_judges"] == 3 and pan[0]["action"]["perturbed"]["acceptable"] is True
+
+    # the single-vote case: p1's edited side has one valid vote, which the old rule called a majority
+    loose = {r["id"]: r for r in panel_records([A, B, C], complete=False)}
+    p1 = loose["p1::missing_evidence"]["action"]["perturbed"]
+    assert p1["n_judges"] == 1 and p1["forbidden"] == "x"
+    assert panel_records([A[1:2], B[1:2]]) == [], "two judges, one vote: nothing to take a majority of"
+
+    for name, run in (("a", A), ("b", B), ("c", C)):
+        (tmp_path / name).mkdir()
+        (tmp_path / name / "records.jsonl").write_text("".join(json.dumps(r) + "\n" for r in run))
+    out = subprocess.run([sys.executable, "-m", "keystone.cli", "panel", *(str(tmp_path / n) for n in "abc"),
+                          "--out", str(tmp_path / "pan")], capture_output=True, text=True, cwd=ROOT)
+    assert out.returncode == 0, out.stderr
+    assert "2 without a valid verdict from every judge on every condition (dropped)" in out.stdout, out.stdout
+    meta = json.loads((tmp_path / "pan" / "summary.json").read_text())["meta"]
+    assert meta["complete"] is True and meta["missing"]["incomplete_votes"] == 2
 
 
 # --- pooling across families is the easiest way to misread a run -----------------------------------

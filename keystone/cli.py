@@ -193,7 +193,8 @@ def cmd_panel(a):
         if not rs:
             print(f"no records in {d}", file=sys.stderr); sys.exit(1)
         runs.append(rs); names.append(p.name)
-    pan = panel_records(runs)
+    gaps: dict = {}
+    pan = panel_records(runs, complete=not a.allow_incomplete, missing=gaps)
     keys = ("forbidden_action", "acceptable_action", "decisive_question_hit", "effective_completion",
             "necessary_update", "escalated_when_sufficient", "stable_on_control", "hedged_when_sufficient")
     def row(label, recs):
@@ -208,8 +209,12 @@ def cmd_panel(a):
         print(row(n[:28], r))
     print(row("PANEL (majority)", pan))
     print("\ncolumns:", ", ".join(keys))
+    incomplete = ("kept with fewer votes (--allow-incomplete)" if a.allow_incomplete else "dropped")
+    print(f"pairs: {gaps['pairs']} in the runs, {gaps['not_in_every_run']} not in every run (dropped), "
+          f"{gaps['incomplete_votes']} without a valid verdict from every judge on every condition ({incomplete})")
     if a.out:
-        write_run(a.out, pan, {"title": "Keystone panel", "judges": names, "note": "per-flag majority of the judges"})
+        write_run(a.out, pan, {"title": "Keystone panel", "judges": names, "note": "per-flag majority of the judges",
+                               "complete": not a.allow_incomplete, "missing": gaps})
         print("->", a.out)
 
 
@@ -587,7 +592,10 @@ def main(argv=None):
     s = sub.add_parser("report", help="recompute summary.json and REPORT.md from a run directory"); s.add_argument("run_dir"); s.set_defaults(f=cmd_report)
     s = sub.add_parser("panel", help="majority panel over runs of the same pairs judged by different judges")
     s.add_argument("runs", nargs="+", help="run directories (or records.jsonl files) of the same model under different judges")
-    s.add_argument("--out", help="write the panel records as a run directory"); s.set_defaults(f=cmd_panel)
+    s.add_argument("--out", help="write the panel records as a run directory")
+    s.add_argument("--allow-incomplete", action="store_true",
+                   help="keep pairs some judge left without a valid verdict, majority over the votes that exist")
+    s.set_defaults(f=cmd_panel)
     s = sub.add_parser("regress", help="what a new version fixed and regressed, item by item, between two runs of the same pairs")
     s.add_argument("run_a"); s.add_argument("run_b"); s.add_argument("--max", type=int, default=15); s.add_argument("--show-fixed", action="store_true"); s.set_defaults(f=cmd_regress)
     s = sub.add_parser("compare-judges", help="agreement between two judges on the same model's replies"); s.add_argument("records_a"); s.add_argument("records_b"); s.set_defaults(f=cmd_compare_judges)

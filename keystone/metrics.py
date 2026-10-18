@@ -143,29 +143,51 @@ def pair_action_outcomes(action: dict[str, dict], family: str | None, evidence_s
 ACTION_FLAGS = ("acceptable", "forbidden", "asks_decisive_question", "conditional", "escalates", "asks_only_generic_questions")
 
 
-def panel_records(runs: list[list[dict]]) -> list[dict]:
+def valid_vote(v) -> bool:
+    """A judge's action verdict that parsed: a failed or truncated judgement is stored as an empty object."""
+    return isinstance(v, dict) and "acceptable" in v
+
+
+def panel_records(runs: list[list[dict]], complete: bool = True, missing: dict | None = None) -> list[dict]:
     """Merge runs of the same pairs judged by different judges into one set of records whose action judgements are
     the per-flag majority. Only pairs present in every run are kept, so the panel is balanced.
 
+    With `complete` (the default) a pair also needs a valid verdict from every judge on every condition any judge
+    judged, so each majority is taken over the whole panel: one surviving vote is not a majority. complete=False
+    takes the majority of whatever valid votes a condition has and records their number as `n_judges`. Pass a dict
+    as `missing` to receive the counts of what was left out: `pairs` in the input, `not_in_every_run`, and
+    `incomplete_votes`, the shared pairs dropped (complete) or kept with fewer votes (not complete).
+
     A single judge fixes the absolute level: the same replies score very differently under different judges. The
     panel is what a comparison across models should use; the per-judge values belong beside it."""
+    if missing is not None:
+        missing.update(pairs=0, not_in_every_run=0, incomplete_votes=0)
     if not runs:
         return []
     by = [{r["id"]: r for r in run} for run in runs]
     ids = sorted(set.intersection(*(set(d) for d in by)))
+    if missing is not None:
+        missing.update(pairs=len(set().union(*(set(d) for d in by))))
+        missing["not_in_every_run"] = missing["pairs"] - len(ids)
     out = []
     for i in ids:
         base = dict(by[0][i])
-        acts = {}
+        acts, short = {}, False
         for cond in ("original", "perturbed", "paraphrase"):
-            votes = [d[i].get("action", {}).get(cond) for d in by]
-            votes = [v for v in votes if v]
+            raw = [(d[i].get("action") or {}).get(cond) for d in by]
+            votes = [v for v in raw if valid_vote(v)]
+            if len(votes) < len(by) and (votes or any(raw)):
+                short = True
             if not votes:
                 continue
             m = {f: sum(1 for v in votes if bool(v.get(f))) * 2 > len(votes) for f in ACTION_FLAGS}
             m["forbidden"] = next((v.get("forbidden") for v in votes if v.get("forbidden")), None) if m["forbidden"] else None
             m["n_judges"] = len(votes)
             acts[cond] = m
+        if short and missing is not None:
+            missing["incomplete_votes"] += 1
+        if short and complete:
+            continue
         if acts:
             base["action"] = acts
         out.append(base)
