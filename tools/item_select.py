@@ -27,12 +27,20 @@ the test split by a transfer rule fitted on dev: each annotation field in TRANSF
 rate of its value, shrunk toward the family rate, and the test items with the highest mean are kept at the family's
 dev keep rate. No test outcome is read to choose an item; test outcomes are read only to score the result.
 
-Runs written by an earlier benchmark version are mapped to the current release through the revision fields: an item
-whose text was rewritten since is dropped unless its row says the annotations were inherited.
+Runs written by an earlier benchmark version are mapped to the current release by content: a record counts for the
+current item only when the row it answered, read from that release's own twin file (`--run-dist`), has the same text
+and the same annotation as the current row (`content_hash`). Annotations carried over to a rewritten text do not
+carry the replies with them, since the replies answered the old text.
+
+`--freeze PATH` writes everything the held-out evaluation needs: the rule's thresholds, the fitted transfer
+parameters, the dev items with the ones kept, and the test-split candidates of the evaluation layer with the subset
+the transfer rule takes from them, each item with the hash of its content, and the file with a hash of itself.
+`--from-frozen PATH` scores held-out runs from that file alone; no selection run is read.
 
 Usage:
   python tools/item_select.py --runs results/reference --out docs/ITEM_SELECTION.md
-  python tools/item_select.py --runs runs --prefix devcore --eval-runs runs --eval-prefix testcore --ids sharp.json
+  python tools/item_select.py --runs runs --prefix devcore --freeze sharp.frozen.json
+  python tools/item_select.py --from-frozen sharp.frozen.json --eval-runs runs --eval-prefix testcore --out held.md
 """
 from __future__ import annotations
 import argparse, glob, hashlib, json, os, statistics, sys, zlib
@@ -42,7 +50,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
-from keystone.build import VERSION  # noqa: E402
+from keystone.build import STATE_FIELDS, VERSION  # noqa: E402
 from keystone.metrics import PRIMARY_OUTCOME, pair_action_outcomes  # noqa: E402
 import discrimination  # noqa: E402
 
@@ -55,6 +63,11 @@ MAX_CEILING = 0.5         # at most half the systems already take a forbidden ac
 MAX_INSTABILITY = 0.25    # one system in four may flip between the unedited conversation and its paraphrase
 TRANSFER_FEATURES = ("evidence_state", "group", "turns", "materiality_majority", "state_review_behaviour_agree")
 SHRINK = 10               # prior weight, in items, of the family keep rate when a feature value is rare
+# What a recorded outcome depends on besides the reply: the text the system answered and the annotation it was judged
+# against. Two rows with equal values here are the same item for every statistic this tool computes.
+TEXT_FIELDS = ("original_prompt", "perturbed_prompt", "paraphrase_prompt", "edited_turn", "paraphrase_edited_turn")
+ANNOTATION_FIELDS = ("removed_or_changed", "materiality_majority", "group") + STATE_FIELDS
+LAYER_FLAG = {"core": "in_core", "strict": "in_strict", "primary": "in_primary", "quick": "in_quick"}
 
 
 # ----------------------------------------------------------------------------------------------------- inputs
@@ -93,23 +106,44 @@ def load_twins(dist: Path) -> dict:
     return out
 
 
-def current_item(iid: str, version: str | None, twins: dict, keep_inherited: bool = True) -> tuple[str | None, str]:
+def load_run_dists(paths: list[str] | None) -> dict[str, dict]:
+    """{benchmark version: twin rows} of the releases earlier runs were made on, each from its own MANIFEST."""
+    out = {}
+    for d in paths or []:
+        version = json.loads((Path(d) / "MANIFEST.json").read_text())["version"]
+        out[version] = load_twins(Path(d))
+    return out
+
+
+def content_hash(t: dict) -> str:
+    """Hash of the text a system answers on this item and of the annotation its reply is judged against."""
+    blob = json.dumps({f: t.get(f) for f in TEXT_FIELDS + ANNOTATION_FIELDS}, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(blob.encode()).hexdigest()
+
+
+def current_item(iid: str, version: str | None, twins: dict, run_dists: dict | None = None) -> tuple[str | None, str]:
     """The current item a record of `version` speaks for, or None with the reason.
 
-    Public ids do not change across versions; a rewrite raises `revision` and the replaced row moves to the
-    deprecated file. A record from before the rewrite answered the old text, so it counts for the current item only
-    when the rewrite carried the annotations over (`inherits_annotations`)."""
+    A record of the current release answered the current row. A record of another release counts only when that
+    release's row has the same content hash as the current one: same text, same annotation. A rewrite that inherited
+    the annotations still changed the text the reply answered, and a release whose rows are not at hand
+    (`run_dists`), or a run that does not name its release, cannot be shown to match, so its records are dropped."""
     t = twins.get(iid)
     if t is None:
         return None, "not in the current release"
-    if version in (None, VERSION) or (t.get("revision") or 1) == 1:
+    if version == VERSION:
         return iid, "same text"
-    if keep_inherited and t.get("inherits_annotations"):
-        return iid, "rewritten, annotations inherited"
-    return None, "rewritten"
+    old = (run_dists or {}).get(version)
+    if old is None:
+        return None, "earlier or unnamed release, rows not given"
+    if iid not in old:
+        return None, "not in the run's release"
+    if content_hash(old[iid]) == content_hash(t):
+        return iid, "same text and annotation in both releases"
+    return None, "text or annotation changed since"
 
 
-def load(runs: str, prefix: str | None, layer: str, twins: dict, keep_inherited: bool = True):
+def load(runs: str, prefix: str | None, layer: str, twins: dict, run_dists: dict | None = None):
     """{item: {system: record}} plus a count of what the version mapping kept and dropped."""
     items: dict[str, dict] = defaultdict(dict)
     mapping: dict[str, int] = defaultdict(int)
@@ -121,7 +155,7 @@ def load(runs: str, prefix: str | None, layer: str, twins: dict, keep_inherited:
             if not line.strip():
                 continue
             r = json.loads(line)
-            iid, why = current_item(r["id"], v, twins, keep_inherited)
+            iid, why = current_item(r["id"], v, twins, run_dists)
             mapping[why] += 1
             if iid is not None:
                 items[iid][system] = r
@@ -216,6 +250,12 @@ def topup_key(iid: str, s: dict):
     return (not informative(s), -(r if r is not None else -2.0), s["instability"] or 0.0, s["ceiling"] or 0.0, s["hash"])
 
 
+def filtered(fam: str, s: dict) -> bool:
+    """Does the item pass its family's filters: the full rule for a perturbation family, the two measurement checks
+    for a negative control. A selected item that does not was added to reach MIN_ITEMS."""
+    return measured_cleanly(s) if fam in CONTROLS else passes(s)
+
+
 def select(stats: dict) -> dict[str, list[str]]:
     """{family: selected item ids} on the items given, which must all be dev items."""
     by_fam: dict[str, list[str]] = defaultdict(list)
@@ -299,6 +339,52 @@ def apply_transfer(model: dict, iids: list[str], twins: dict, control_share: flo
     return out
 
 
+# ----------------------------------------------------------------------------------------------- freezing
+def digest(payload: dict) -> str:
+    """Hash of a frozen selection, over its canonical JSON without the hash field itself."""
+    body = {k: v for k, v in payload.items() if k != "sha256"}
+    return hashlib.sha256(json.dumps(body, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+
+
+def layer_items(twins: dict, split: str, layer: str) -> list[str]:
+    flag = LAYER_FLAG.get(layer)
+    return sorted(i for i, t in twins.items() if t.get("split") == split and (flag is None or t.get(flag)))
+
+
+def freeze(selected_on: dict, stats: dict, chosen: dict, model: dict, ctrl_share: float, twins: dict,
+           eval_layer: str) -> dict:
+    """Everything the held-out evaluation reads, fixed before any test outcome exists."""
+    by_fam = lambda iids: {f: [{"id": i, "sha256": content_hash(twins[i])} for i in sorted(iids) if twins[i]["family"] == f]
+                           for f in FAMILIES if any(twins[i]["family"] == f for i in iids)}
+    payload = {
+        "benchmark_version": VERSION, "selected_on": selected_on,
+        "rule": {"min_items": MIN_ITEMS, "max_ceiling": MAX_CEILING, "max_instability": MAX_INSTABILITY,
+                 "transfer_features": list(TRANSFER_FEATURES), "shrink": SHRINK, "control_share": ctrl_share,
+                 "content_fields": list(TEXT_FIELDS + ANNOTATION_FIELDS)},
+        "transfer": model,
+        "dev": {"items": by_fam(list(stats)), "selected": {f: chosen[f] for f in FAMILIES if f in chosen}},
+    }
+    cand = layer_items(twins, "test", eval_layer)
+    if cand:
+        sharp = apply_transfer(model, cand, twins, ctrl_share)
+        payload["test"] = {"layer": eval_layer, "candidates": by_fam(cand),
+                           "selected": {f: sharp[f] for f in FAMILIES if f in sharp}}
+    payload["sha256"] = digest(payload)
+    return payload
+
+
+def read_frozen(path: str, twins: dict) -> tuple[dict, list[str]]:
+    """The frozen selection, after checking its own hash; plus the candidates whose content no longer matches."""
+    f = json.loads(Path(path).read_text())
+    if f.get("sha256") != digest(f):
+        raise SystemExit(f"{path}: the content does not match its sha256; the file was changed after it was frozen")
+    if "test" not in f:
+        raise SystemExit(f"{path}: no test candidates were frozen, so there is nothing to evaluate")
+    changed = [c["id"] for cs in f["test"]["candidates"].values() for c in cs
+               if c["id"] not in twins or content_hash(twins[c["id"]]) != c["sha256"]]
+    return f, changed
+
+
 # ----------------------------------------------------------------------------------------------- evaluation
 def seed(fam: str, modulus: int) -> int:
     """The seeds tools/discrimination.py uses, so the full-set columns reproduce its table on the same runs."""
@@ -359,14 +445,21 @@ def main(argv=None):
     ap.add_argument("--eval-prefix", default="testcore")
     ap.add_argument("--eval-layer", default="core")
     ap.add_argument("--dist", default=str(ROOT / "dist"))
-    ap.add_argument("--drop-inherited", action="store_true",
-                    help="drop rewritten items even when the rewrite inherited the annotations")
+    ap.add_argument("--run-dist", action="append",
+                    help="a built dist of the release earlier runs were made on (repeatable); their records map to "
+                         "the current release only where the item's text and annotation are unchanged")
     ap.add_argument("--out", help="write the report here (docs/ITEM_SELECTION.md)")
     ap.add_argument("--ids", help="write the selected item ids here as JSON")
+    ap.add_argument("--freeze", help="write the rule, the fitted transfer parameters, the dev and test ids and their "
+                                     "content hashes here, for --from-frozen")
+    ap.add_argument("--from-frozen", help="score --eval-runs with the subset frozen in this file and nothing else")
     a = ap.parse_args(argv)
 
     twins = load_twins(Path(a.dist))
-    items, mapping, versions = load(a.runs, a.prefix, a.layer, twins, keep_inherited=not a.drop_inherited)
+    run_dists = load_run_dists(a.run_dist)
+    if a.from_frozen:
+        return evaluate_frozen(a, twins, run_dists)
+    items, mapping, versions = load(a.runs, a.prefix, a.layer, twins, run_dists)
     if not items:
         print(f"no runs found under {a.runs}"); return 1
     on_test = sorted(i for i in items if twins[i]["split"] != "dev")
@@ -395,7 +488,11 @@ def main(argv=None):
          "subset chosen on the `dev` split by a fixed rule that keeps those items. The `test` split is never read to "
          "choose an item.", "",
          f"Selection runs: {src}, benchmark {', '.join(versions)}, {len(systems)} systems ({', '.join(systems)}), "
-         f"{total} dev items, {discrimination.PERM} permutations. Generated by `{cmd}`.", ""]
+         f"{total} dev items, {discrimination.PERM} permutations. Generated by `{cmd}`.", "",
+         "This page describes an exploratory method; " + ("the subset is scored on held-out runs in the last table."
+                                                          if a.eval_runs else
+                                                          "the held-out evaluation of the subset it selects is pending."),
+         ""]
     if on_test:
         L += [f"{len(on_test)} test-split items in the selection runs were set aside unread.", ""]
     moved = {k: v for k, v in mapping.items() if k != "same text"}
@@ -418,14 +515,16 @@ def main(argv=None):
           f"negative, its ceiling is at most {MAX_CEILING:.2f} and its instability at most {MAX_INSTABILITY:.2f}. A "
           f"family left with fewer than {MIN_ITEMS} items, the smallest family `tools/discrimination.py` reports, is "
           "filled in a fixed order: informative items first, then by item-rest r, then by the cleaner measurement, "
-          "then by the build's hash order.", "",
+          f"then by the build's hash order. Items added to reach {MIN_ITEMS} need not pass the filters above; the "
+          "table below counts them.", "",
           "The two negative controls are not selected on outcomes, since their prediction is that systems do not "
           "differ and choosing the items on which they do would manufacture the opposite. They pass the ceiling and "
           "instability checks and are then taken in hash order, in the number that keeps their share of the subset "
-          f"at their share of the full set ({ctrl_share:.2f}).", "",
+          f"at their share of the full set ({ctrl_share:.2f}), or {MIN_ITEMS} if that is more.", "",
           "## Kept per family", "",
-          "| family | items | informative | kept | kept share | negative item-rest r | at ceiling | unstable control |",
-          "|---|---|---|---|---|---|---|---|"]
+          f"| family | items | informative | kept | added to reach {MIN_ITEMS} | kept share | negative item-rest r | "
+          "at ceiling | unstable control |",
+          "|---|---|---|---|---|---|---|---|---|"]
     for fam in FAMILIES:
         iids = full.get(fam) or []
         if not iids:
@@ -437,8 +536,9 @@ def main(argv=None):
         k = len(chosen.get(fam) or [])
         ctrl = fam in CONTROLS               # selected on the two measurement checks only
         name = f"`{fam}`" + (" (control)" if ctrl else "")
+        added = sum(1 for i in chosen.get(fam) or [] if not filtered(fam, stats[i]))
         L.append(f"| {name} | {len(iids)} | {'not used' if ctrl else sum(1 for s in ss if informative(s))} | {k} | "
-                 f"{k / len(iids):.2f} | {'not used' if ctrl else neg} | {ceil_} | {inst} |")
+                 f"{added} | {k / len(iids):.2f} | {'not used' if ctrl else neg} | {ceil_} | {inst} |")
     L += ["", f"Overall {kept} of {total} items are kept ({kept / total:.2f}); the controls are "
               f"{sum(len(chosen.get(f) or []) for f in CONTROLS) / max(1, kept):.2f} of the subset.", ""]
     L += compare_table(
@@ -462,9 +562,11 @@ def main(argv=None):
           + ", ".join(f"{overlap[f]} of {len(chosen.get(f) or [])} `{f}` items (chance "
                       f"{len(refit.get(f) or []) * len(chosen.get(f) or []) / len(full[f]):.1f})" for f in overlap)
           + ". That agreement is in sample; given held-out runs (`--eval-runs`), the tool scores the transferred "
-          "subset on the `test` split in the table below it.", ""]
+          "subset on the `test` split in the table below it. `--freeze` writes the thresholds, the fitted transfer "
+          "parameters, the dev and test ids and a content hash of each item to one file, and `--from-frozen` scores "
+          "held-out runs from that file alone.", ""]
     if a.eval_runs:
-        ev, ev_map, ev_versions = load(a.eval_runs, a.eval_prefix, a.eval_layer, twins, keep_inherited=not a.drop_inherited)
+        ev, ev_map, ev_versions = load(a.eval_runs, a.eval_prefix, a.eval_layer, twins, run_dists)
         held = {i: v for i, v in ev.items() if twins[i]["split"] == "test"}
         if held:
             ev_stats = item_stats(held, twins)
@@ -489,6 +591,45 @@ def main(argv=None):
                                                            "split": "dev", "systems": systems},
             "rule": {"min_items": MIN_ITEMS, "max_ceiling": MAX_CEILING, "max_instability": MAX_INSTABILITY},
             "items": {f: chosen[f] for f in FAMILIES if f in chosen}}, indent=1) + "\n")
+    if a.freeze:
+        selected_on = {"runs": a.runs, "prefix": a.prefix, "layer": a.layer, "split": "dev", "systems": systems,
+                       "benchmark_versions": versions}
+        Path(a.freeze).write_text(json.dumps(freeze(selected_on, stats, chosen, model, ctrl_share, twins, a.eval_layer),
+                                             indent=1, ensure_ascii=False) + "\n")
+    return 0
+
+
+def evaluate_frozen(a, twins: dict, run_dists: dict) -> int:
+    """Score held-out runs on the subset a frozen file fixed: no selection run is read, no rule is refitted."""
+    if not a.eval_runs:
+        print("--from-frozen scores held-out runs; give them with --eval-runs"); return 1
+    f, changed = read_frozen(a.from_frozen, twins)
+    cand = {c["id"] for cs in f["test"]["candidates"].values() for c in cs} - set(changed)
+    ev, ev_map, ev_versions = load(a.eval_runs, a.eval_prefix, f["test"]["layer"], twins, run_dists)
+    held = {i: v for i, v in ev.items() if i in cand}
+    if not held:
+        print(f"no frozen test candidate in {a.eval_runs}"); return 1
+    ev_stats = item_stats(held, twins)
+    ev_full: dict[str, list[str]] = defaultdict(list)
+    for i, s in ev_stats.items():
+        ev_full[s["family"]].append(i)
+    sharp = {fam: [i for i in ids if i in held] for fam, ids in f["test"]["selected"].items()}
+    ev_systems = sorted({s for v in held.values() for s in v})
+    sel = f["selected_on"]
+    L = ["# Item selection, held-out evaluation of a frozen subset", "",
+         f"Frozen file `{a.from_frozen}`, sha256 `{f['sha256']}`, benchmark {f['benchmark_version']}, selected on "
+         f"`{sel['runs']}` ({', '.join(sel['systems'])}). Held-out runs `{a.eval_runs}`, prefix `{a.eval_prefix}`, "
+         f"benchmark {', '.join(ev_versions)}, {len(ev_systems)} systems, {len(held)} of {len(cand)} frozen "
+         f"`{f['test']['layer']}` candidates on `test`. Neither the subset nor the transfer rule is refitted here.", ""]
+    if changed:
+        L += [f"{len(changed)} frozen candidates have changed text or annotation since the freeze and are left out.", ""]
+    L += compare_table("Full set against the subset, held out",
+                       "The subset is the one the frozen file names; the outcomes below are the first test outcomes "
+                       "the procedure reads.", held, ev_stats, dict(ev_full), sharp)
+    text = "\n".join(L) + "\n"
+    print(text)
+    if a.out:
+        Path(a.out).write_text(text)
     return 0
 
 

@@ -37,7 +37,8 @@ def few_permutations(monkeypatch):
 def twin(pid, family, split, **kw):
     state = "sufficient_for_original_action" if family in item_select.CONTROLS else "insufficient_ambiguous"
     return {"prompt_id": pid, "family": family, "split": split, "evidence_state": state, "group": "enough_context",
-            "turns": 1, "materiality_majority": 3, "state_review_behaviour_agree": True, "revision": 1, **kw}
+            "turns": 1, "materiality_majority": 3, "state_review_behaviour_agree": True, "revision": 1, "in_core": True,
+            "original_prompt": f"original {pid}", "perturbed_prompt": f"edited {pid}", **kw}
 
 
 def record(pid, family, split, original, perturbed, paraphrase):
@@ -241,13 +242,113 @@ def test_full_set_spread_is_the_discrimination_statistic(release):
     assert row["sd"] == pytest.approx(sd) and row["p"] == pytest.approx(p)
 
 
-def test_records_from_an_earlier_version_map_through_the_revision_fields():
+def test_records_from_an_earlier_release_map_only_where_text_and_annotation_are_unchanged():
+    """A record answered the row of the release it was run on. It speaks for the current item only when that row has
+    the current text and the current annotation; inherited annotations on a rewritten text do not qualify."""
     v = item_select.VERSION
-    twins = {"a::f": {"revision": 1}, "b::f": {"revision": 2, "inherits_annotations": True},
-             "c::f": {"revision": 2, "inherits_annotations": False}}
-    assert item_select.current_item("a::f", "0.5.0", twins)[0] == "a::f"
-    assert item_select.current_item("b::f", "0.5.0", twins)[0] == "b::f"
-    assert item_select.current_item("b::f", "0.5.0", twins, keep_inherited=False)[0] is None
-    assert item_select.current_item("c::f", "0.5.0", twins)[0] is None, "a rewritten twin's old replies answered other text"
-    assert item_select.current_item("c::f", v, twins)[0] == "c::f", "a run on the current release needs no mapping"
-    assert item_select.current_item("gone::f", v, twins)[0] is None
+    cur = {"a::f": {"perturbed_prompt": "x", "evidence_state": "insufficient_ambiguous"},
+           "b::f": {"perturbed_prompt": "y2", "evidence_state": "insufficient_ambiguous", "revision": 2,
+                    "inherits_annotations": True},
+           "c::f": {"perturbed_prompt": "z", "evidence_state": "sufficient_for_escalation"}}
+    old = {"0.5.0": {"a::f": {"perturbed_prompt": "x", "evidence_state": "insufficient_ambiguous", "in_core": False},
+                     "b::f": {"perturbed_prompt": "y1", "evidence_state": "insufficient_ambiguous"},
+                     "c::f": {"perturbed_prompt": "z", "evidence_state": "insufficient_ambiguous"}}}
+    assert item_select.current_item("a::f", "0.5.0", cur, old)[0] == "a::f", "same content; layer flags are not content"
+    assert item_select.current_item("b::f", "0.5.0", cur, old)[0] is None, "rewritten text, inherited annotations"
+    assert item_select.current_item("c::f", "0.5.0", cur, old)[0] is None, "same text, the annotation changed"
+    assert item_select.current_item("a::f", "0.5.0", cur)[0] is None, "without the earlier rows nothing can be shown"
+    assert item_select.current_item("a::f", None, cur, old)[0] is None, "a run that names no release maps to nothing"
+    assert item_select.current_item("b::f", v, cur)[0] == "b::f", "a run on the current release needs no mapping"
+    assert item_select.current_item("gone::f", v, cur)[0] is None
+
+
+def test_run_dist_maps_an_earlier_release_through_the_loader(release, tmp_path):
+    """Runs stamped with an earlier version load only through --run-dist, and then only the unchanged items."""
+    root, dist = release["root"], release["dist"]
+    for f in (root / "runs").glob("devq__*/*/summary.json"):
+        f.write_text(json.dumps({"meta": {"benchmark_version": "0.5.0"}}))
+    twins = item_select.load_twins(dist)
+    none, mapping, _ = item_select.load(str(root / "runs"), "devq", "quick", twins)
+    assert not none and mapping == {"earlier or unnamed release, rows not given": sum(mapping.values())}
+    older = tmp_path / "dist-0.5.0"; older.mkdir()
+    rows = [json.loads(l) for l in (dist / "keystone_twins.jsonl").read_text().splitlines()]
+    sep = sorted(release["dev"]["separating"])[0]
+    for r in rows:
+        if r["prompt_id"] == sep:
+            r["perturbed_prompt"] += " (worded differently then)"
+    (older / "keystone_twins.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    (older / "MANIFEST.json").write_text(json.dumps({"version": "0.5.0"}))
+    items, mapping, _ = item_select.load(str(root / "runs"), "devq", "quick", twins, item_select.load_run_dists([str(older)]))
+    assert f"{sep}::missing_evidence" not in items and mapping["text or annotation changed since"] == len(SYSTEMS)
+    assert ids(release["dev"], "constant") <= set(items)
+
+
+def test_freeze_fixes_what_the_held_out_evaluation_reads(release, tmp_path):
+    root = release["root"]
+    frozen = tmp_path / "sharp.frozen.json"
+    assert item_select.main(["--runs", str(root / "runs"), "--prefix", "devq", "--dist", str(release["dist"]),
+                             "--freeze", str(frozen)]) == 0
+    f = json.loads(frozen.read_text())
+    assert f["sha256"] == item_select.digest(f)
+    assert set(f["rule"]) >= {"min_items", "max_ceiling", "max_instability", "transfer_features", "shrink", "control_share"}
+    assert f["transfer"]["missing_evidence"]["base"] > 0 and f["transfer"]["missing_evidence"]["rates"]
+    assert ids(release["dev"], "separating") <= set(f["dev"]["selected"]["missing_evidence"])
+    test_ids = {c["id"] for cs in f["test"]["candidates"].values() for c in cs}
+    assert test_ids == {i for i in item_select.load_twins(release["dist"]) if i.startswith("test-")}
+    twins = item_select.load_twins(release["dist"])
+    assert all(c["sha256"] == item_select.content_hash(twins[c["id"]]) for cs in f["test"]["candidates"].values() for c in cs)
+    assert set(f["test"]["selected"]["missing_evidence"]) <= test_ids
+
+    # scored from the file alone: the selection runs are gone, and the page names the frozen subset's hash
+    import shutil
+    shutil.copytree(root / "runs", tmp_path / "held")
+    shutil.rmtree(root / "runs")
+    out = tmp_path / "held.md"
+    assert item_select.main(["--from-frozen", str(frozen), "--eval-runs", str(tmp_path / "held"), "--eval-prefix",
+                             "testcore", "--dist", str(release["dist"]), "--out", str(out)]) == 0
+    text = out.read_text()
+    assert f["sha256"] in text and "## Full set against the subset, held out" in text
+    n_sel = len(f["test"]["selected"]["missing_evidence"])
+    assert f"| `missing_evidence` | {len(f['test']['candidates']['missing_evidence'])} → {n_sel} |" in text
+
+    tampered = json.loads(frozen.read_text())
+    tampered["test"]["selected"]["missing_evidence"].pop()
+    frozen.write_text(json.dumps(tampered))
+    with pytest.raises(SystemExit, match="does not match its sha256"):
+        item_select.main(["--from-frozen", str(frozen), "--eval-runs", str(tmp_path / "held"),
+                          "--dist", str(release["dist"])])
+
+
+def test_a_candidate_changed_after_the_freeze_is_left_out(release, tmp_path):
+    root, dist = release["root"], release["dist"]
+    frozen = tmp_path / "f.json"
+    assert item_select.main(["--runs", str(root / "runs"), "--prefix", "devq", "--dist", str(dist), "--freeze", str(frozen)]) == 0
+    rows = [json.loads(l) for l in (dist / "keystone_twins.jsonl").read_text().splitlines()]
+    moved = sorted(release["test"]["separating"])[0]
+    for r in rows:
+        if r["prompt_id"] == moved:
+            r["evidence_state"] = "sufficient_for_escalation"
+    (dist / "keystone_twins.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    out = tmp_path / "held.md"
+    assert item_select.main(["--from-frozen", str(frozen), "--eval-runs", str(root / "runs"), "--dist", str(dist),
+                             "--out", str(out)]) == 0
+    assert "1 frozen candidates have changed text or annotation since the freeze and are left out." in out.read_text()
+
+
+def test_top_up_items_are_counted_on_the_page(release, tmp_path):
+    kinds, recs = design("dev", n_sep=5, n_const=20)
+    items: dict = {}
+    for sys_, rs in recs.items():
+        for r in rs:
+            items.setdefault(r["id"], {})[sys_] = r
+    twins = {r["id"]: twin(r["source_id"], r["family"], "dev") for rs in recs.values() for r in rs}
+    stats = item_select.item_stats(items, twins)
+    chosen = item_select.select(stats)
+    added = [i for i in chosen["missing_evidence"] if not item_select.filtered("missing_evidence", stats[i])]
+    assert len(added) == item_select.MIN_ITEMS - 5, "five items pass; the rest of the floor is top-up"
+    out = tmp_path / "p.md"
+    assert item_select.main(["--runs", str(release["root"] / "runs"), "--prefix", "devq", "--dist", str(release["dist"]),
+                             "--out", str(out)]) == 0
+    text = out.read_text()
+    assert "| added to reach 20 |" in text and "need not pass the filters above" in text
+    assert "held-out evaluation of the subset it selects is pending" in text
