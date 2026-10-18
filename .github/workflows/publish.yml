@@ -1,25 +1,70 @@
 name: publish
 # Publishes to PyPI through Trusted Publishing: GitHub signs a short-lived OIDC token
 # for this workflow, so no API token is ever stored in the repository.
+#
+# Nothing is uploaded unless the release tag itself passes: its version matches the package, the data release
+# rebuilds from it byte for byte against the published hashes, the test suite passes, and the wheel it builds,
+# installed on its own, rebuilds the same release.
 on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "release tag to build and publish, for example v0.6.1"
+        required: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ github.event.release.tag_name || inputs.tag }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install build
-      - run: python -m build
+      - name: The tag names the package version
+        run: |
+          python - <<'EOF'
+          import os, tomllib
+          v = tomllib.load(open("pyproject.toml", "rb"))["project"]["version"]
+          tag = os.environ["TAG"]
+          assert tag == f"v{v}", f"tag {tag} does not match the package version {v}"
+          EOF
+      - name: Build the package from the tag, before anything else is written to the tree
+        run: |
+          pip install build twine
+          python -m build --outdir pkg/
+          twine check --strict pkg/*
+      - name: Cache HealthBench
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: healthbench-2025-05-07
+      - run: pip install -e ".[dev]"
+      - name: Rebuild the data release from the tag and check it against the published hashes
+        run: |
+          keystone build
+          keystone build --check | tee check.log
+          grep -q "^published hashes: ok" check.log
+      - run: python tools/quality_checks.py > /dev/null
+      - run: python -m pytest -q
+      - name: The built wheel, installed on its own, rebuilds the same release
+        run: |
+          python -m venv "$RUNNER_TEMP/wheel"
+          "$RUNNER_TEMP/wheel/bin/pip" install pkg/*.whl
+          cd "$RUNNER_TEMP"
+          export KEYSTONE_CACHE="$RUNNER_TEMP/keystone"
+          "$RUNNER_TEMP/wheel/bin/keystone" build --cache "$GITHUB_WORKSPACE/.cache/healthbench_oss.jsonl"
+          "$RUNNER_TEMP/wheel/bin/keystone" build --check | tee check.log
+          grep -q "^published hashes: ok" check.log
       - uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: dist/
+          path: pkg/
 
   publish:
     needs: build
