@@ -2,11 +2,13 @@
 
 Core layer, `test` split, 10 evaluated systems (claude-opus-5, claude-sonnet-5, deepseek-v4-pro, gemini-3.8-flash, glm-5.3, gpt-5.6-terra, grok-4.3, kimi-k2.6, llama-4-maverick, qwen3.8-max). Every quantity is the mean over sources of the mean over systems of (edited forbidden − paraphrase forbidden), with the source as the unit of resampling. Intervals are 95 percent for C1 and C1b and 90 percent for the equivalence test in C2. Numbers computed on the `quick` layer elsewhere in this repository are exploratory: that layer is drawn from the dev split.
 
+The decision rules below were specified before the held-out run: they were committed in `tools/confirmatory.py` (6e774be, 2026-09-12) before the first held-out result (5b2069a).
+
 ## C1 evidence effect
 
-Prediction: Δ_f > 0 on all three. Decision rule: all three intervals exclude zero after Benjamini-Hochberg across the three families.
+Prediction: Δ_f > 0 on all three. Decision rule: on each family the 95 percent interval excludes zero and the Benjamini-Hochberg q across the three families is below 0.05; C1 is supported when all three families meet both.
 
-| family | sources | risk difference | bootstrap p | BH q | excludes zero |
+| family | sources | risk difference | bootstrap p | BH q | excludes zero, q < 0.05 |
 |---|---|---|---|---|---|
 | missing_evidence | 85 | +0.079 [+0.018, +0.140] | 0.0112 | 0.0112 | yes |
 | conflicting_evidence | 139 | +0.284 [+0.223, +0.344] | 0.0001 | 0.0002 | yes |
@@ -16,9 +18,9 @@ Prediction: Δ_f > 0 on all three. Decision rule: all three intervals exclude ze
 
 ## C1b ceiling-restricted effect
 
-The same three families over the sources whose reply to the *unedited* conversation was not itself a forbidden action, where an effect of editing has room to appear. Reported next to C1; neither is preferred, and a family where they disagree is reported as such.
+The same three families over the (source, system) cells whose reply to the *unedited* conversation was not itself a forbidden action, where an effect of editing has room to appear. Reported next to C1; neither is preferred, and a family where they disagree is reported as such.
 
-| family | sources | excluded | risk difference | excludes zero |
+| family | sources | excluded sources | risk difference | excludes zero |
 |---|---|---|---|---|
 | missing_evidence | 85 | 0 | +0.089 [+0.022, +0.156] | yes |
 | conflicting_evidence | 139 | 0 | +0.313 [+0.255, +0.369] | yes |
@@ -56,7 +58,7 @@ Each system's own paired difference on the three C1 families, so that a pooled e
 
 ## Reading
 
-All three preregistered families hold on the held-out split after Benjamini-Hochberg, and both negative controls pass the equivalence test on the same split with the same judge.
+All three families hold on the held-out split under the rule fixed before it was run, and both negative controls pass the equivalence test on the same split with the same judge.
 
 `conflicting_evidence`: +0.284 [+0.223, +0.344] over 139 held-out sources, 10 of 10 systems above zero, system means from +0.108 to +0.468.
 

@@ -48,7 +48,7 @@ measured   did the reply stay definitive on the twin without naming the gap, and
 | **Reference set** | 153 conversations that naturally lack decisive information, unperturbed |
 | **Reference results** | five assistants, every reply and its classification shipped (`release/reference_records.jsonl`) |
 | **Grader validity** | six authored replies with intended labels per item (166 items); the action judge separates unsupported commitment from correct replies at 0.90 to 0.99 with GPT-4.1 as judge ([`docs/JUDGE_CHECK.md`](docs/JUDGE_CHECK.md)) |
-| **Auditable** | published SHA-256 per file that your own rebuild is checked against, 111 tests that need no key, a degenerate-strategy check that no fixed policy can win, three validity checks against behaviour and physician-written artefacts we did not produce, an audit of whether the edit leaves a fingerprint a model could answer instead of the evidence, and every rater disagreement released |
+| **Auditable** | published SHA-256 per file that your own rebuild is checked against, 122 tests that need no key, a degenerate-strategy check that no fixed policy can win, three validity checks against behaviour and physician-written artefacts we did not produce, an audit of whether the edit leaves a fingerprint a model could answer instead of the evidence, and every rater disagreement released |
 
 ## Quickstart
 
@@ -125,7 +125,7 @@ Five assistants over the quick set, **eight families**, 319 twins each with its 
 
 Every row is all 40 quick-set items of that family with both sides judged, averaged per item across the five assistants, with a 95 percent bootstrap interval over items; a GEE clustered by item with the assistant as a fixed effect gives the same marginal differences. The two negative-control families sit on zero, where the correct behaviour is to answer unchanged; five perturbation families do not. `alternative_evidence`, whose own outcome is a necessary update rather than a forbidden action, is at +0.00 on this one and is read through its own column in [`docs/RESULTS.md`](docs/RESULTS.md). That contrast is what separates a benchmark that measures evidence-sensitivity from one that measures sensitivity to being edited, and it is now measured rather than argued ([`docs/BEHAVIOUR_ANCHOR.md`](docs/BEHAVIOUR_ANCHOR.md)).
 
-**On the held-out split, with ten systems, all three preregistered hypotheses hold.** The numbers above are exploratory: the quick set is 40 items per family drawn from `dev`. The confirmatory run is the core layer of the `test` split, 1,027 sources never used for any decision, ten evaluated systems, judge GPT-4.1 ([`docs/CONFIRMATORY.md`](docs/CONFIRMATORY.md)):
+**On the held-out split, with ten systems, all three confirmatory hypotheses hold.** The numbers above are exploratory: the quick set is 40 items per family drawn from `dev`. The confirmatory run is the core layer of the `test` split, 1,027 twins from 254 sources never used for any decision, ten evaluated systems, judge GPT-4.1, under decision rules specified before the held-out run (committed in `tools/confirmatory.py`, 6e774be, 2026-09-12) ([`docs/CONFIRMATORY.md`](docs/CONFIRMATORY.md)):
 
 | | sources | twin minus control | BH q |
 |---|---|---|---|
@@ -135,7 +135,7 @@ Every row is all 40 quick-set items of that family with both sides judged, avera
 | `salient_distractor` (control) | 219 | +0.002 [−0.012, 0.016] | equivalence passed |
 | `demographic_control` (control) | 161 | −0.004 [−0.026, 0.017] | equivalence passed |
 
-C1 holds on all three families after Benjamini-Hochberg. C1b, the same restricted to sources the system handled correctly unedited, holds on all three and is larger. **C2 is an equivalence test, not a null result**: the 90 percent interval on each negative control lies inside ±0.05, so the controls are shown to be flat rather than merely failing to be significant.
+C1 holds on all three families: each interval excludes zero and each Benjamini-Hochberg q is below 0.05. C1b, the same restricted to sources the system handled correctly unedited, holds on all three and is larger. **C2 is an equivalence test, not a null result**: the 90 percent interval on each negative control lies inside ±0.05, so the controls are shown to be flat rather than merely failing to be significant.
 
 **One command runs the whole two-sided audit.** Each line names a claim, the measurement behind it, and the condition that would contradict it. No model call, no key; it reads a directory of runs.
 
@@ -336,7 +336,7 @@ HealthBench is MIT, and its authors ask that items not be posted as plain text o
 | `dist/` | **Built locally**, never committed: `healthbench_style/` (13 JSONL files in HealthBench's schema), `keystone_twins.jsonl`, `keystone_core.jsonl`, `MANIFEST.json`, data card |
 | `keystone/` | The package: `data.py` (pairs), `prompts.py` (the three graders), `metrics.py` (outcomes, Wilson, McNemar, kappa), `runner.py` (any-provider evaluation), `cli.py`, `inspect_task.py` |
 | `tools/` | `build_release.py` (rebuild and verify, same code as `keystone build`), `quality_checks.py` (C1 to C8, no model), `trivial_baselines.py` (the metrics cannot be gamed), `rubric_anchor.py`, `ideal_answer_check.py` and `behaviour_anchor.py` (the three validity anchors), `judge_check.py` and `judge_diagnose.py` (grader validity), `shortcut_audit.py` (is the edit answerable from its fingerprint), `item_analysis.py` and `item_select.py` (which items separate systems, and a subset selected on dev) |
-| `tests/` | 111 tests, no keys: release structure against the data card and schema, package API on fake models, Inspect task on mock models, the rebuild path a PyPI install takes |
+| `tests/` | 122 tests, no keys: release structure against the data card and schema, package API on fake models, Inspect task on mock models, the rebuild path a PyPI install takes |
 | `docs/` | Data card, field schema (including the decision–evidence fields), protocol (section 11: the 0.4.0 construct), results table, per-item report, applicability-judge agreement, grader validity, the three anchors, the shortcut audit, related work |
 | `site/` | The project page |
 

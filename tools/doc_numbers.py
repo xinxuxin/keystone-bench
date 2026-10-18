@@ -50,7 +50,7 @@ def check(path: Path):
             continue
         for m in STAT.finditer(text):
             tok = m.group(0)
-            if tok in ("0.05", "0.95", "0.90"):                   # preregistered thresholds are fixed by the protocol
+            if tok in ("0.05", "0.95", "0.90"):                   # decision thresholds fixed by the protocol and the tools
                 continue
             ctx = lines[lineno - 1].strip()[:110] if lineno <= len(lines) else ""
             bad.append((lineno, tok, ctx))
