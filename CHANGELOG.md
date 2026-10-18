@@ -2,14 +2,46 @@
 
 ## 0.6.1 (unreleased)
 
+The package is 0.6.1 and the data release it builds is still 0.6.0: `keystone build` fetches the label files from
+the `v0.6.0` tag and checks the rebuild against the hashes recorded for it, so the data and every published number
+are unchanged.
+
 - **An installation from PyPI rebuilds the published release again.** `keystone build` outside a checkout fetched
   eight label files from the tag and not `deprecated_metadata.jsonl` or `deprecated_edits.jsonl`, so it wrote no
   `dist/deprecated_twins.jsonl` and `keystone build --check` reported a mismatch on that file. Both are now
-  fetched, a download cut off part way resumes with a range request instead of failing the build, and `tests/test_build.py` rebuilds from exactly the fetched files and
-  checks the result against the published hashes. The label files and the hashes are those of 0.6.0
-  (`keystone.build.VERSION`), so the data and every published number are unchanged.
-- The package is 0.6.1 and the data release it builds is still 0.6.0: `keystone build` fetches the label files
-  from the `v0.6.0` tag and checks the rebuild against the hashes recorded for it.
+  fetched, and `tests/test_build.py` rebuilds from exactly the fetched files and checks the result against the
+  published hashes.
+- **A label download cut off part way resumes** with a range request instead of failing the build.
+- **`tools/discrimination.py` gives the same table on every run of the same inputs.** The resampling was seeded
+  from Python's salted string hash, which changes with every interpreter start; it is now seeded from the family
+  name, with the sources in sorted order.
+- **`tools/confirmatory.py` applies the decision rule it states.** A C1 family holds when its 95 percent interval
+  excludes zero and its Benjamini-Hochberg q is below 0.05; the q was computed and printed but not used in the
+  verdict. C1b follows the same rule with its own p and q, and reports the sources it removes and the
+  (source, system) cells it removes as two columns, since a source loses some systems long before it loses all of
+  them. On the published held-out numbers every C1 q is below 0.05, so the C1 verdict is unchanged;
+  `docs/CONFIRMATORY.md` shows the C1b p, q and cell columns once it is regenerated from the held-out runs.
+- **`keystone panel` takes a majority over the whole panel.** A pair now needs a valid verdict from every judge on
+  every condition any judge judged; before, a condition with one surviving vote passed as a majority of one. The
+  pairs left out are counted and printed, and written to the panel's `summary.json`. `--allow-incomplete`
+  (`panel_records(..., complete=False)`) keeps the earlier behaviour.
+- **Item selection (`tools/item_select.py`, new).** Per-item discrimination statistics on the dev split, a fixed
+  rule that keeps the items that separate systems, and a transfer rule that carries the subset to the test split
+  from annotations alone ([`docs/ITEM_SELECTION.md`](docs/ITEM_SELECTION.md)). A run from an earlier release maps
+  to the current one only where the item's text and annotation are unchanged, checked by content hash against
+  that release's own twin file (`--run-dist`). `--freeze` writes the thresholds, the fitted transfer parameters,
+  the dev and test ids and a content hash of every item to one hashed file, and `--from-frozen` scores held-out
+  runs from that file alone. Items added to bring a family to 20 are counted on the page.
+- `docs/ITEM_ANALYSIS.md` names its correlation for what it computes, **agreement with other systems (r)**: per
+  model, the correlation over items between that model's outcome and the other models' mean outcome on the same
+  item. The numbers are unchanged.
+- README: the confirmatory run covers 1,027 twins from 254 held-out sources, and the confirmatory decision rules
+  are dated by the commit that fixed them before the held-out run.
+- `CITATION.cff` and `.zenodo.json` carry the data release version, 0.6.0, and name the 0.6.1 package that
+  rebuilds it.
+- The PyPI workflow publishes only a release tag that matches the package version, rebuilds the data release
+  byte for byte against the published hashes, passes the test suite, and whose wheel, installed on its own,
+  rebuilds the same release.
 
 ## 0.6.0 (2026-09-12)
 
