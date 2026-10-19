@@ -35,13 +35,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 # The data release: the labels, the edits and the published hashes. A package release that changes only code keeps
 # this value, so an installed copy fetches the label files of the release its hashes were recorded for.
-VERSION = "0.6.0"
+VERSION = "0.7.0"
 CACHE = Path(os.environ.get("KEYSTONE_CACHE", Path.home() / ".cache" / "keystone"))
 RAW = "https://raw.githubusercontent.com/xinxuxin/keystone-bench/v{version}/release/{name}"
 # every file in release/ that build() reads; an installed copy has nothing else to rebuild from
 RELEASE_FILES = ("metadata.jsonl", "edits.jsonl", "reference_ids.json", "reference_results.json",
                  "reference_records.jsonl", "decision_frames.jsonl", "contrastive_replies.jsonl",
-                 "deprecated_metadata.jsonl", "deprecated_edits.jsonl", "MANIFEST.expected.json")
+                 "deprecated_metadata.jsonl", "deprecated_edits.jsonl", "quick_set.json", "MANIFEST.expected.json")
 FETCH_ATTEMPTS = 8
 EXPECTED = "MANIFEST.expected.json"      # the hashes of the release the published numbers were computed on
 BASE = ("missing_evidence", "conflicting_evidence", "demographic_shift", "salient_distractor")
@@ -63,7 +63,11 @@ TWIN_FIELDS = ("prompt_id", "family", "original_prompt", "perturbed_prompt", "re
                "materiality_majority", "has_decision_frame", "evidence_state", "alternative_action", "acceptable_actions",
                "forbidden_actions", "decisive_questions", "absent_is_not_negative", "escalation_sufficient", "state_annotator",
                "state_note", "state_review_agree", "state_review", "state_reviewer", "mechanism", "advice_should_change",
-               "mechanism_note", "alternative_fact", "expected_action", "deprecated", "superseded_by",
+               "mechanism_note", "alternative_fact", "expected_action",
+               "hard_mode", "hard_outcome", "old_value", "new_value", "threshold", "threshold_value", "threshold_unit",
+               "threshold_source", "old_side", "new_side", "value_kind",
+               "lists_version", "acceptable_actions_v1", "forbidden_actions_v1", "decisive_questions_v1", "list_edits_applied",
+               "deprecated", "superseded_by",
                "quality_flags", "in_core", "in_strict", "paraphrase_released", "split", "tier", "clinician_confirmed",
                "state_consistent", "acts_as_control", "state_review_behaviour_agree", "in_primary", "in_quick")
 
@@ -73,6 +77,14 @@ TWIN_FIELDS = ("prompt_id", "family", "original_prompt", "perturbed_prompt", "re
 # so an older release still rebuilds byte-identically under this code.
 VERSION_FIELDS = ("revision", "supersedes", "rewrite_reason", "specific_used", "inherits_annotations",
                   "paraphrase_edited_turn", "paraphrase_turns", "deprecated", "superseded_by")
+
+
+# Fields that first appear in 0.7.0: the threshold-crossing values of `alternative_evidence_hard` and the version-1 action
+# lists kept beside the revised ones. A row carries them only where they apply, so a release without them rebuilds unchanged.
+HARD_FIELDS = ("hard_mode", "hard_outcome", "old_value", "new_value", "threshold", "threshold_value", "threshold_unit",
+               "threshold_source", "old_side", "new_side", "value_kind")
+# what the HealthBench-style `keystone` block carries of them, after the state fields and only where the twin has them
+BLOCK_EXTRA = HARD_FIELDS + ("lists_version",)
 
 
 def twin_fields(versioned: bool) -> tuple[str, ...]:
@@ -88,12 +100,15 @@ CONSISTENT = {  # the evidence states a family's edit is designed to produce
     "conflicting_evidence": {"contradiction_unresolved", "insufficient_ambiguous", "sufficient_for_escalation"},
     "demographic_shift": {"sufficient_for_alternative_action", "sufficient_for_escalation", "insufficient_ambiguous"},
     "alternative_evidence": {"sufficient_for_alternative_action", "sufficient_for_escalation"},   # escalation is the alternative action when the new fact makes it urgent
+    "alternative_evidence_hard": {"sufficient_for_alternative_action"},   # the crossed threshold changes the action; escalation is buried_red_flag's construct
     "salient_distractor": {"sufficient_for_original_action"},
     "demographic_control": {"sufficient_for_original_action"},
     "buried_red_flag": {"sufficient_for_escalation"},
     "missing_evidence_early": {"insufficient_ambiguous", "sufficient_for_escalation"},
 }
 CONTROLS = ("salient_distractor", "demographic_control")
+# the families of every release up to 0.6.0; a family outside this set is an additional family of a later release
+FAMILIES_BEFORE_0_7 = BASE + ("alternative_evidence", "demographic_control", "buried_red_flag", "missing_evidence_early")
 
 
 # the behaviour a state calls for; two states in the same class imply the same correct reply
@@ -369,12 +384,21 @@ def build(dist: Path, cache: Path, release: Path | None = None) -> int:
         # an annotated state needs the second reviewer's agreement (at the behaviour level); a derived state has no review by construction
         t["in_primary"] = bool(t["in_strict"] and t["state_consistent"] and (derived or t["state_review_behaviour_agree"] is True))
         twins.append(t)
-    # quick set: 40 strict, state-consistent dev twins with a control per family, in hash order, stable across versions
-    quick = set()
-    for fam in sorted({t["family"] for t in twins}):
-        cand = sorted((t for t in twins if t["family"] == fam and t["in_strict"] and t["state_consistent"] and t["paraphrase_released"] and t["split"] == "dev"),
-                      key=lambda t: hashlib.sha256((t["prompt_id"] + fam).encode()).hexdigest())
-        quick |= {(t["prompt_id"], t["family"]) for t in cand[:40]}
+    # quick set: 40 strict, state-consistent dev twins with a control per family, in hash order. From 0.7.0 the release
+    # fixes the set in quick_set.json, so that it stays the same twins across releases (a rewrite keeps its predecessor's
+    # place while it still qualifies, a new family is drawn by the same rule); before that it is drawn here.
+    quick_ok = lambda t: bool(t["in_strict"] and t["state_consistent"] and t["paraphrase_released"] and t["split"] == "dev")
+    if (RELEASE / "quick_set.json").exists():
+        quick = {tuple(k) for k in json.loads((RELEASE / "quick_set.json").read_text())["twins"]}
+        unfit = sorted(quick - {(t["prompt_id"], t["family"]) for t in twins if quick_ok(t)})
+        if unfit and not (missing or mismatch):
+            raise SystemExit(f"quick_set.json lists {len(unfit)} twin(s) that are not in the release or no longer qualify: {unfit[:3]}")
+    else:
+        quick = set()
+        for fam in sorted({t["family"] for t in twins}):
+            cand = sorted((t for t in twins if t["family"] == fam and quick_ok(t)),
+                          key=lambda t: hashlib.sha256((t["prompt_id"] + fam).encode()).hexdigest())
+            quick |= {(t["prompt_id"], t["family"]) for t in cand[:40]}
     for t in twins:
         t["in_quick"] = (t["prompt_id"], t["family"]) in quick
     fields = twin_fields(versioned)
@@ -457,7 +481,7 @@ def build(dist: Path, cache: Path, release: Path | None = None) -> int:
                         "state_consistent": t["state_consistent"], "acts_as_control": t["acts_as_control"], "in_primary": t["in_primary"],
                         "state_review_behaviour_agree": t["state_review_behaviour_agree"],
                         "edited_turn": t.get("edited_turn") if isinstance(t.get("edited_turn"), int) else len(s["prompt"]) - 1,
-                        **{k: t.get(k) for k in STATE_FIELDS}}})
+                        **{k: t.get(k) for k in STATE_FIELDS}, **{k: t[k] for k in BLOCK_EXTRA if k in t}}})
             if out:
                 emit(f"healthbench_style/{fam}__{cond}.jsonl",
                      "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in out))
@@ -542,6 +566,20 @@ def build(dist: Path, cache: Path, release: Path | None = None) -> int:
                            for f in fams},
             "healthbench_style": dict(counts)},
         "files": {}}
+    if any(t["family"] not in FAMILIES_BEFORE_0_7 or "lists_version" in t for t in twins):
+        # 0.7.0 on: the primary layer per family, the revised action lists, and the sources that carry only an additional family
+        c = manifest["counts"]
+        for f, e in c["per_family"].items():
+            e["primary"] = sum(1 for t in twins if t["family"] == f and t["in_primary"])
+            e["state_consistent"] = sum(1 for t in twins if t["family"] == f and t["state_consistent"])
+        lv2 = [t for t in twins if t.get("lists_version") == 2]
+        c["lists_v2"] = {"twins": len(lv2), "with_applied_edits": sum(1 for t in lv2 if t.get("list_edits_applied")),
+                         "applied_edits": sum(t.get("list_edits_applied") or 0 for t in lv2),
+                         "per_family": dict(Counter(t["family"] for t in lv2).most_common())}
+        base_src = {t["prompt_id"] for t in twins if t["family"] in BASE}
+        c["new_sources"] = len({t["prompt_id"] for t in twins} - base_src)
+        c["base_sources"] = len(base_src)
+        manifest["additional_families"] = sorted(f for f in fams if f not in FAMILIES_BEFORE_0_7)
     # Only the files this build wrote. Scanning the directory instead folds in whatever another tool left
     # behind (tools/quality_checks.py writes quality_flags.jsonl there), which would make the manifest depend
     # on what ran before it rather than on the inputs.
