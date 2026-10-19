@@ -34,7 +34,7 @@ from inspect_ai.model import (ChatMessage, ChatMessageAssistant, ChatMessageSyst
 from inspect_ai.scorer import Metric, SampleScore, Score, Scorer, Target, metric, scorer
 from inspect_ai.solver import Generate, Solver, TaskState, solver
 
-from .data import FAMILIES  # noqa: E402  (includes alternative_evidence from 0.4.0)
+from .data import FAMILIES  # noqa: E402  (includes alternative_evidence from 0.4.0, alternative_evidence_hard from 0.7.0)
 NA = "na"  # value for "this sample is not in the denominator of this quantity"; metrics skip it
 
 from .data import find_dist  # noqa: E402
@@ -77,7 +77,7 @@ def load_family(family: str, layer: str = "core") -> list[Sample]:
     if layer not in ("primary", "strict", "core", "all", "quick"):
         raise ValueError("layer must be 'primary', 'strict', 'core', 'quick' or 'all'")
     if not (DIST / f"{family}__perturbed.jsonl").exists():
-        return []  # an optional family (alternative_evidence) absent from an older release
+        return []  # an additional family (alternative_evidence, alternative_evidence_hard) absent from an older release
     orig = {r["keystone"]["source_prompt_id"]: r for r in _rows(DIST / f"{family}__original.jsonl")}
     pert = {r["keystone"]["source_prompt_id"]: r for r in _rows(DIST / f"{family}__perturbed.jsonl")}
     pp = DIST / f"{family}__paraphrase.jsonl"

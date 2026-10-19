@@ -31,12 +31,12 @@ def cmd_pairs(a):
     for fam in ([a.family] if a.family else FAMILIES):
         allp = load_pairs(fam, "all", a.dist)
         if not allp:
-            print(f"{fam:22s} not in this release"); continue
+            print(f"{fam:25s} not in this release"); continue
         strict, core, quick, prim = load_pairs(fam, "strict", a.dist), load_pairs(fam, "core", a.dist), load_pairs(fam, "quick", a.dist), load_pairs(fam, "primary", a.dist)
         with_para = sum(1 for p in allp if p.paraphrase is not None)
         with_state = sum(1 for p in allp if p.has_state)
         test = sum(1 for p in allp if p.split == "test")
-        print(f"{fam:22s} primary {len(prim):4d}  strict {len(strict):4d}  core {len(core):4d}  all {len(allp):4d}  quick {len(quick):3d}  with control {with_para:4d}  "
+        print(f"{fam:25s} primary {len(prim):4d}  strict {len(strict):4d}  core {len(core):4d}  all {len(allp):4d}  quick {len(quick):3d}  with control {with_para:4d}  "
               f"multi-turn {sum(1 for p in allp if p.turns > 1):4d}  with evidence state {with_state:4d}  test split {test:4d}")
         totals["all"] = totals.get("all", 0) + len(allp)
         for name, sel in (("primary", prim), ("strict", strict), ("core", core), ("quick", quick)):
@@ -56,7 +56,7 @@ def _pairs_totals(totals: dict) -> None:
         if not n:
             continue
         ctrl = totals.get(name + "_control", 0)
-        print(f"{name:22s} {n:5d} pairs, {ctrl:5d} of them negative control ({ctrl / n:.0%}); "
+        print(f"{name:25s} {n:5d} pairs, {ctrl:5d} of them negative control ({ctrl / n:.0%}); "
               f"the correct behaviour there is the opposite, so report per family rather than pooled")
 
 

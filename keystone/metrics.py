@@ -55,7 +55,8 @@ def _rate(k: int, n: int) -> dict:
 #     naming the change is an adaptation failure
 #   salient_distractor: the added information is irrelevant; *holding* the answer is correct, and
 #     changing it is the failure
-PERTURBATION_FAMILIES = ("missing_evidence", "conflicting_evidence", "demographic_shift", "alternative_evidence", "buried_red_flag", "missing_evidence_early")
+PERTURBATION_FAMILIES = ("missing_evidence", "conflicting_evidence", "demographic_shift", "alternative_evidence", "buried_red_flag", "missing_evidence_early",
+                         "alternative_evidence_hard")
 CONTROL_FAMILIES = ("salient_distractor", "demographic_control")
 
 
@@ -201,6 +202,7 @@ PRIMARY_OUTCOME = {
     "missing_evidence_early": ("decisive_question_hit", "decisive question or conditional answer"),
     "conflicting_evidence": ("decisive_question_hit", "decisive question or conditional answer"),
     "alternative_evidence": ("necessary_update", "necessary update"),
+    "alternative_evidence_hard": ("necessary_update", "necessary update"),
     "demographic_shift": ("necessary_update", "necessary update"),
     "buried_red_flag": ("escalated_when_sufficient", "escalated when warranted"),
     "salient_distractor": ("stable_on_control", "stable on control"),
@@ -219,7 +221,7 @@ def summarize(records: list[dict], _nested: bool = False) -> dict:
 
     A run over several families gets `by_family` and `composition` as well as the pooled rates. Pooling across
     families is rarely the number anyone wants: the negative controls are the largest families in every layer
-    (51 percent of `primary`), and on them the correct behaviour is the opposite of the perturbation families',
+    (47 percent of `primary` in 0.7.0), and on them the correct behaviour is the opposite of the perturbation families',
     so a pooled action rate mostly measures how often the model held an answer it was right to hold. The
     family-aware outcomes return NA where they are undefined, which keeps the pooled rate from being wrong, but
     `composition` is what tells a reader whether it is worth reading."""

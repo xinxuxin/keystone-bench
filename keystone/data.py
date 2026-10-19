@@ -17,7 +17,10 @@ BASE_FAMILIES = ("missing_evidence", "conflicting_evidence", "demographic_shift"
 # 0.5.0 hard families: demographic_control (an attribute that must NOT change the advice; negative control),
 # buried_red_flag (a casually mentioned red flag; the correct action becomes urgent evaluation),
 # missing_evidence_early (the load-bearing fact removed from an earlier turn of a multi-turn conversation)
-FAMILIES = BASE_FAMILIES + ("alternative_evidence", "demographic_control", "buried_red_flag", "missing_evidence_early")
+# 0.7.0 additional family: alternative_evidence_hard (one value the decision rests on moved just across a named clinical
+# threshold, so that the correct action changes; scored as a necessary update)
+FAMILIES = BASE_FAMILIES + ("alternative_evidence", "demographic_control", "buried_red_flag", "missing_evidence_early",
+                            "alternative_evidence_hard")
 CONDITIONS = ("original", "perturbed", "paraphrase")
 LAYERS = ("primary", "strict", "core", "all", "quick")
 SPLITS = ("dev", "test", "all")
@@ -84,6 +87,24 @@ class Pair:
     in_primary: bool = False             # strict, state-consistent, and the second reviewer did not disagree
     edited_turn: int = -1                # index of the edited turn in the message list; the last user turn unless the family edits an earlier one
     tier: str | None = None              # silver: model-drafted and model-reviewed; gold: clinician-confirmed
+    revision: int = 1                    # 2 for a twin rewritten in a later release (the twin it replaced is in deprecated_twins.jsonl)
+    # action lists, version 2 (0.7.0): the lists above are the revised ones; the version-1 lists are kept beside them
+    lists_version: int | None = None     # 2 where the lists went through the second-vendor review, None for version 1
+    acceptable_actions_v1: list[str] | None = None
+    forbidden_actions_v1: list[dict] | None = None
+    decisive_questions_v1: list[str] | None = None
+    # alternative_evidence_hard (0.7.0): the value moved across a named threshold
+    hard_mode: str | None = None         # threshold_cross
+    hard_outcome: str | None = None      # the outcome the twin is scored on (necessary_update)
+    old_value: str | None = None         # the value in the source conversation
+    new_value: str | None = None         # the value in the twin
+    threshold: str | None = None         # the threshold the change crosses
+    threshold_value: float | None = None
+    threshold_unit: str | None = None
+    threshold_source: str | None = None  # the label or guideline the threshold comes from
+    old_side: str | None = None          # what the threshold implies on the source's side of it
+    new_side: str | None = None          # ... and on the twin's
+    value_kind: str | None = None        # dose, lab_value, vital_sign, weight, gestational_age, duration_time, age, other
 
     @property
     def has_state(self) -> bool:
@@ -125,6 +146,31 @@ def _last_user(messages: list[dict]) -> str:
     return ""
 
 
+V1_LISTS = ("acceptable_actions_v1", "forbidden_actions_v1", "decisive_questions_v1")
+HARD_FIELDS = ("hard_mode", "hard_outcome", "old_value", "new_value", "threshold", "threshold_value", "threshold_unit",
+               "threshold_source", "old_side", "new_side", "value_kind")
+_V1: dict = {}
+
+
+def load_v1_lists(dist: str | os.PathLike | None = None) -> dict[tuple[str, str], dict]:
+    """The version-1 action lists of the twins whose lists were revised, keyed by (source id, family). They live only in
+    the full twin records, so they are read once per release directory; empty before 0.7.0."""
+    p = find_dist(dist) / "keystone_twins.jsonl"
+    key = (str(p), p.stat().st_mtime_ns if p.exists() else None)
+    if key not in _V1:
+        out = {}
+        if p.exists():
+            for line in p.open():
+                if '"lists_version": 2' not in line:
+                    continue
+                t = json.loads(line)
+                if t.get("lists_version") == 2:
+                    out[(t["prompt_id"], t["family"])] = {k: t.get(k) for k in V1_LISTS}
+        _V1.clear()
+        _V1[key] = out
+    return _V1[key]
+
+
 def load_frames(dist: str | os.PathLike | None = None) -> dict[str, dict]:
     """Decision frames of the original messages, keyed by source id; empty before 0.4.0."""
     p = find_dist(dist) / "decision_frames.jsonl"
@@ -151,6 +197,7 @@ def load_pairs(family: str, layer: str = "core", dist: str | os.PathLike | None 
     if not (d / f"{family}__perturbed.jsonl").exists():
         return []
     frames = load_frames(dist)
+    v1 = load_v1_lists(dist)
     orig = {r["keystone"]["source_prompt_id"]: r for r in load_rows(d / f"{family}__original.jsonl")}
     pert = {r["keystone"]["source_prompt_id"]: r for r in load_rows(d / f"{family}__perturbed.jsonl")}
     pp = d / f"{family}__paraphrase.jsonl"
@@ -183,7 +230,9 @@ def load_pairs(family: str, layer: str = "core", dist: str | os.PathLike | None 
                         escalation_sufficient=mv.get("escalation_sufficient"), frame=frames.get(sid),
                         split=mv.get("split"), in_quick=bool(mv.get("in_quick")), tier=mv.get("tier"),
                         state_consistent=mv.get("state_consistent"), acts_as_control=bool(mv.get("acts_as_control")),
-                        in_primary=bool(mv.get("in_primary")), edited_turn=mv.get("edited_turn") if isinstance(mv.get("edited_turn"), int) else -1))
+                        in_primary=bool(mv.get("in_primary")), edited_turn=mv.get("edited_turn") if isinstance(mv.get("edited_turn"), int) else -1,
+                        revision=int(mv.get("revision") or 1), lists_version=mv.get("lists_version"),
+                        **v1.get((sid, family), {}), **{k: mv.get(k) for k in HARD_FIELDS}))
         if limit and len(out) >= limit:
             break
     return out

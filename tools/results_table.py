@@ -32,6 +32,7 @@ HEADLINE = {
     "missing_evidence_early": ("decisive_question_hit", "same, with the fact removed from an earlier turn", True),
     "conflicting_evidence": ("decisive_question_hit", "named the contradiction and asked which side is true", True),
     "alternative_evidence": ("necessary_update", "changed the action to the one the new value supports", True),
+    "alternative_evidence_hard": ("necessary_update", "changed the action once the value crossed the threshold", True),
     "demographic_shift": ("necessary_update", "adjusted the advice to the changed attribute", True),
     "buried_red_flag": ("escalated_when_sufficient", "made urgent evaluation the main answer", True),
     "salient_distractor": ("stable_on_control", "answered unchanged despite the irrelevant insertion", True),
