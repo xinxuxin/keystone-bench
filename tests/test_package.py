@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 import keystone
-from keystone.data import BASE_FAMILIES
+from keystone.data import BASE_FAMILIES, find_dist
 from keystone import (FAMILIES, OpenAICompatible, evaluate, healthbench_score, load_manifest, load_pairs, load_reference,
                        mcnemar_exact, pair_outcomes, parse_json, summarize, wilson, write_run)
 from keystone.metrics import cohen_kappa, primary_hypothesis_supported
@@ -329,6 +329,10 @@ def test_action_outcomes_by_state():
     assert o["generic_questions_only"] is True and o["decisive_question_hit"] is False
     o = pair_action_outcomes({"perturbed": good}, "alternative_evidence", "sufficient_for_alternative_action")
     assert o["necessary_update"] is True and o["decisive_question_hit"] is None
+    o = pair_action_outcomes({"perturbed": good}, "alternative_evidence_hard", "sufficient_for_alternative_action")
+    assert o["necessary_update"] is True and o["forbidden_action"] is False and o["stable_on_control"] is None
+    from keystone.metrics import primary_outcome
+    assert primary_outcome("alternative_evidence_hard") == primary_outcome("alternative_evidence")
     o = pair_action_outcomes({"perturbed": good}, "salient_distractor", "sufficient_for_original_action")
     assert o["stable_on_control"] is True and o["forbidden_action"] is None, "forbidden_action is a perturbation-family outcome"
     o = pair_action_outcomes({"perturbed": {**bad, "escalates": True}}, "missing_evidence", "sufficient_for_escalation", escalation_sufficient=True)
@@ -507,3 +511,32 @@ def test_with_system_prepends_and_keeps_usage(tmp_path):
     f = tmp_path / "arm.txt"; f.write_text("From file.\n")
     assert read_system_arg("@" + str(f)) == "From file." and read_system_arg("inline") == "inline" and read_system_arg(None) is None
 
+
+
+def test_pairs_carry_the_0_7_0_fields():
+    """The threshold values, the revision and the version-1 action lists reach the Pair the runner scores."""
+    rows = {}
+    for line in (find_dist() / "keystone_twins.jsonl").open():
+        t = json.loads(line)
+        rows[(t["prompt_id"], t["family"])] = t
+    hard = load_pairs("alternative_evidence_hard", "all")
+    if not hard:
+        pytest.skip("release predates 0.7.0")
+    from keystone.data import HARD_FIELDS, V1_LISTS
+    for p in hard:
+        t = rows[(p.source_id, p.family)]
+        assert {k: getattr(p, k) for k in HARD_FIELDS} == {k: t[k] for k in HARD_FIELDS}
+        assert p.hard_mode == "threshold_cross" and p.lists_version is None and p.acceptable_actions_v1 is None
+    assert len(load_pairs("alternative_evidence_hard", "primary")) == load_manifest()["counts"]["per_family"]["alternative_evidence_hard"]["primary"]
+    ds = load_pairs("demographic_shift", "all")
+    assert {p.revision for p in ds} == {1, 2}
+    assert all(p.revision == (rows[(p.source_id, p.family)].get("revision") or 1) for p in ds)
+    n = 0
+    for fam in ("missing_evidence", "conflicting_evidence"):
+        for p in load_pairs(fam, "all"):
+            t = rows[(p.source_id, p.family)]
+            assert p.lists_version == t.get("lists_version")
+            assert {k: getattr(p, k) for k in V1_LISTS} == {k: t.get(k) for k in V1_LISTS}
+            assert p.acceptable_actions == t["acceptable_actions"] and p.forbidden_actions == t["forbidden_actions"]
+            n += p.lists_version == 2
+    assert n > 0

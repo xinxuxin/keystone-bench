@@ -210,3 +210,30 @@ def test_paraphrase_control_rewords_the_edited_turn(tmp_path):
             differ = [i for i, (a, b) in enumerate(zip(p.original, p.paraphrase)) if a["content"] != b["content"]]
             assert differ in ([], [k]), f"{p.id}: control changed turns {differ}, expected {k}"
 
+
+
+def test_the_0_6_0_release_still_rebuilds_byte_identically(tmp_path):
+    """Fields added in later releases are written only where a row carries them, so the label and edit files of an
+    earlier tag still rebuild into exactly the files its published hashes describe."""
+    import hashlib
+    import shutil
+    import subprocess
+    import tarfile
+    hb = ROOT / ".cache" / "healthbench_oss.jsonl"
+    if not hb.exists():
+        pytest.skip("needs the HealthBench copy that `keystone build` downloads")
+    if not shutil.which("git") or subprocess.run(["git", "-C", str(ROOT), "rev-parse", "-q", "--verify", "refs/tags/v0.6.0"],
+                                                 capture_output=True).returncode != 0:
+        pytest.skip("needs a clone with the v0.6.0 tag")
+    archive = tmp_path / "v060.tar"
+    subprocess.run(["git", "-C", str(ROOT), "archive", "-o", str(archive), "v0.6.0", "release"], check=True)
+    with tarfile.open(archive) as tf:
+        tf.extractall(tmp_path, filter="data")
+    rel = tmp_path / "release"
+    exp = json.loads((rel / build.EXPECTED).read_text())
+    assert exp["version"] == "0.6.0"
+    dist = tmp_path / "dist"
+    assert build.build(dist, hb, rel) == 0
+    bad = sorted(r for r, h in exp["files"].items()
+                 if not (dist / r).exists() or hashlib.sha256((dist / r).read_bytes()).hexdigest() != h)
+    assert not bad, f"0.6.0 no longer rebuilds byte for byte: {bad[:3]}"
