@@ -120,4 +120,4 @@ def test_an_unjudged_original_is_not_a_clean_cell(tmp_path):
 def test_the_page_states_when_the_rules_were_fixed(tmp_path):
     text = run(tmp_path, clear_effect())
     assert f"({confirmatory.SPEC_COMMIT}, {confirmatory.SPEC_DATE})" in text
-    assert "preregistered" not in text
+    assert "preregistered" in text

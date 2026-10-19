@@ -351,4 +351,4 @@ def test_top_up_items_are_counted_on_the_page(release, tmp_path):
                              "--out", str(out)]) == 0
     text = out.read_text()
     assert "| added to reach 20 |" in text and "need not pass the filters above" in text
-    assert "held-out evaluation of the subset it selects is pending" in text
+    assert "pending" not in text

@@ -58,7 +58,7 @@ Each system's own paired difference on the three C1 families, so that a pooled e
 
 ## Reading
 
-All three families hold on the held-out split under the rule fixed before it was run, and both negative controls pass the equivalence test on the same split with the same judge.
+All three preregistered families hold on the held-out split after Benjamini-Hochberg, and both negative controls pass the equivalence test on the same split with the same judge.
 
 `conflicting_evidence`: +0.284 [+0.223, +0.344] over 139 held-out sources, 10 of 10 systems above zero, system means from +0.108 to +0.468.
 

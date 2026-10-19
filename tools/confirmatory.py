@@ -215,7 +215,7 @@ def main(argv=None):
     stats = {fam: (n, m, lo, hi) for fam, n, m, lo, hi in rows}
     order = sorted(C1_FAMILIES, key=lambda f: -stats[f][1])
     L += ["", "## Reading", ""]
-    verdict = ("All three families hold on the held-out split under the rule fixed before it was run, and both "
+    verdict = ("All three preregistered families hold on the held-out split after Benjamini-Hochberg, and both "
                "negative controls pass the equivalence test on the same split with the same judge."
                if ok1 and ok2 else
                f"C1 is {'supported' if ok1 else 'not supported as specified'} and C2 is "
