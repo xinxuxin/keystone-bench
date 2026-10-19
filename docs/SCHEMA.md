@@ -21,7 +21,7 @@ One row per (source conversation, family, condition). HealthBench's own fields c
 | Field | Type | Meaning |
 |---|---|---|
 | `source_prompt_id` | str | HealthBench `prompt_id` of the source; join key across conditions and families |
-| `family` | str | `missing_evidence`, `conflicting_evidence`, `demographic_shift`, `salient_distractor` |
+| `family` | str | `missing_evidence`, `conflicting_evidence`, `demographic_shift`, `salient_distractor`, and the families added where the source supports them: `alternative_evidence`, `demographic_control`, `buried_red_flag`, `missing_evidence_early`, `alternative_evidence_hard` |
 | `condition` | str | `original`, `perturbed`, `paraphrase` |
 | `group` | str | source stratum, HealthBench theme ∧ physician-agreed tag: `enough_context` (context_seeking ∧ enough-context), `cond_emergent` (emergency_referrals ∧ conditionally-emergent), `emergent` (emergency_referrals ∧ emergent), `non_emergent` (emergency_referrals ∧ non-emergent), `data_task` (health_data_tasks ∧ enough-info-to-complete-task), `reducible_uncertainty` (hedging ∧ any-reducible-uncertainty), `context_matters` (global_health ∧ context-matters-is-clear) |
 | `turns` | int | number of messages in the conversation |
@@ -72,7 +72,7 @@ The formal pilot under the protocol's rules: `setup` (models, judge, generation 
 
 ## `dist/MANIFEST.json`
 
-`version`, `built`, `counts` (twins, core, strict, sources, sources with a released paraphrase, sources whose paraphrase was fidelity-checked, twins with a defect, twins with rubric-dependence labels from each labeller, conflicting twins with a second naturalness verdict, sources still in progress and not released, per-family and per-stratum counts, rows per file) and `files` with row count and SHA-256 of every released file. `keystone validate` recomputes it.
+`version`, `built`, `counts` (twins, core, strict, sources, sources with a released paraphrase, sources whose paraphrase was fidelity-checked, twins with a defect, twins with rubric-dependence labels from each labeller, conflicting twins with a second naturalness verdict, sources still in progress and not released, per-family and per-stratum counts, rows per file; from 0.7.0 also the primary and state-consistent count per family, `lists_v2` with the revised twins, the twins with an applied edit and the edits applied, `base_sources` and `new_sources`), `additional_families` (from 0.7.0) and `files` with row count and SHA-256 of every released file. `keystone validate` recomputes it.
 
 ## Decision-evidence layer (0.4.0)
 
@@ -106,10 +106,10 @@ Per-twin fields, in the `keystone` block of the HealthBench-style rows and at to
 | `mechanism` | str or null | `demographic_shift` only: `age`, `sex_gender`, `pregnancy_lactation`, `comorbidity`, `medication`, `allergy`, `access_to_care`, `care_setting`, `social_context`, `other` |
 | `advice_should_change` | str or null | `demographic_shift` only: `yes`, `no`, `uncertain` |
 | `split` | str | `dev` or `test`, by source (about 20% test); all twins and controls of a source share a side |
-| `in_quick` | bool | the fixed quick set: 40 strict, state-consistent dev twins with a control per family |
+| `in_quick` | bool | the fixed quick set: 40 strict, state-consistent dev twins with a control per family, drawn when the family was first released and kept across releases (`release/quick_set.json` lists it from 0.7.0) |
 | `tier` | str | `silver` (model-drafted and model-reviewed) or `gold` (clinician-confirmed) |
-| `edited_turn` | int | index of the edited message in the conversation; the last user turn for every family except `missing_evidence_early`, which removes the fact from an earlier user turn. The paraphrase control always rewords the last user turn |
-| `state_consistent` | bool or null | the annotated evidence state agrees with what the family's edit is designed to do (missing: ambiguous or escalation; conflicting: contradiction; demographic and alternative evidence: alternative action or escalation; controls: original action). A twin whose edit did not do what its family says is released but flagged |
+| `edited_turn` | int | index of the edited message in the conversation; the last user turn, except in `missing_evidence_early`, which removes the fact from an earlier user turn, and in an `alternative_evidence_hard` twin whose value sits in an earlier turn. The paraphrase control rewords the turn named by `paraphrase_edited_turn` |
+| `state_consistent` | bool or null | the annotated evidence state agrees with what the family's edit is designed to do (missing: ambiguous or escalation; conflicting: contradiction; demographic and alternative evidence: alternative action or escalation; `alternative_evidence_hard`: alternative action; controls: original action). A twin whose edit did not do what its family says is released but flagged |
 | `acts_as_control` | bool | `demographic_shift` twin whose attribute does not bear on the decision (`advice_should_change: no`) and whose state keeps the original action: an extra negative control |
 | `state_review_behaviour_agree` | bool or null | the second reviewer agreed with the state at the level of the behaviour it calls for (`insufficient_ambiguous` and `contradiction_unresolved` both call for asking; `sufficient_for_alternative_action` for changing the action; `sufficient_for_escalation` for escalating; `sufficient_for_original_action` for holding) |
 | `in_primary` | bool | the layer the headline numbers use: strict, state-consistent, and (for an annotated state) the second reviewer agreed with the behaviour the state calls for; a derived state (negative control, `alternative_evidence`) has no review by construction |
@@ -157,3 +157,32 @@ the current version of that (source, family) pair.
 | `paraphrase_edited_turn` | int or null | index of the turn the paraphrase-only control rewords. The last user turn for every family except `missing_evidence_early`, whose twin edits an earlier turn and whose control must reword that same turn |
 | `paraphrase_turns` | list or null | the whole conversation with only that turn reworded. Present only where `paraphrase_edited_turn` is not the last turn |
 
+## Release 0.7.0 additions
+
+**`alternative_evidence_hard`** is an additional family: one value the decision rests on (a dose, a lab value, a vital sign, a weight, an age, a gestational age, a duration or time window) is moved just across a named clinical threshold (a product label, a guideline, a coding rule), with nothing else in the message pointing at the change. The correct reply notices the crossing and adopts the action the new value calls for, so the family is scored as a necessary update, like `alternative_evidence`. It is not one of the pre-specified confirmatory families. A twin may edit an earlier user turn (`edited_turn`); its paraphrase control then rewords that same turn. Its rows carry, at top level in `keystone_twins.jsonl` and in the `keystone` block of the HealthBench-style rows:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `hard_mode` | str | `threshold_cross` |
+| `hard_outcome` | str or null | the outcome the twin is scored on, from its evidence state: `necessary_update` (state `sufficient_for_alternative_action`); null when the annotated state is not the one the construction is designed to produce (`state_consistent: false`) |
+| `old_value`, `new_value` | str | the value as it stands in the source and in the twin |
+| `threshold`, `threshold_value`, `threshold_unit` | str, number, str | the threshold the change crosses, its numeric value and unit |
+| `threshold_source` | str | where the threshold comes from (guideline, product label, coding rule) |
+| `old_side`, `new_side` | str | what the threshold implies on each side of it, for this conversation |
+| `value_kind` | str | `dose`, `lab_value`, `vital_sign`, `weight`, `age`, `gestational_age`, `duration_time` or `other` |
+
+Its layers follow the rules of `alternative_evidence`: core is median materiality 3 with no defect, strict adds the reviewer and rubric-dependence checks, and the state consistent with the design is `sufficient_for_alternative_action`. 26 of its sources are HealthBench `oss` conversations outside the seven base strata (`group` is `v4_` followed by the HealthBench theme); they carry only this family and no paraphrase control.
+
+**Action lists, version 2.** The acceptable actions, forbidden actions and decisive questions of a twin's evidence state were revised wherever the state reviewer's comments on them were accepted by two model vendors: the drafting vendor adjudicated each comment, a second vendor verified each accepted edit, and only edits both accepted are applied. Revised rows carry:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `lists_version` | int | `2` on a twin whose lists went through this review (also in the `keystone` block); rows without the field use the version-1 lists |
+| `acceptable_actions_v1`, `forbidden_actions_v1`, `decisive_questions_v1` | as the lists | the lists before the revision; `acceptable_actions`, `forbidden_actions` and `decisive_questions` hold the revised lists |
+| `list_edits_applied` | int | number of edits applied (0 when every comment was declined) |
+
+No layer rule reads the lists, so `in_core`, `in_strict` and `in_primary` do not depend on the revision.
+
+**`demographic_shift`, revision 2.** Twins whose attribute came from a small set of recurring templates were rewritten with a different attribute that bears on the decision (`revision: 2`, `supersedes: 1`, `rewrite_reason`, `specific_used`), and every label was redone on the new text: mechanism, `advice_should_change`, evidence state and its review, materiality and rubric dependence. The revision-1 rows they replace are in `dist/deprecated_twins.jsonl` with `deprecated: true` and `superseded_by: 2`.
+
+**`release/quick_set.json`** lists the quick layer as (`prompt_id`, `family`) pairs. The set is fixed across releases so that quick-layer results stay comparable: a rewritten twin keeps its place while it still qualifies, and a new family is drawn by the same rule (40 strict, state-consistent dev twins with a released control, in hash order). `keystone build` marks exactly these twins `in_quick`.

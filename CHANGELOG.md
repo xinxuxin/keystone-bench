@@ -1,6 +1,47 @@
 # Changelog
 
-## 0.6.1 (unreleased)
+## 0.7.0 (2026-10-19)
+
+Data release 0.7.0 with package 0.7.0. `keystone build` rebuilds it from the `v0.7.0` tag and checks it against 35
+published hashes; under the same code the `v0.6.0` tag still rebuilds byte for byte.
+
+- **A new family, `alternative_evidence_hard`.** One value the decision rests on (a dose, a lab value, a vital sign, a
+  weight, an age, a gestational age, a duration or time window) moves just across a named clinical threshold from a
+  product label or guideline, so the correct action changes, and nothing else in the message points at the change.
+  The reply has to read the number against the threshold to see it. The family is scored as a necessary update, like
+  `alternative_evidence`. 113 twins, core 65, strict 64, primary 52; every twin records the threshold, where it comes
+  from, the old and the new value, and what each side of the threshold implies. On its 52 primary twins, five
+  assistants with GPT-4.1 as action judge reply acceptably to 0.89 of the originals and 0.80 of the twins. Their twin
+  rates span 0.63 to 0.96 (sd 0.112), against 0.74 to 0.94 (sd 0.069) for necessary update on `alternative_evidence`
+  in the reference results, and all five agree on only 52 percent of the twins: the threshold crossing spreads the
+  assistants further apart than `alternative_evidence` does. It is an additional family, not one of the
+  pre-specified confirmatory ones.
+- **26 new HealthBench sources.** Conversations from the HealthBench `oss` split outside the seven base strata, each
+  with an `alternative_evidence_hard` twin and the decision frame of its original message. The release covers 1,260
+  sources, 999 dev and 261 test.
+- **`demographic_shift` rewritten with real attribute swaps.** 577 twins whose attribute came from a small set of
+  recurring templates now change an attribute that bears on the decision, and every label was redone on the new
+  text: mechanism, `advice_should_change`, evidence state and its review, materiality, rubric dependence. They carry
+  `revision: 2` and `supersedes: 1`; the revision-1 rows move to `deprecated_twins.jsonl` with `superseded_by: 2`.
+  The family grows from 385 core, 339 strict and 169 primary twins to 843, 776 and 437, and its twins with a
+  mechanical defect flag fall from 755 to 181.
+- **Action lists, version 2.** On 2,274 released twins the acceptable actions, forbidden actions and decisive
+  questions were reviewed comment by comment: the drafting vendor adjudicated every comment of the state reviewer,
+  and an edit was applied only when a second vendor agreed. 1,356 twins carry at least one of the 2,284 applied
+  edits. Revised rows carry `lists_version: 2` and keep the version-1 lists beside the new ones. Judged against both
+  versions, the same replies of three assistants on 60 changed twins change verdict 9 times in 180: 7 replies that a
+  too-broad version-1 forbidden item had penalised are now acceptable, and 2 replies that ignore a contradiction are
+  now caught. No layer rule reads the lists.
+- **The quick set is published and kept across releases** (`release/quick_set.json`): the 319 twins of 0.6.0, with
+  the same text on every one, plus 31 `alternative_evidence_hard` twins, 350 in all. Version 2 revised the action
+  lists of 94 of the 319.
+- Counts: 7,419 twins over 1,260 sources, core 5,454, strict 5,252, primary 4,410, quick 350, and 2,371 superseded
+  rows in `deprecated_twins.jsonl`. `MANIFEST.json` adds the primary count per family, the version-2 list counts, and
+  the base and new sources.
+- The reference results, the confirmatory run and the analysis pages were computed on 0.6.0 and stay labelled 0.6.0.
+- The package changes listed under 0.6.1 ship in this release; 0.6.1 was not published on its own.
+
+## 0.6.1 (not published separately; included in 0.7.0)
 
 The package is 0.6.1 and the data release it builds is still 0.6.0: `keystone build` fetches the label files from
 the `v0.6.0` tag and checks the rebuild against the hashes recorded for it, so the data and every published number

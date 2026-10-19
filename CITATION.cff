@@ -8,7 +8,7 @@ abstract: >-
   physician rubric that grades it. Built on HealthBench (OpenAI, MIT).
 type: dataset
 # the data release; the keystone-bench package that rebuilds and checks it is listed under references
-version: "0.6.0"
+version: "0.7.0"
 license: MIT
 repository-code: "https://github.com/xinxuxin/keystone-bench"
 url: "https://xinxuxin.github.io/keystone-bench/"
@@ -23,8 +23,8 @@ keywords:
   - medical AI
 references:
   - type: software
-    title: "keystone-bench: the Python package that rebuilds, checks and runs the Keystone 0.6.0 data release"
-    version: "0.6.1"
+    title: "keystone-bench: the Python package that rebuilds, checks and runs the Keystone 0.7.0 data release"
+    version: "0.7.0"
     authors:
       - given-names: Xin
         family-names: Xu
